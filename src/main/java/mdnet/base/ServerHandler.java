@@ -10,7 +10,7 @@ import java.util.HashMap;
 
 public class ServerHandler {
 	private final static Logger LOGGER = LoggerFactory.getLogger(ServerHandler.class);
-	private static final String SERVER_ADDRESS = "https://mangadex-test.net/";
+	private static final String SERVER_ADDRESS = "https://api.mangadex.network/";
 
 	private final ClientSettings settings;
 
