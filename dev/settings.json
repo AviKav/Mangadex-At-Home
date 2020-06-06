@@ -1,0 +1,7 @@
+{
+  "client_secret": "7rc7p00md0n0xsvqnv4rv17fthvjjrzpdghak1yq45833zvdvnb0",
+  "max_cache_size_mib": 2048,
+  "client_port": 8080,
+  "max_burst_rate_kib_per_second": 100,
+  "max_bandwidth_mib_per_hour": 1
+}
