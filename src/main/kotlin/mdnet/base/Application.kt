@@ -107,7 +107,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
 
                 val editor = cache.edit(cacheId)
 
-                val lastModified = HTTP_TIME_FORMATTER.format(ZonedDateTime.now(ZoneOffset.UTC))
+                val lastModified = mdResponse.header("Last-Modified")!!
 
                 // A null editor means that this file is being written to
                 // concurrently so we skip the cache process
