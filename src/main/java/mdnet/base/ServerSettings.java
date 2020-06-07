@@ -8,10 +8,13 @@ public final class ServerSettings {
 	@SerializedName("image_server")
 	private final String imageServer;
 	private final TlsCert tls;
+	@SerializedName("latest_build")
+	private final int latestBuild;
 
-	public ServerSettings(String imageServer, TlsCert tls) {
+	public ServerSettings(String imageServer, TlsCert tls, int latestBuild) {
 		this.imageServer = Objects.requireNonNull(imageServer);
 		this.tls = tls;
+		this.latestBuild = latestBuild;
 	}
 
 	public String getImageServer() {
@@ -22,9 +25,14 @@ public final class ServerSettings {
 		return tls;
 	}
 
+	public int getLatestBuild() {
+		return latestBuild;
+	}
+
 	@Override
 	public String toString() {
-		return "ServerSettings{" + "imageServer='" + imageServer + '\'' + ", tls=" + "<hidden>" + '}';
+		return "ServerSettings{" + "imageServer='" + imageServer + '\'' + ", tls=" + tls + ", latestBuild="
+				+ latestBuild + '}';
 	}
 
 	@Override

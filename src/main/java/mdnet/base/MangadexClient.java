@@ -48,6 +48,12 @@ public class MangadexClient {
 	public void runLoop() {
 		statistics.set(new Statistics());
 		loginAndStartServer();
+		if (serverSettings.getLatestBuild() > Constants.CLIENT_BUILD) {
+			if (LOGGER.isWarnEnabled()) {
+				LOGGER.warn("Outdated build detected! Latest: {}, Current: {}", serverSettings.getLatestBuild(),
+						Constants.CLIENT_BUILD);
+			}
+		}
 
 		if (LOGGER.isInfoEnabled()) {
 			LOGGER.info("MDNet initialization completed successfully. Starting normal operation.");
@@ -94,19 +100,29 @@ public class MangadexClient {
 			}
 
 			ServerSettings n = serverHandler.pingControl(serverSettings);
+
 			if (LOGGER.isInfoEnabled()) {
 				LOGGER.info("Server settings received: {}", n);
 			}
 
-			if (n != null && (n.getTls() != null || !n.getImageServer().equals(serverSettings.getImageServer()))) {
-				// certificates or upstream url must have changed, restart webserver
-				if (LOGGER.isInfoEnabled()) {
-					LOGGER.info("Doing internal restart of HTTP server to refresh certs/upstream URL");
+			if (n != null) {
+				if (n.getLatestBuild() > Constants.CLIENT_BUILD) {
+					if (LOGGER.isWarnEnabled()) {
+						LOGGER.warn("Outdated build detected! Latest: {}, Current: {}", n.getLatestBuild(),
+								Constants.CLIENT_BUILD);
+					}
 				}
 
-				synchronized (shutdownLock) {
-					logoutAndStopServer();
-					loginAndStartServer();
+				if (n.getTls() != null || !n.getImageServer().equals(serverSettings.getImageServer())) {
+					// certificates or upstream url must have changed, restart webserver
+					if (LOGGER.isInfoEnabled()) {
+						LOGGER.info("Doing internal restart of HTTP server to refresh certs/upstream URL");
+					}
+
+					synchronized (shutdownLock) {
+						logoutAndStopServer();
+						loginAndStartServer();
+					}
 				}
 			}
 		}, 45, 45, TimeUnit.SECONDS);

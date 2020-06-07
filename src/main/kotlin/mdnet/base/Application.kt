@@ -149,13 +149,10 @@ private val HTTP_TIME_FORMATTER = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy 
 private fun addCommonHeaders(): Filter {
     return Filter { next: HttpHandler ->
         { request: Request ->
-            val now = ZonedDateTime.now(ZoneOffset.UTC)
             val response = next(request)
-            response.header("Date", HTTP_TIME_FORMATTER.format(now))
+            response.header("Date", HTTP_TIME_FORMATTER.format(ZonedDateTime.now(ZoneOffset.UTC)))
                 .header("Server", "Mangadex@Home Node")
                 .header("Cache-Control", listOf("public", MaxAgeTtl(Constants.MAX_AGE_CACHE).toHeaderValue()).joinToString(", "))
-                .header("Expires", HTTP_TIME_FORMATTER.format(now.plusSeconds(Constants.MAX_AGE_CACHE.seconds)))
-                .header("Cache-Control", "public, max-age=604800") // 1 week browser cache
                 .header("Timing-Allow-Origin", "https://mangadex.org")
         }
     }
