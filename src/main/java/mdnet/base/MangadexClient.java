@@ -37,7 +37,7 @@ public class MangadexClient {
 		this.statistics = new AtomicReference<>();
 
 		try {
-			cache = DiskLruCache.open(new File("cache"), 1, 2,
+			cache = DiskLruCache.open(new File("cache"), 2, 3,
 					clientSettings.getMaxCacheSizeMib() * 1024 * 1024 /* MiB to bytes */);
 		} catch (IOException e) {
 			MangadexClient.dieWithError(e);

@@ -228,9 +228,9 @@ public final class DiskLruCache implements Closeable {
 				cache.readJournal();
 				cache.processJournal();
 				return cache;
-			} catch (IOException journalIsCorrupt) {
+			} catch (IOException e) {
 				if (LOGGER.isWarnEnabled()) {
-					LOGGER.warn("DiskLruCache " + directory + " is corrupt - removing", journalIsCorrupt);
+					LOGGER.warn("DiskLruCache " + directory + " is corrupt/outdated - removing");
 				}
 				cache.delete();
 			}
@@ -600,7 +600,7 @@ public final class DiskLruCache implements Closeable {
 		}
 
 		redundantOpCount++;
-		journalWriter.append(REMOVE + ' ' + key + '\n');
+		journalWriter.append(REMOVE).append(' ').append(key).append('\n');
 		lruEntries.remove(key);
 
 		if (journalRebuildRequired()) {
@@ -694,10 +694,15 @@ public final class DiskLruCache implements Closeable {
 			return ins[index];
 		}
 
-		/** Returns the string value for {@code index}. */
+		/**
+		 * Returns the string value for {@code index}. This consumes the InputStream!
+		 */
 		public String getString(int index) throws IOException {
-			try (InputStream in = getInputStream(index)) {
+			InputStream in = getInputStream(index);
+			try {
 				return IOUtils.toString(in, StandardCharsets.UTF_8);
+			} finally {
+				Util.closeQuietly(in);
 			}
 		}
 

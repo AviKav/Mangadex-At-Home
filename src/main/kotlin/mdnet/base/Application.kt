@@ -14,6 +14,7 @@ import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.core.then
+import org.http4k.filter.CachingFilters
 import org.http4k.filter.MaxAgeTtl
 import org.http4k.filter.ServerFilters
 import org.http4k.lens.Path
@@ -55,21 +56,38 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
         statistics.get().requestsServed.incrementAndGet()
 
         // Netty doesn't do Content-Length or Content-Type, so we have the pleasure of doing that ourselves
-        fun respond(input: InputStream, length: String, type: String): Response =
+        fun respondWithImage(input: InputStream, length: String, type: String, lastModified: String): Response =
             Response(Status.OK).header("Content-Length", length)
                 .header("Content-Type", type)
                 .header("X-Content-Type-Options", "nosniff")
+                .header("Last-Modified", lastModified)
+                .header("Cache-Control", listOf("public", MaxAgeTtl(Constants.MAX_AGE_CACHE).toHeaderValue()).joinToString(", "))
+                .header("Timing-Allow-Origin", "https://mangadex.org")
                 .body(input, length.toLong())
 
         val snapshot = cache.get(cacheId)
         if (snapshot != null) {
             statistics.get().cacheHits.incrementAndGet()
-            if (LOGGER.isTraceEnabled) {
-                LOGGER.trace("Request for $chapterHash/$fileName hit cache")
-            }
 
-            respond(CipherInputStream(snapshot.getInputStream(0), getRc4(cacheId)),
-                snapshot.getLength(0).toString(), snapshot.getString(1))
+            // our files never change, so it's safe to use the browser cache
+            if (request.header("If-Modified-Since") != null) {
+                if (LOGGER.isTraceEnabled) {
+                    LOGGER.trace("Request for $chapterHash/$fileName cached by browser")
+                }
+
+                val lastModified = snapshot.getString(2)
+                snapshot.close()
+
+                Response(Status.NOT_MODIFIED)
+                    .header("Last-Modified", lastModified)
+            } else {
+                if (LOGGER.isTraceEnabled) {
+                    LOGGER.trace("Request for $chapterHash/$fileName hit cache")
+                }
+
+                respondWithImage(CipherInputStream(snapshot.getInputStream(0), getRc4(cacheId)),
+                    snapshot.getLength(0).toString(), snapshot.getString(1), snapshot.getString(2))
+            }
         } else {
             statistics.get().cacheMisses.incrementAndGet()
             if (LOGGER.isTraceEnabled) {
@@ -89,6 +107,8 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
 
                 val editor = cache.edit(cacheId)
 
+                val lastModified = HTTP_TIME_FORMATTER.format(ZonedDateTime.now(ZoneOffset.UTC))
+
                 // A null editor means that this file is being written to
                 // concurrently so we skip the cache process
                 if (editor != null) {
@@ -96,6 +116,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                         LOGGER.trace("Request for $chapterHash/$fileName is being cached and served")
                     }
                     editor.setString(1, contentType)
+                    editor.setString(2, lastModified)
 
                     val tee = CachingInputStream(mdResponse.body.stream,
                         executor, CipherOutputStream(editor.newOutputStream(0), getRc4(cacheId))) {
@@ -115,17 +136,19 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                             editor.abort()
                         }
                     }
-                    respond(tee, contentLength, contentType)
+                    respondWithImage(tee, contentLength, contentType, lastModified)
                 } else {
                     if (LOGGER.isTraceEnabled) {
                         LOGGER.trace("Request for $chapterHash/$fileName is being served")
                     }
 
-                    respond(mdResponse.body.stream, contentLength, contentType)
+                    respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified)
                 }
             }
         }
     }
+
+    CachingFilters
 
     return catchAllHideDetails()
         .then(ServerFilters.CatchLensFailure)
@@ -152,8 +175,6 @@ private fun addCommonHeaders(): Filter {
             val response = next(request)
             response.header("Date", HTTP_TIME_FORMATTER.format(ZonedDateTime.now(ZoneOffset.UTC)))
                 .header("Server", "Mangadex@Home Node")
-                .header("Cache-Control", listOf("public", MaxAgeTtl(Constants.MAX_AGE_CACHE).toHeaderValue()).joinToString(", "))
-                .header("Timing-Allow-Origin", "https://mangadex.org")
         }
     }
 }
