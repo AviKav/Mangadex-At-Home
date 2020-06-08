@@ -83,8 +83,8 @@ public final class ServerSettings {
 
 		@Override
 		public String toString() {
-			return "TlsCert{" + "createdAt='" + createdAt + '\'' + ", privateKey='" + privateKey + '\''
-					+ ", certificate='" + certificate + '\'' + '}';
+			return "TlsCert{" + "createdAt='" + createdAt + '\'' + ", privateKey='" + "<hidden>" + '\''
+					+ ", certificate='" + "<hidden>" + '\'' + '}';
 		}
 
 		@Override

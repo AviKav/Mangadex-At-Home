@@ -16,7 +16,6 @@
 
 package mdnet.cache;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 
@@ -40,17 +39,6 @@ final class Util {
 			}
 			if (!file.delete()) {
 				throw new IOException("failed to delete file: " + file);
-			}
-		}
-	}
-
-	static void closeQuietly(/* Auto */Closeable closeable) {
-		if (closeable != null) {
-			try {
-				closeable.close();
-			} catch (RuntimeException rethrown) {
-				throw rethrown;
-			} catch (Exception ignored) {
 			}
 		}
 	}

@@ -47,102 +47,120 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
             .build())
         .build())
 
-    val app = { request: Request ->
+    val app = { dataSaver: Boolean ->
+        { request: Request ->
 
-        val chapterHash = Path.of("chapterHash")(request)
-        val fileName = Path.of("fileName")(request)
-        val cacheId = md5String("$chapterHash.$fileName")
+            val chapterHash = Path.of("chapterHash")(request)
+            val fileName = Path.of("fileName")(request)
 
-        statistics.get().requestsServed.incrementAndGet()
+            val rc4Bytes = if (dataSaver) {
+                md5Bytes("saver$chapterHash.$fileName")
+            } else {
+                md5Bytes("$chapterHash.$fileName")
+            }
+            val cacheId = printHexString(rc4Bytes)
 
-        // Netty doesn't do Content-Length or Content-Type, so we have the pleasure of doing that ourselves
-        fun respondWithImage(input: InputStream, length: String, type: String, lastModified: String): Response =
-            Response(Status.OK).header("Content-Length", length)
-                .header("Content-Type", type)
-                .header("X-Content-Type-Options", "nosniff")
-                .header("Last-Modified", lastModified)
-                .header("Cache-Control", listOf("public", MaxAgeTtl(Constants.MAX_AGE_CACHE).toHeaderValue()).joinToString(", "))
-                .header("Timing-Allow-Origin", "https://mangadex.org")
-                .body(input, length.toLong())
+            statistics.get().requestsServed.incrementAndGet()
 
-        val snapshot = cache.get(cacheId)
-        if (snapshot != null) {
-            statistics.get().cacheHits.incrementAndGet()
-
-            // our files never change, so it's safe to use the browser cache
-            if (request.header("If-Modified-Since") != null) {
-                if (LOGGER.isTraceEnabled) {
-                    LOGGER.trace("Request for $chapterHash/$fileName cached by browser")
-                }
-
-                val lastModified = snapshot.getString(2)
-                snapshot.close()
-
-                Response(Status.NOT_MODIFIED)
+            // Netty doesn't do Content-Length or Content-Type, so we have the pleasure of doing that ourselves
+            fun respondWithImage(input: InputStream, length: String, type: String, lastModified: String): Response =
+                Response(Status.OK).header("Content-Length", length)
+                    .header("Content-Type", type)
+                    .header("X-Content-Type-Options", "nosniff")
                     .header("Last-Modified", lastModified)
-            } else {
-                if (LOGGER.isTraceEnabled) {
-                    LOGGER.trace("Request for $chapterHash/$fileName hit cache")
-                }
+                    .header(
+                        "Cache-Control",
+                        listOf("public", MaxAgeTtl(Constants.MAX_AGE_CACHE).toHeaderValue()).joinToString(", ")
+                    )
+                    .header("Timing-Allow-Origin", "https://mangadex.org")
+                    .body(input, length.toLong())
 
-                respondWithImage(CipherInputStream(snapshot.getInputStream(0), getRc4(cacheId)),
-                    snapshot.getLength(0).toString(), snapshot.getString(1), snapshot.getString(2))
-            }
-        } else {
-            statistics.get().cacheMisses.incrementAndGet()
-            if (LOGGER.isTraceEnabled) {
-                LOGGER.trace("Request for $chapterHash/$fileName missed cache")
-            }
-            val mdResponse = client(Request(Method.GET, "${serverSettings.imageServer}${request.uri}"))
+            val snapshot = cache.get(cacheId)
+            if (snapshot != null) {
+                statistics.get().cacheHits.incrementAndGet()
 
-            if (mdResponse.status != Status.OK) {
-                if (LOGGER.isTraceEnabled) {
-                    LOGGER.trace("Request for $chapterHash/$fileName errored with status {}", mdResponse.status)
-                }
-                mdResponse.close()
-                Response(mdResponse.status)
-            } else {
-                val contentLength = mdResponse.header("Content-Length")!!
-                val contentType = mdResponse.header("Content-Type")!!
-
-                val editor = cache.edit(cacheId)
-
-                val lastModified = mdResponse.header("Last-Modified")!!
-
-                // A null editor means that this file is being written to
-                // concurrently so we skip the cache process
-                if (editor != null) {
+                // our files never change, so it's safe to use the browser cache
+                if (request.header("If-Modified-Since") != null) {
                     if (LOGGER.isTraceEnabled) {
-                        LOGGER.trace("Request for $chapterHash/$fileName is being cached and served")
+                        LOGGER.trace("Request for $chapterHash/$fileName cached by browser")
                     }
-                    editor.setString(1, contentType)
-                    editor.setString(2, lastModified)
 
-                    val tee = CachingInputStream(mdResponse.body.stream,
-                        executor, CipherOutputStream(editor.newOutputStream(0), getRc4(cacheId))) {
-                        // Note: if neither of the options get called/are in the log
-                        // check that tee gets closed and for exceptions in this lambda
-                        if (editor.getLength(0) == contentLength.toLong()) {
-                            if (LOGGER.isTraceEnabled) {
-                                LOGGER.trace("Cache download $chapterHash/$fileName committed")
-                            }
+                    val lastModified = snapshot.getString(2)
+                    snapshot.close()
 
-                            editor.commit()
-                        } else {
-                            if (LOGGER.isTraceEnabled) {
-                                LOGGER.trace("Cache download $chapterHash/$fileName aborted")
-                            }
-
-                            editor.abort()
-                        }
-                    }
-                    respondWithImage(tee, contentLength, contentType, lastModified)
+                    Response(Status.NOT_MODIFIED)
+                        .header("Last-Modified", lastModified)
                 } else {
                     if (LOGGER.isTraceEnabled) {
-                        LOGGER.trace("Request for $chapterHash/$fileName is being served")
+                        LOGGER.trace("Request for $chapterHash/$fileName hit cache")
                     }
 
-                    respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified)
+                    respondWithImage(
+                        CipherInputStream(snapshot.getInputStream(0), getRc4(rc4Bytes)),
+                        snapshot.getLength(0).toString(), snapshot.getString(1), snapshot.getString(2)
+                    )
+                }
+            } else {
+                statistics.get().cacheMisses.incrementAndGet()
+                if (LOGGER.isTraceEnabled) {
+                    LOGGER.trace("Request for $chapterHash/$fileName missed cache")
+                }
+                val mdResponse = client(Request(Method.GET, "${serverSettings.imageServer}${request.uri}"))
+
+                if (mdResponse.status != Status.OK) {
+                    if (LOGGER.isTraceEnabled) {
+                        LOGGER.trace("Request for $chapterHash/$fileName errored with status {}", mdResponse.status)
+                    }
+                    mdResponse.close()
+                    Response(mdResponse.status)
+                } else {
+                    val contentLength = mdResponse.header("Content-Length")!!
+                    val contentType = mdResponse.header("Content-Type")!!
+
+                    if (LOGGER.isTraceEnabled) {
+                        LOGGER.trace("Grabbing DiskLruCache editor instance")
+                    }
+                    val editor = cache.edit(cacheId)
+
+                    val lastModified = mdResponse.header("Last-Modified")!!
+
+                    // A null editor means that this file is being written to
+                    // concurrently so we skip the cache process
+                    if (editor != null) {
+                        if (LOGGER.isTraceEnabled) {
+                            LOGGER.trace("Request for $chapterHash/$fileName is being cached and served")
+                        }
+                        editor.setString(1, contentType)
+                        editor.setString(2, lastModified)
+
+                        val tee = CachingInputStream(
+                            mdResponse.body.stream,
+                            executor, CipherOutputStream(editor.newOutputStream(0), getRc4(rc4Bytes))
+                        ) {
+                            // Note: if neither of the options get called/are in the log
+                            // check that tee gets closed and for exceptions in this lambda
+                            if (editor.getLength(0) == contentLength.toLong()) {
+                                if (LOGGER.isTraceEnabled) {
+                                    LOGGER.trace("Cache download $chapterHash/$fileName committed")
+                                }
+
+                                editor.commit()
+                            } else {
+                                if (LOGGER.isTraceEnabled) {
+                                    LOGGER.trace("Cache download $chapterHash/$fileName aborted")
+                                }
+
+                                editor.abort()
+                            }
+                        }
+                        respondWithImage(tee, contentLength, contentType, lastModified)
+                    } else {
+                        if (LOGGER.isTraceEnabled) {
+                            LOGGER.trace("Request for $chapterHash/$fileName is being served")
+                        }
+
+                        respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified)
+                    }
                 }
             }
         }
@@ -155,15 +173,16 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
         .then(addCommonHeaders())
         .then(
             routes(
-                "/data/{chapterHash}/{fileName}" bind Method.GET to app
+                "/data/{chapterHash}/{fileName}" bind Method.GET to app(false)
+//                "/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true)
             )
         )
         .asServer(Netty(serverSettings.tls, clientSettings, statistics))
 }
 
-private fun getRc4(key: String): Cipher {
+private fun getRc4(key: ByteArray): Cipher {
     val rc4 = Cipher.getInstance("RC4")
-    rc4.init(Cipher.ENCRYPT_MODE, SecretKeySpec(key.toByteArray(), "RC4"))
+    rc4.init(Cipher.ENCRYPT_MODE, SecretKeySpec(key, "RC4"))
     return rc4
 }
 
@@ -185,17 +204,23 @@ private fun catchAllHideDetails(): Filter {
             try {
                 next(request)
             } catch (e: Exception) {
+                if (LOGGER.isWarnEnabled) {
+                    LOGGER.warn("Request error detected", e)
+                }
                 Response(Status.INTERNAL_SERVER_ERROR)
             }
         }
     }
 }
 
-private fun md5String(stringToHash: String): String {
+private fun md5Bytes(stringToHash: String): ByteArray {
     val digest = MessageDigest.getInstance("MD5")
+    return digest.digest(stringToHash.toByteArray())
+}
 
+private fun printHexString(bytes: ByteArray): String {
     val sb = StringBuilder()
-    for (b in digest.digest(stringToHash.toByteArray())) {
+    for (b in bytes) {
         sb.append(String.format("%02x", b))
     }
     return sb.toString()

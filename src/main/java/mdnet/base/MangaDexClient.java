@@ -16,8 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class MangadexClient {
-	private final static Logger LOGGER = LoggerFactory.getLogger(MangadexClient.class);
+public class MangaDexClient {
+	private final static Logger LOGGER = LoggerFactory.getLogger(MangaDexClient.class);
 
 	// This lock protects the Http4kServer from concurrent restart attempts
 	private final Object shutdownLock = new Object();
@@ -31,16 +31,16 @@ public class MangadexClient {
 	private Http4kServer engine;
 	private DiskLruCache cache;
 
-	public MangadexClient(ClientSettings clientSettings) {
+	public MangaDexClient(ClientSettings clientSettings) {
 		this.clientSettings = clientSettings;
 		this.serverHandler = new ServerHandler(clientSettings);
 		this.statistics = new AtomicReference<>();
 
 		try {
-			cache = DiskLruCache.open(new File("cache"), 2, 3,
+			cache = DiskLruCache.open(new File("cache"), 3, 3,
 					clientSettings.getMaxCacheSizeMib() * 1024 * 1024 /* MiB to bytes */);
 		} catch (IOException e) {
-			MangadexClient.dieWithError(e);
+			MangaDexClient.dieWithError(e);
 		}
 	}
 
@@ -73,10 +73,11 @@ public class MangadexClient {
 				}
 				statistics.set(new Statistics());
 
-				if (LOGGER.isInfoEnabled()) {
-					LOGGER.info("Restarting server stopped due to hourly bandwidth limit");
-				}
 				if (engine == null) {
+					if (LOGGER.isInfoEnabled()) {
+						LOGGER.info("Restarting server stopped due to hourly bandwidth limit");
+					}
+
 					loginAndStartServer();
 				}
 			} else {
@@ -132,7 +133,7 @@ public class MangadexClient {
 	private void loginAndStartServer() {
 		serverSettings = serverHandler.loginToControl();
 		if (serverSettings == null) {
-			MangadexClient.dieWithError("Failed to get a login response from server - check API secret for validity");
+			MangaDexClient.dieWithError("Failed to get a login response from server - check API secret for validity");
 		}
 		engine = ApplicationKt.getServer(cache, serverSettings, clientSettings, statistics);
 		engine.start();
@@ -168,38 +169,38 @@ public class MangadexClient {
 	public static void main(String[] args) {
 		System.out.println("Mangadex@Home Client " + Constants.CLIENT_VERSION + " (Build " + Constants.CLIENT_BUILD
 				+ ") initializing\n");
-		System.out.println("Copyright (c) 2020, Mangadex");
+		System.out.println("Copyright (c) 2020, MangaDex Network");
 
 		try {
 			String file = "settings.json";
 			if (args.length == 1) {
 				file = args[0];
 			} else if (args.length != 0) {
-				MangadexClient.dieWithError("Expected one argument: path to config file, or nothing");
+				MangaDexClient.dieWithError("Expected one argument: path to config file, or nothing");
 			}
 
 			ClientSettings settings = new Gson().fromJson(new FileReader(file), ClientSettings.class);
 
 			if (!ClientSettings.isSecretValid(settings.getClientSecret()))
-				MangadexClient.dieWithError("Config Error: API Secret is invalid, must be 52 alphanumeric characters");
+				MangaDexClient.dieWithError("Config Error: API Secret is invalid, must be 52 alphanumeric characters");
 
 			if (settings.getClientPort() == 0) {
-				MangadexClient.dieWithError("Config Error: Invalid port number");
+				MangaDexClient.dieWithError("Config Error: Invalid port number");
 			}
 
 			if (settings.getMaxCacheSizeMib() < 1024) {
-				MangadexClient.dieWithError("Config Error: Invalid max cache size, must be >= 1024 MiB (1GiB)");
+				MangaDexClient.dieWithError("Config Error: Invalid max cache size, must be >= 1024 MiB (1GiB)");
 			}
 
 			if (LOGGER.isInfoEnabled()) {
 				LOGGER.info("Client settings loaded: {}", settings);
 			}
 
-			MangadexClient client = new MangadexClient(settings);
+			MangaDexClient client = new MangaDexClient(settings);
 			Runtime.getRuntime().addShutdownHook(new Thread(client::shutdown));
 			client.runLoop();
 		} catch (FileNotFoundException e) {
-			MangadexClient.dieWithError(e);
+			MangaDexClient.dieWithError(e);
 		}
 	}
 

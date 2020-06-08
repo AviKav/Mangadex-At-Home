@@ -244,8 +244,7 @@ public final class DiskLruCache implements Closeable {
 	}
 
 	private void readJournal() throws IOException {
-		StrictLineReader reader = new StrictLineReader(new FileInputStream(journalFile), StandardCharsets.UTF_8);
-		try {
+		try (StrictLineReader reader = new StrictLineReader(new FileInputStream(journalFile), StandardCharsets.UTF_8)) {
 			String magic = reader.readLine();
 			String version = reader.readLine();
 			String appVersionString = reader.readLine();
@@ -276,8 +275,6 @@ public final class DiskLruCache implements Closeable {
 				journalWriter = new BufferedWriter(
 						new OutputStreamWriter(new FileOutputStream(journalFile, true), StandardCharsets.UTF_8));
 			}
-		} finally {
-			Util.closeQuietly(reader);
 		}
 	}
 
@@ -352,9 +349,8 @@ public final class DiskLruCache implements Closeable {
 			journalWriter.close();
 		}
 
-		Writer writer = new BufferedWriter(
-				new OutputStreamWriter(new FileOutputStream(journalFileTmp), StandardCharsets.UTF_8));
-		try {
+		try (Writer writer = new BufferedWriter(
+				new OutputStreamWriter(new FileOutputStream(journalFileTmp), StandardCharsets.UTF_8))) {
 			writer.write(MAGIC);
 			writer.write("\n");
 			writer.write(VERSION_1);
@@ -372,8 +368,6 @@ public final class DiskLruCache implements Closeable {
 					writer.write(CLEAN + ' ' + entry.key + entry.getLengths() + '\n');
 				}
 			}
-		} finally {
-			Util.closeQuietly(writer);
 		}
 
 		if (journalFile.exists()) {
@@ -430,7 +424,10 @@ public final class DiskLruCache implements Closeable {
 			// A file must have been deleted manually!
 			for (int i = 0; i < valueCount; i++) {
 				if (ins[i] != null) {
-					Util.closeQuietly(ins[i]);
+					try {
+						ins[i].close();
+					} catch (IOException ignored) {
+					}
 				} else {
 					break;
 				}
@@ -698,11 +695,8 @@ public final class DiskLruCache implements Closeable {
 		 * Returns the string value for {@code index}. This consumes the InputStream!
 		 */
 		public String getString(int index) throws IOException {
-			InputStream in = getInputStream(index);
-			try {
+			try (InputStream in = getInputStream(index)) {
 				return IOUtils.toString(in, StandardCharsets.UTF_8);
-			} finally {
-				Util.closeQuietly(in);
 			}
 		}
 
@@ -713,7 +707,10 @@ public final class DiskLruCache implements Closeable {
 
 		public void close() {
 			for (InputStream in : ins) {
-				Util.closeQuietly(in);
+				try {
+					in.close();
+				} catch (IOException ignored) {
+				}
 			}
 		}
 	}
@@ -741,7 +738,7 @@ public final class DiskLruCache implements Closeable {
 		 * Returns an unbuffered input stream to read the last committed value, or null
 		 * if no value has been committed.
 		 */
-		public InputStream newInputStream(int index) throws IOException {
+		public InputStream newInputStream(int index) {
 			synchronized (DiskLruCache.this) {
 				if (entry.currentEditor != this) {
 					throw new IllegalStateException();
@@ -762,11 +759,8 @@ public final class DiskLruCache implements Closeable {
 		 * committed.
 		 */
 		public String getString(int index) throws IOException {
-			InputStream in = newInputStream(index);
-			try {
+			try (InputStream in = newInputStream(index)) {
 				return in != null ? IOUtils.toString(in, StandardCharsets.UTF_8) : null;
-			} finally {
-				Util.closeQuietly(in);
 			}
 		}
 
@@ -774,11 +768,8 @@ public final class DiskLruCache implements Closeable {
 		 * Write a string to the specified index.
 		 */
 		public void setString(int index, String value) throws IOException {
-			OutputStream out = newOutputStream(index);
-			try {
+			try (OutputStream out = newOutputStream(index)) {
 				IOUtils.write(value, out, StandardCharsets.UTF_8);
-			} finally {
-				Util.closeQuietly(out);
 			}
 		}
 
@@ -811,6 +802,7 @@ public final class DiskLruCache implements Closeable {
 						outputStream = new FileOutputStream(dirtyFile);
 					} catch (FileNotFoundException e2) {
 						// We are unable to recover. Silently eat the writes.
+						LOGGER.warn("Returning NULL_OUTPUT_STREAM", e2);
 						return NULL_OUTPUT_STREAM;
 					}
 				}
@@ -863,6 +855,7 @@ public final class DiskLruCache implements Closeable {
 				try {
 					out.write(oneByte);
 				} catch (IOException e) {
+					LOGGER.warn("FaultHidingOutputStream exception in write()", e);
 					hasErrors = true;
 				}
 			}
@@ -872,6 +865,7 @@ public final class DiskLruCache implements Closeable {
 				try {
 					out.write(buffer, offset, length);
 				} catch (IOException e) {
+					LOGGER.warn("FaultHidingOutputStream exception in write()", e);
 					hasErrors = true;
 				}
 			}
@@ -881,6 +875,7 @@ public final class DiskLruCache implements Closeable {
 				try {
 					out.close();
 				} catch (IOException e) {
+					LOGGER.warn("FaultHidingOutputStream exception in close()", e);
 					hasErrors = true;
 				}
 			}
@@ -890,6 +885,7 @@ public final class DiskLruCache implements Closeable {
 				try {
 					out.flush();
 				} catch (IOException e) {
+					LOGGER.warn("FaultHidingOutputStream exception in flush()", e);
 					hasErrors = true;
 				}
 			}
