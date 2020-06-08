@@ -13,6 +13,7 @@ import io.netty.channel.ServerChannel
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
+import io.netty.handler.codec.DecoderException
 import io.netty.handler.codec.http.DefaultFullHttpResponse
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpObjectAggregator
@@ -30,11 +31,15 @@ import org.http4k.core.HttpHandler
 import org.http4k.server.Http4kChannelHandler
 import org.http4k.server.Http4kServer
 import org.http4k.server.ServerConfig
+import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
+import javax.net.ssl.SSLException
+
+private val LOGGER = LoggerFactory.getLogger("Application")
 
 @Sharable
 class ConnectionCounter : ChannelInboundHandlerAdapter() {
@@ -105,6 +110,18 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
                             ch.pipeline().addLast("burstLimiter", burstLimiter)
                             ch.pipeline().addLast("streamer", ChunkedWriteHandler())
                             ch.pipeline().addLast("handler", Http4kChannelHandler(httpHandler))
+
+                            ch.pipeline().addLast("handle_ssl", object : ChannelInboundHandlerAdapter() {
+                                override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+                                    if (cause is SSLException || (cause is DecoderException && cause.cause is SSLException)) {
+                                        if (LOGGER.isTraceEnabled) {
+                                            LOGGER.trace("Ignored invalid SSL connection")
+                                        }
+                                    } else {
+                                        ctx.fireExceptionCaught(cause)
+                                    }
+                                }
+                            })
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 1000)

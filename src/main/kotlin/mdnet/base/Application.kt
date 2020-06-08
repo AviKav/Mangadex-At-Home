@@ -44,14 +44,21 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
     val client = ApacheClient(responseBodyMode = BodyMode.Stream, client = HttpClients.custom()
         .setDefaultRequestConfig(RequestConfig.custom()
             .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
+            .setConnectTimeout(3000)
+            .setSocketTimeout(3000)
+            .setConnectionRequestTimeout(3000)
             .build())
+        .setMaxConnTotal(10)
         .build())
 
     val app = { dataSaver: Boolean ->
         { request: Request ->
-
             val chapterHash = Path.of("chapterHash")(request)
             val fileName = Path.of("fileName")(request)
+
+            if (LOGGER.isTraceEnabled) {
+                LOGGER.trace("Request for $chapterHash/$fileName received")
+            }
 
             val rc4Bytes = if (dataSaver) {
                 md5Bytes("saver$chapterHash.$fileName")
@@ -109,20 +116,20 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
 
                 if (mdResponse.status != Status.OK) {
                     if (LOGGER.isTraceEnabled) {
-                        LOGGER.trace("Request for $chapterHash/$fileName errored with status {}", mdResponse.status)
+                        LOGGER.trace("Upstream query for $chapterHash/$fileName errored with status {}", mdResponse.status)
                     }
                     mdResponse.close()
                     Response(mdResponse.status)
                 } else {
+                    if (LOGGER.isTraceEnabled) {
+                        LOGGER.trace("Upstream query for $chapterHash/$fileName succeeded")
+                    }
+
                     val contentLength = mdResponse.header("Content-Length")!!
                     val contentType = mdResponse.header("Content-Type")!!
-
-                    if (LOGGER.isTraceEnabled) {
-                        LOGGER.trace("Grabbing DiskLruCache editor instance")
-                    }
-                    val editor = cache.edit(cacheId)
-
                     val lastModified = mdResponse.header("Last-Modified")!!
+
+                    val editor = cache.edit(cacheId)
 
                     // A null editor means that this file is being written to
                     // concurrently so we skip the cache process
