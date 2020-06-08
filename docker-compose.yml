@@ -1,0 +1,10 @@
+version: "3"
+services:
+    mdclient:
+        image: openjdk:11.0.7-jre
+        ports:
+            - 8843:8843
+        volumes:
+            - ".:/app"
+        working_dir: /app
+        command: java -jar mangadex_at_home-1.0.0-rc4-all.jar settings.json
