@@ -23,6 +23,8 @@ import org.http4k.routing.routes
 import org.http4k.server.Http4kServer
 import org.http4k.server.asServer
 import org.slf4j.LoggerFactory
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
 import java.io.InputStream
 import java.security.MessageDigest
 import java.time.ZoneOffset
@@ -37,9 +39,14 @@ import javax.crypto.CipherOutputStream
 import javax.crypto.spec.SecretKeySpec
 
 private val LOGGER = LoggerFactory.getLogger("Application")
+private val THREADS_TO_ALLOCATE = Runtime.getRuntime().availableProcessors() * 30 / 2 ;
 
 fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSettings: ClientSettings, statistics: AtomicReference<Statistics>): Http4kServer {
     val executor = Executors.newCachedThreadPool()
+
+    if (LOGGER.isInfoEnabled) {
+        LOGGER.info("Starting ApacheClient with {} threads", THREADS_TO_ALLOCATE)
+    }
 
     val client = ApacheClient(responseBodyMode = BodyMode.Stream, client = HttpClients.custom()
         .setDefaultRequestConfig(RequestConfig.custom()
@@ -48,8 +55,8 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
             .setSocketTimeout(3000)
             .setConnectionRequestTimeout(3000)
             .build())
-        .setMaxConnTotal(75)
-        .setMaxConnPerRoute(75)
+        .setMaxConnTotal(THREADS_TO_ALLOCATE)
+        .setMaxConnPerRoute(THREADS_TO_ALLOCATE)
         .build())
 
     val app = { dataSaver: Boolean ->
@@ -122,7 +129,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                     }
 
                     respondWithImage(
-                        CipherInputStream(snapshot.getInputStream(0), getRc4(rc4Bytes)),
+                        CipherInputStream(BufferedInputStream(snapshot.getInputStream(0)), getRc4(rc4Bytes)),
                         snapshot.getLength(0).toString(), snapshot.getString(1), snapshot.getString(2)
                     )
                 }
@@ -161,19 +168,19 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
 
                         val tee = CachingInputStream(
                             mdResponse.body.stream,
-                            executor, CipherOutputStream(editor.newOutputStream(0), getRc4(rc4Bytes))
+                            executor, CipherOutputStream(BufferedOutputStream(editor.newOutputStream(0)), getRc4(rc4Bytes))
                         ) {
                             // Note: if neither of the options get called/are in the log
                             // check that tee gets closed and for exceptions in this lambda
                             if (editor.getLength(0) == contentLength.toLong()) {
                                 if (LOGGER.isInfoEnabled) {
-                                    LOGGER.info("Cache download $sanitizedUri committed")
+                                    LOGGER.info("Cache download for $sanitizedUri committed")
                                 }
 
                                 editor.commit()
                             } else {
                                 if (LOGGER.isInfoEnabled) {
-                                    LOGGER.info("Cache download $sanitizedUri aborted")
+                                    LOGGER.info("Cache download for $sanitizedUri aborted")
                                 }
 
                                 editor.abort()

@@ -36,15 +36,6 @@ private const val PKCS_1_PEM_FOOTER = "-----END RSA PRIVATE KEY-----"
 private const val PKCS_8_PEM_HEADER = "-----BEGIN PRIVATE KEY-----"
 private const val PKCS_8_PEM_FOOTER = "-----END PRIVATE KEY-----"
 
-fun getX509Cert(certificate: String): X509Certificate {
-    val targetStream: InputStream = ByteArrayInputStream(certificate.toByteArray())
-    return CertificateFactory.getInstance("X509").generateCertificate(targetStream) as X509Certificate
-}
-
-fun getPrivateKey(privateKey: String): PrivateKey {
-    return loadKey(privateKey)!!
-}
-
 fun loadKey(keyDataString: String): PrivateKey? {
     if (keyDataString.contains(PKCS_1_PEM_HEADER)) {
         // OpenSSL / PKCS#1 Base64 PEM encoded file
