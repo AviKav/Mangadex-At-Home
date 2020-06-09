@@ -24,6 +24,7 @@ import org.http4k.server.Http4kChannelHandler
 import org.http4k.server.Http4kServer
 import org.http4k.server.ServerConfig
 import org.slf4j.LoggerFactory
+import java.io.IOException
 import java.net.InetSocketAddress
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -42,6 +43,7 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
             workerGroup, 1024 * clientSettings.maxBurstRateKibPerSecond, 0, 50) {
             override fun doAccounting(counter: TrafficCounter) {
                 stats.get().bytesSent.getAndAdd(counter.cumulativeWrittenBytes())
+                counter.resetCumulativeTime()
             }
         }
 
@@ -67,6 +69,10 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
                                     if (cause is SSLException || (cause is DecoderException && cause.cause is SSLException)) {
                                         if (LOGGER.isTraceEnabled) {
                                             LOGGER.trace("Ignored invalid SSL connection")
+                                        }
+                                    } else if (cause is IOException && cause.message?.contains("peer") == true) {
+                                        if (LOGGER.isTraceEnabled) {
+                                            LOGGER.trace("User (downloader) closed the connection")
                                         }
                                     } else {
                                         ctx.fireExceptionCaught(cause)

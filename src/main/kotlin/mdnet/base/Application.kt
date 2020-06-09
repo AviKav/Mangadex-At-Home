@@ -48,8 +48,8 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
             .setSocketTimeout(3000)
             .setConnectionRequestTimeout(3000)
             .build())
-        .setMaxConnTotal(10)
-        .setMaxConnPerRoute(10)
+        .setMaxConnTotal(75)
+        .setMaxConnPerRoute(75)
         .build())
 
     val app = { dataSaver: Boolean ->
@@ -57,8 +57,14 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
             val chapterHash = Path.of("chapterHash")(request)
             val fileName = Path.of("fileName")(request)
 
-            if (LOGGER.isTraceEnabled) {
-                LOGGER.trace("Request for ${request.uri} received")
+            val sanitizedUri = if (dataSaver) {
+                "/data-saver"
+            } else {
+                "/data"
+            } + "/$chapterHash/$fileName"
+
+            if (LOGGER.isInfoEnabled) {
+                LOGGER.info("Request for $sanitizedUri received")
             }
 
             val rc4Bytes = if (dataSaver) {
@@ -80,16 +86,18 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                         listOf("public", MaxAgeTtl(Constants.MAX_AGE_CACHE).toHeaderValue()).joinToString(", ")
                     )
                     .header("Timing-Allow-Origin", "https://mangadex.org")
-                    .also {
-                        if(length != null) {
-                            it.body(input, length.toLong())
-                            it.header("Content-Length", length)
+                    .let {
+                        if (length != null) {
+                            it.body(input, length.toLong()).header("Content-Length", length)
                         } else {
-                            it.body(input)
+                            it.body(input).header("Transfer-Encoding", "chunked")
                         }
-
-                        if(lastModified != null) {
+                    }
+                    .let {
+                        if (lastModified != null) {
                             it.header("Last-Modified", lastModified)
+                        } else {
+                            it
                         }
                     }
 
@@ -99,8 +107,8 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
 
                 // our files never change, so it's safe to use the browser cache
                 if (request.header("If-Modified-Since") != null) {
-                    if (LOGGER.isTraceEnabled) {
-                        LOGGER.trace("Request for ${request.uri} cached by browser")
+                    if (LOGGER.isInfoEnabled) {
+                        LOGGER.info("Request for $sanitizedUri cached by browser")
                     }
 
                     val lastModified = snapshot.getString(2)
@@ -109,8 +117,8 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                     Response(Status.NOT_MODIFIED)
                         .header("Last-Modified", lastModified)
                 } else {
-                    if (LOGGER.isTraceEnabled) {
-                        LOGGER.trace("Request for ${request.uri} hit cache")
+                    if (LOGGER.isInfoEnabled) {
+                        LOGGER.info("Request for $sanitizedUri hit cache")
                     }
 
                     respondWithImage(
@@ -120,20 +128,20 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                 }
             } else {
                 statistics.get().cacheMisses.incrementAndGet()
-                if (LOGGER.isTraceEnabled) {
-                    LOGGER.trace("Request for ${request.uri} missed cache")
+                if (LOGGER.isInfoEnabled) {
+                    LOGGER.info("Request for $sanitizedUri missed cache")
                 }
-                val mdResponse = client(Request(Method.GET, "${serverSettings.imageServer}${request.uri}"))
+                val mdResponse = client(Request(Method.GET, "${serverSettings.imageServer}$sanitizedUri"))
 
                 if (mdResponse.status != Status.OK) {
                     if (LOGGER.isTraceEnabled) {
-                        LOGGER.trace("Upstream query for ${request.uri} errored with status {}", mdResponse.status)
+                        LOGGER.trace("Upstream query for $sanitizedUri errored with status {}", mdResponse.status)
                     }
                     mdResponse.close()
                     Response(mdResponse.status)
                 } else {
                     if (LOGGER.isTraceEnabled) {
-                        LOGGER.trace("Upstream query for ${request.uri} succeeded")
+                        LOGGER.trace("Upstream query for $sanitizedUri succeeded")
                     }
 
                     val contentType = mdResponse.header("Content-Type")!!
@@ -146,7 +154,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                     // concurrently so we skip the cache process
                     if (editor != null && contentLength != null && lastModified != null) {
                         if (LOGGER.isTraceEnabled) {
-                            LOGGER.trace("Request for ${request.uri} is being cached and served")
+                            LOGGER.trace("Request for $sanitizedUri is being cached and served")
                         }
                         editor.setString(1, contentType)
                         editor.setString(2, lastModified)
@@ -159,13 +167,13 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                             // check that tee gets closed and for exceptions in this lambda
                             if (editor.getLength(0) == contentLength.toLong()) {
                                 if (LOGGER.isTraceEnabled) {
-                                    LOGGER.trace("Cache download ${request.uri} committed")
+                                    LOGGER.trace("Cache download $sanitizedUri committed")
                                 }
 
                                 editor.commit()
                             } else {
                                 if (LOGGER.isTraceEnabled) {
-                                    LOGGER.trace("Cache download ${request.uri} aborted")
+                                    LOGGER.trace("Cache download $sanitizedUri aborted")
                                 }
 
                                 editor.abort()
@@ -176,7 +184,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                         editor?.abort()
 
                         if (LOGGER.isTraceEnabled) {
-                            LOGGER.trace("Request for ${request.uri} is being served")
+                            LOGGER.trace("Request for $sanitizedUri is being served")
                         }
 
                         respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified)

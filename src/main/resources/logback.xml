@@ -23,8 +23,11 @@
     </appender>
 
     <root level="TRACE">
-        <appender-ref ref="STDOUT"/>
         <appender-ref ref="ASYNC"/>
+    </root>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
     </root>
 
     <logger name="io.netty" level="INFO"/>
