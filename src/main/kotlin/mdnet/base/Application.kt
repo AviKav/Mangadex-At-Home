@@ -166,14 +166,14 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                             // Note: if neither of the options get called/are in the log
                             // check that tee gets closed and for exceptions in this lambda
                             if (editor.getLength(0) == contentLength.toLong()) {
-                                if (LOGGER.isTraceEnabled) {
-                                    LOGGER.trace("Cache download $sanitizedUri committed")
+                                if (LOGGER.isInfoEnabled) {
+                                    LOGGER.info("Cache download $sanitizedUri committed")
                                 }
 
                                 editor.commit()
                             } else {
-                                if (LOGGER.isTraceEnabled) {
-                                    LOGGER.trace("Cache download $sanitizedUri aborted")
+                                if (LOGGER.isInfoEnabled) {
+                                    LOGGER.info("Cache download $sanitizedUri aborted")
                                 }
 
                                 editor.abort()

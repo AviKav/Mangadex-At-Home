@@ -16,6 +16,7 @@
 
 package mdnet.cache;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -654,7 +655,7 @@ public final class DiskLruCache implements Closeable {
 	 */
 	public void delete() throws IOException {
 		close();
-		Util.deleteContents(directory);
+		FileUtils.deleteDirectory(directory);
 	}
 
 	private void validateKey(String key) {
