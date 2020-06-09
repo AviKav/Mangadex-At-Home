@@ -98,10 +98,10 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
                 counter.resetCumulativeTime()
             }
         }
-        private val limiter = ConnectionCounter();
+        private val limiter = ConnectionCounter()
 
         override fun start(): Http4kServer = apply {
-            val (mainCert, chainCert) = getX509Certs(tls.certificate);
+            val (mainCert, chainCert) = getX509Certs(tls.certificate)
             val sslContext = SslContextBuilder
                 .forServer(getPrivateKey(tls.privateKey), mainCert, chainCert)
                 .protocols("TLSv1.3", "TLSv.1.2", "TLSv.1.1", "TLSv.1.0")
