@@ -1,10 +1,8 @@
 package mdnet.base
 
 import io.netty.bootstrap.ServerBootstrap
-import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFactory
 import io.netty.channel.ChannelFuture
-import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.channel.ChannelInitializer
@@ -14,16 +12,10 @@ import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.DecoderException
-import io.netty.handler.codec.http.DefaultFullHttpResponse
-import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpObjectAggregator
-import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http.HttpServerCodec
-import io.netty.handler.codec.http.HttpUtil
-import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.ssl.OptionalSslHandler
 import io.netty.handler.ssl.SslContextBuilder
-import io.netty.handler.ssl.SslHandler
 import io.netty.handler.stream.ChunkedWriteHandler
 import io.netty.handler.traffic.GlobalTrafficShapingHandler
 import io.netty.handler.traffic.TrafficCounter
@@ -33,50 +25,11 @@ import org.http4k.server.Http4kServer
 import org.http4k.server.ServerConfig
 import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import javax.net.ssl.SSLException
 
 private val LOGGER = LoggerFactory.getLogger("Application")
-
-@Sharable
-class ConnectionCounter : ChannelInboundHandlerAdapter() {
-    private val connections = AtomicInteger()
-
-    override fun channelActive(ctx: ChannelHandlerContext) {
-        val sslHandler = ctx.pipeline()[SslHandler::class.java]
-
-        if (sslHandler != null) {
-            sslHandler.handshakeFuture().addListener {
-                handleConnection(ctx)
-            }
-        } else {
-            handleConnection(ctx)
-        }
-    }
-
-    private fun handleConnection(ctx: ChannelHandlerContext) {
-        if (connections.incrementAndGet() <= Constants.MAX_CONCURRENT_CONNECTIONS) {
-            super.channelActive(ctx)
-        } else {
-            val response = Unpooled.copiedBuffer(Constants.OVERLOADED_MESSAGE, StandardCharsets.UTF_8)
-            val res =
-                DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.SERVICE_UNAVAILABLE, response)
-            res.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8")
-            HttpUtil.setContentLength(res, response.readableBytes().toLong())
-
-            ctx.writeAndFlush(res)
-            ctx.close()
-        }
-    }
-
-    override fun channelInactive(ctx: ChannelHandlerContext) {
-        super.channelInactive(ctx)
-        connections.decrementAndGet()
-    }
-}
 
 class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings: ClientSettings, private val stats: AtomicReference<Statistics>) : ServerConfig {
     override fun toServer(httpHandler: HttpHandler): Http4kServer = object : Http4kServer {
@@ -85,7 +38,6 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
         private lateinit var closeFuture: ChannelFuture
         private lateinit var address: InetSocketAddress
 
-        private val counter = ConnectionCounter()
         private val burstLimiter = object : GlobalTrafficShapingHandler(
             workerGroup, 1024 * clientSettings.maxBurstRateKibPerSecond, 0, 50) {
             override fun doAccounting(counter: TrafficCounter) {
@@ -105,7 +57,6 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
                             ch.pipeline().addLast("ssl", OptionalSslHandler(sslContext))
 
                             ch.pipeline().addLast("codec", HttpServerCodec())
-                            ch.pipeline().addLast("counter", counter)
                             ch.pipeline().addLast("aggregator", HttpObjectAggregator(65536))
                             ch.pipeline().addLast("burstLimiter", burstLimiter)
                             ch.pipeline().addLast("streamer", ChunkedWriteHandler())

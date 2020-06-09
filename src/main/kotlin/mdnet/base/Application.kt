@@ -49,6 +49,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
             .setConnectionRequestTimeout(3000)
             .build())
         .setMaxConnTotal(10)
+        .setMaxConnPerRoute(10)
         .build())
 
     val app = { dataSaver: Boolean ->
@@ -57,7 +58,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
             val fileName = Path.of("fileName")(request)
 
             if (LOGGER.isTraceEnabled) {
-                LOGGER.trace("Request for $chapterHash/$fileName received")
+                LOGGER.trace("Request for ${request.uri} received")
             }
 
             val rc4Bytes = if (dataSaver) {
@@ -89,7 +90,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                 // our files never change, so it's safe to use the browser cache
                 if (request.header("If-Modified-Since") != null) {
                     if (LOGGER.isTraceEnabled) {
-                        LOGGER.trace("Request for $chapterHash/$fileName cached by browser")
+                        LOGGER.trace("Request for ${request.uri} cached by browser")
                     }
 
                     val lastModified = snapshot.getString(2)
@@ -99,7 +100,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                         .header("Last-Modified", lastModified)
                 } else {
                     if (LOGGER.isTraceEnabled) {
-                        LOGGER.trace("Request for $chapterHash/$fileName hit cache")
+                        LOGGER.trace("Request for ${request.uri} hit cache")
                     }
 
                     respondWithImage(
@@ -110,32 +111,32 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
             } else {
                 statistics.get().cacheMisses.incrementAndGet()
                 if (LOGGER.isTraceEnabled) {
-                    LOGGER.trace("Request for $chapterHash/$fileName missed cache")
+                    LOGGER.trace("Request for ${request.uri} missed cache")
                 }
                 val mdResponse = client(Request(Method.GET, "${serverSettings.imageServer}${request.uri}"))
 
                 if (mdResponse.status != Status.OK) {
                     if (LOGGER.isTraceEnabled) {
-                        LOGGER.trace("Upstream query for $chapterHash/$fileName errored with status {}", mdResponse.status)
+                        LOGGER.trace("Upstream query for ${request.uri} errored with status {}", mdResponse.status)
                     }
                     mdResponse.close()
                     Response(mdResponse.status)
                 } else {
                     if (LOGGER.isTraceEnabled) {
-                        LOGGER.trace("Upstream query for $chapterHash/$fileName succeeded")
+                        LOGGER.trace("Upstream query for ${request.uri} succeeded")
                     }
 
-                    val contentLength = mdResponse.header("Content-Length")!!
                     val contentType = mdResponse.header("Content-Type")!!
-                    val lastModified = mdResponse.header("Last-Modified")!!
+                    val contentLength = mdResponse.header("Content-Length")
+                    val lastModified = mdResponse.header("Last-Modified")
 
                     val editor = cache.edit(cacheId)
 
                     // A null editor means that this file is being written to
                     // concurrently so we skip the cache process
-                    if (editor != null) {
+                    if (editor != null && contentLength != null && lastModified != null) {
                         if (LOGGER.isTraceEnabled) {
-                            LOGGER.trace("Request for $chapterHash/$fileName is being cached and served")
+                            LOGGER.trace("Request for ${request.uri} is being cached and served")
                         }
                         editor.setString(1, contentType)
                         editor.setString(2, lastModified)
@@ -148,13 +149,13 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                             // check that tee gets closed and for exceptions in this lambda
                             if (editor.getLength(0) == contentLength.toLong()) {
                                 if (LOGGER.isTraceEnabled) {
-                                    LOGGER.trace("Cache download $chapterHash/$fileName committed")
+                                    LOGGER.trace("Cache download ${request.uri} committed")
                                 }
 
                                 editor.commit()
                             } else {
                                 if (LOGGER.isTraceEnabled) {
-                                    LOGGER.trace("Cache download $chapterHash/$fileName aborted")
+                                    LOGGER.trace("Cache download ${request.uri} aborted")
                                 }
 
                                 editor.abort()
@@ -162,11 +163,13 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                         }
                         respondWithImage(tee, contentLength, contentType, lastModified)
                     } else {
+                        editor?.abort()
+
                         if (LOGGER.isTraceEnabled) {
-                            LOGGER.trace("Request for $chapterHash/$fileName is being served")
+                            LOGGER.trace("Request for ${request.uri} is being served")
                         }
 
-                        respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified)
+                        respondWithImage(mdResponse.body.stream, contentLength ?: "", contentType, lastModified ?: "")
                     }
                 }
             }
@@ -180,8 +183,8 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
         .then(addCommonHeaders())
         .then(
             routes(
-                "/data/{chapterHash}/{fileName}" bind Method.GET to app(false)
-//                "/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true)
+                "/data/{chapterHash}/{fileName}" bind Method.GET to app(false),
+                "/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true)
             )
         )
         .asServer(Netty(serverSettings.tls, clientSettings, statistics))
