@@ -104,7 +104,7 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
             val (mainCert, chainCert) = getX509Certs(tls.certificate)
             val sslContext = SslContextBuilder
                 .forServer(getPrivateKey(tls.privateKey), mainCert, chainCert)
-                .protocols("TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1.0")
+                .protocols("TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1")
                 .build()
 
             val bootstrap = ServerBootstrap()
