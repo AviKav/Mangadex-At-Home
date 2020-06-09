@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.mangadex"
-version = "1.0.0-rc6"
+version = "1.0.0-rc7"
 mainClassName = "mdnet.base.MangaDexClient"
 
 repositories {

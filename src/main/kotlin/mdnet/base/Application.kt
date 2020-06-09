@@ -71,17 +71,27 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
             statistics.get().requestsServed.incrementAndGet()
 
             // Netty doesn't do Content-Length or Content-Type, so we have the pleasure of doing that ourselves
-            fun respondWithImage(input: InputStream, length: String, type: String, lastModified: String): Response =
-                Response(Status.OK).header("Content-Length", length)
+            fun respondWithImage(input: InputStream, length: String?, type: String, lastModified: String?): Response =
+                Response(Status.OK)
                     .header("Content-Type", type)
                     .header("X-Content-Type-Options", "nosniff")
-                    .header("Last-Modified", lastModified)
                     .header(
                         "Cache-Control",
                         listOf("public", MaxAgeTtl(Constants.MAX_AGE_CACHE).toHeaderValue()).joinToString(", ")
                     )
                     .header("Timing-Allow-Origin", "https://mangadex.org")
-                    .body(input, length.toLong())
+                    .also {
+                        if(length != null) {
+                            it.body(input, length.toLong())
+                            it.header("Content-Length", length)
+                        } else {
+                            it.body(input)
+                        }
+
+                        if(lastModified != null) {
+                            it.header("Last-Modified", lastModified)
+                        }
+                    }
 
             val snapshot = cache.get(cacheId)
             if (snapshot != null) {
@@ -169,7 +179,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                             LOGGER.trace("Request for ${request.uri} is being served")
                         }
 
-                        respondWithImage(mdResponse.body.stream, contentLength ?: "", contentType, lastModified ?: "")
+                        respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified)
                     }
                 }
             }
