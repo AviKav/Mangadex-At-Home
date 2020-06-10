@@ -209,7 +209,9 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
         .then(
             routes(
                 "/data/{chapterHash}/{fileName}" bind Method.GET to app(false),
-                "/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true)
+                "/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true),
+                "/{token}/data/{chapterHash}/{fileName}" bind Method.GET to app(false),
+                "/{token}/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true)
             )
         )
         .asServer(Netty(serverSettings.tls, clientSettings, statistics))
@@ -228,7 +230,7 @@ private fun addCommonHeaders(): Filter {
         { request: Request ->
             val response = next(request)
             response.header("Date", HTTP_TIME_FORMATTER.format(ZonedDateTime.now(ZoneOffset.UTC)))
-                .header("Server", "Mangadex@Home Node")
+                .header("Server", "Mangadex@Home Node ${Constants.CLIENT_VERSION} (${Constants.CLIENT_BUILD})")
         }
     }
 }

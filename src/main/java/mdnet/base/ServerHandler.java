@@ -41,6 +41,7 @@ public class ServerHandler {
 		params.put("secret", settings.getClientSecret());
 		params.put("port", settings.getClientPort());
 		params.put("disk_space", settings.getMaxCacheSizeMib() * 1024 * 1024 /* MiB to bytes */);
+		params.put("build_version", Constants.CLIENT_BUILD);
 
 		HttpResponse<ServerSettings> response = Unirest.post(SERVER_ADDRESS + "ping")
 				.header("Content-Type", "application/json").body(new JSONObject(params)).asObject(ServerSettings.class);
@@ -63,6 +64,7 @@ public class ServerHandler {
 		params.put("secret", settings.getClientSecret());
 		params.put("port", settings.getClientPort());
 		params.put("disk_space", settings.getMaxCacheSizeMib() * 1024 * 1024 /* MiB to bytes */);
+		params.put("build_version", Constants.CLIENT_BUILD);
 		params.put("tls_created_at", old.getTls().getCreatedAt());
 
 		HttpResponse<ServerSettings> response = Unirest.post(SERVER_ADDRESS + "ping")
