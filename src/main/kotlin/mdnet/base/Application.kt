@@ -39,7 +39,7 @@ import javax.crypto.CipherOutputStream
 import javax.crypto.spec.SecretKeySpec
 
 private val LOGGER = LoggerFactory.getLogger("Application")
-private val THREADS_TO_ALLOCATE = Runtime.getRuntime().availableProcessors() * 30
+private val THREADS_TO_ALLOCATE = 65535 // Have it at the maximum open sockets a user can have in most modern OSes. No reason to limit this, just limit it at the Netty side.
 
 fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSettings: ClientSettings, statistics: AtomicReference<Statistics>): Http4kServer {
     val executor = Executors.newCachedThreadPool()
