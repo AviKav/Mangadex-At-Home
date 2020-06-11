@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2020-06-12] Added CHANGELOG.md by [@lflare].
 
 ### Changed
+- [2020-06-12] Raised ApacheClient socket limit to `2**18` by [@lflare].
 
 ### Deprecated
 
