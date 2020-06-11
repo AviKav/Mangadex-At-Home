@@ -185,8 +185,8 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
 
                                 editor.abort()
                             }
-                            mdResponse.close()
                         }
+                        mdResponse.close()
                         respondWithImage(tee, contentLength, contentType, lastModified)
                     } else {
                         editor?.abort()
@@ -194,7 +194,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                         if (LOGGER.isTraceEnabled) {
                             LOGGER.trace("Request for $sanitizedUri is being served")
                         }
-
+                        mdResponse.close()
                         respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified)
                     }
                 }
