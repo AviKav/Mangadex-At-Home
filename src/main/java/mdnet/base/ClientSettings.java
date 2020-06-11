@@ -57,7 +57,7 @@ public final class ClientSettings {
 	public String toString() {
 		return "ClientSettings{" + "maxCacheSizeMib=" + maxCacheSizeMib + ", maxBandwidthMibPerHour="
 				+ maxBandwidthMibPerHour + ", maxBurstRateKibPerSecond=" + maxBurstRateKibPerSecond + ", clientPort="
-				+ clientPort + ", clientSecret='" + "<hidden>" + '\'' + ", threadsPerCPU=" + threadsPerCpu + "}";
+				+ clientPort + ", clientSecret='" + clientSecret + '\'' + ", threadsPerCpu=" + threadsPerCpu + '}';
 	}
 
 	public static boolean isSecretValid(String clientSecret) {
