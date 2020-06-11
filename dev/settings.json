@@ -3,5 +3,6 @@
   "max_cache_size_mib": 2048,
   "client_port": 8080,
   "max_burst_rate_kib_per_second": 100,
-  "max_bandwidth_mib_per_hour": 1
+  "max_bandwidth_mib_per_hour": 1,
+  "threads_per_cpu": 32
 }
