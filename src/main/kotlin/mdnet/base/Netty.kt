@@ -38,8 +38,8 @@ private val LOGGER = LoggerFactory.getLogger("Application")
 
 class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings: ClientSettings, private val stats: AtomicReference<Statistics>) : ServerConfig {
     override fun toServer(httpHandler: HttpHandler): Http4kServer = object : Http4kServer {
-        private val masterGroup = NioEventLoopGroup()
-        private val workerGroup = NioEventLoopGroup()
+        private val masterGroup = NioEventLoopGroup(Runtime.getRuntime().availableProcessors() * 30 / 2)
+        private val workerGroup = NioEventLoopGroup(Runtime.getRuntime().availableProcessors() * 30 / 2)
         private lateinit var closeFuture: ChannelFuture
         private lateinit var address: InetSocketAddress
 
