@@ -1,0 +1,145 @@
+/*Content holder positions*/
+
+#pageBar {
+}
+
+#connection {
+    border-radius: 10px;
+}
+
+#consoleLatest {
+    border-radius: 10px;
+}
+
+#sideBar {
+}
+
+.sideSelected {
+    border-radius: 10px;
+}
+
+.sideOption:hover {
+    border-radius: 10px;
+}
+
+#expSide {
+}
+
+#dash {
+}
+
+#cons {
+}
+
+#opt {
+}
+
+#content {
+}
+
+.contentHeader {
+    border-radius: 10px;
+}
+
+/*Main dashboard positions*/
+
+#dashb {
+}
+
+#nDat {
+
+}
+
+.numerical_data {
+    border-radius: 10px;
+}
+
+#gDat {
+    border-radius: 10px;
+}
+
+.line_graph_data {
+    border-radius: 10px;
+}
+
+/*Console and options positions*/
+
+#console {
+}
+
+#buttonBoard {
+}
+
+#liveConsole {
+    border-radius: 10px;
+}
+
+#console_input {
+}
+
+#console_text {
+    border-radius: 10px;
+}
+
+/*Web option positions*/
+#dashOptions {
+}
+
+#options {
+}
+
+#apply {
+    border-radius: 10px;
+}
+
+.option {
+}
+
+.optionLabel {
+
+}
+
+.optionInput {
+}
+
+/*misc modifications*/
+
+.input {
+    padding-left: 5px;
+    border-radius: 10px;
+}
+
+.slider {
+    border-radius: 30px;
+    width: 60px;
+    height: 16px;
+}
+
+.slider:before {
+    border-radius: 7px;
+    height: 14px;
+    width: 28px;
+    left: 3px;
+    bottom: 1px;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/*Webkit modifications*/
+
+::-webkit-scrollbar {
+}
+
+::-webkit-scrollbar-button {
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+}

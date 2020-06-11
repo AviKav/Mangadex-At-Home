@@ -1,15 +1,15 @@
 package mdnet.base;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import mdnet.base.settings.ClientSettings;
 import mdnet.cache.DiskLruCache;
+import mdnet.webui.WebConsole;
 import org.http4k.server.Http4kServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -171,36 +171,63 @@ public class MangaDexClient {
 				+ ") initializing\n");
 		System.out.println("Copyright (c) 2020, MangaDex Network");
 
+		String file = "settings.json";
+		if (args.length == 1) {
+			file = args[0];
+		} else if (args.length != 0) {
+			MangaDexClient.dieWithError("Expected one argument: path to config file, or nothing");
+		}
+
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		ClientSettings settings;
+
 		try {
-			String file = "settings.json";
-			if (args.length == 1) {
-				file = args[0];
-			} else if (args.length != 0) {
-				MangaDexClient.dieWithError("Expected one argument: path to config file, or nothing");
+			settings = gson.fromJson(new FileReader(file), ClientSettings.class);
+		} catch (FileNotFoundException ignored) {
+			settings = new ClientSettings();
+			LOGGER.warn("Settings file {} not found, generating file", file);
+			try (FileWriter writer = new FileWriter(file)) {
+				writer.write(gson.toJson(settings));
+			} catch (IOException e) {
+				MangaDexClient.dieWithError(e);
 			}
+		}
 
-			ClientSettings settings = new Gson().fromJson(new FileReader(file), ClientSettings.class);
+		if (!ClientSettings.isSecretValid(settings.getClientSecret()))
+			MangaDexClient.dieWithError("Config Error: API Secret is invalid, must be 52 alphanumeric characters");
 
-			if (!ClientSettings.isSecretValid(settings.getClientSecret()))
-				MangaDexClient.dieWithError("Config Error: API Secret is invalid, must be 52 alphanumeric characters");
+		if (settings.getClientPort() == 0) {
+			MangaDexClient.dieWithError("Config Error: Invalid port number");
+		}
 
-			if (settings.getClientPort() == 0) {
-				MangaDexClient.dieWithError("Config Error: Invalid port number");
-			}
+		if (settings.getMaxCacheSizeMib() < 1024) {
+			MangaDexClient.dieWithError("Config Error: Invalid max cache size, must be >= 1024 MiB (1GiB)");
+		}
 
-			if (settings.getMaxCacheSizeMib() < 1024) {
-				MangaDexClient.dieWithError("Config Error: Invalid max cache size, must be >= 1024 MiB (1GiB)");
-			}
+		if (LOGGER.isInfoEnabled()) {
+			LOGGER.info("Client settings loaded: {}", settings);
+		}
 
-			if (LOGGER.isInfoEnabled()) {
-				LOGGER.info("Client settings loaded: {}", settings);
-			}
+		MangaDexClient client = new MangaDexClient(settings);
+		Runtime.getRuntime().addShutdownHook(new Thread(client::shutdown));
+		client.runLoop();
 
-			MangaDexClient client = new MangaDexClient(settings);
-			Runtime.getRuntime().addShutdownHook(new Thread(client::shutdown));
-			client.runLoop();
-		} catch (FileNotFoundException e) {
-			MangaDexClient.dieWithError(e);
+		if (settings.getWebSettings() != null) {
+			// java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+			// System.setOut(new java.io.PrintStream(out));
+			// TODO: system.out redirect
+			ClientSettings finalSettings = settings;
+			new Thread(() -> {
+				WebConsole webConsole = new WebConsole(finalSettings.getWebSettings().getClientWebsocketPort()) {
+					@Override
+					protected void parseMessage(String message) {
+						System.out.println(message);
+						// TODO: something happens here
+						// the message should be formatted in json
+					}
+				};
+				// TODO: webConsole.sendMessage(t,m) whenever system.out is written to
+			}).start();
 		}
 	}
 
