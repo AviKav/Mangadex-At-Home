@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package mdnet.cache;
 
 import org.apache.commons.io.FileUtils;
@@ -68,9 +67,9 @@ import java.util.regex.Pattern;
  * so space-sensitive applications should set a conservative limit.
  *
  * <p>
- * Clients call {@link #edit} to create or update the values of an entry. An
+ * Clients call {@link #editImpl} to create or update the values of an entry. An
  * entry may have only one editor at one time; if a value is not available to be
- * edited then {@link #edit} will return null.
+ * edited then {@link #editImpl} will return null.
  * <ul>
  * <li>When an entry is being <strong>created</strong> it is necessary to supply
  * a full set of values; the empty value should be used as a placeholder if
@@ -78,7 +77,7 @@ import java.util.regex.Pattern;
  * <li>When an entry is being <strong>edited</strong>, it is not necessary to
  * supply data for every value; values default to their previous value.
  * </ul>
- * Every {@link #edit} call must be matched by a call to {@link Editor#commit}
+ * Every {@link #editImpl} call must be matched by a call to {@link Editor#commit}
  * or {@link Editor#abort}. Committing is atomic: a read observes the full set
  * of values as they were before or after the commit, but never a mix of values.
  *
@@ -104,8 +103,10 @@ public final class DiskLruCache implements Closeable {
 	private static final String MAGIC = "libcore.io.DiskLruCache";
 	private static final String VERSION_1 = "1";
 	private static final long ANY_SEQUENCE_NUMBER = -1;
-	private static final String STRING_KEY_PATTERN = "[a-z0-9_-]{1,120}";
-	public static final Pattern LEGAL_KEY_PATTERN = Pattern.compile(STRING_KEY_PATTERN);
+
+	public static final Pattern LEGAL_KEY_PATTERN = Pattern.compile("[a-z0-9_-]{1,120}");
+	public static final Pattern UNSAFE_LEGAL_KEY_PATTERN = Pattern.compile("[a-z0-9_-][\\/a-z0-9_-]{0,119}");
+
 	private static final String CLEAN = "CLEAN";
 	private static final String DIRTY = "DIRTY";
 	private static final String REMOVE = "REMOVE";
@@ -401,9 +402,23 @@ public final class DiskLruCache implements Closeable {
 	 * exist is not currently readable. If a value is returned, it is moved to the
 	 * head of the LRU queue.
 	 */
-	public synchronized Snapshot get(String key) throws IOException {
-		checkNotClosed();
+	public Snapshot get(String key) throws IOException {
 		validateKey(key);
+		return getImpl(key);
+	}
+
+	/**
+	 * Returns a snapshot of the entry named {@code key}, or null if it doesn't
+	 * exist is not currently readable. If a value is returned, it is moved to the
+	 * head of the LRU queue. Unsafe as it allows arbitrary directories to be accessed!
+	 */
+	public Snapshot getUnsafe(String key) throws IOException {
+		validateUnsafeKey(key);
+		return getImpl(key);
+	}
+
+	public synchronized Snapshot getImpl(String key) throws IOException {
+		checkNotClosed();
 		Entry entry = lruEntries.get(key);
 		if (entry == null) {
 			return null;
@@ -450,12 +465,21 @@ public final class DiskLruCache implements Closeable {
 	 * in progress.
 	 */
 	public Editor edit(String key) throws IOException {
-		return edit(key, ANY_SEQUENCE_NUMBER);
+		validateKey(key);
+		return editImpl(key, ANY_SEQUENCE_NUMBER);
 	}
 
-	private synchronized Editor edit(String key, long expectedSequenceNumber) throws IOException {
+	/**
+	 * Returns an editor for the entry named {@code key}, or null if another edit is
+	 * in progress. Unsafe as it allows arbitrary directories to be accessed!
+	 */
+	public Editor editUnsafe(String key) throws IOException {
+		validateUnsafeKey(key);
+		return editImpl(key, ANY_SEQUENCE_NUMBER);
+	}
+
+	private synchronized Editor editImpl(String key, long expectedSequenceNumber) throws IOException {
 		checkNotClosed();
-		validateKey(key);
 		Entry entry = lruEntries.get(key);
 		if (expectedSequenceNumber != ANY_SEQUENCE_NUMBER
 				&& (entry == null || entry.sequenceNumber != expectedSequenceNumber)) {
@@ -580,9 +604,24 @@ public final class DiskLruCache implements Closeable {
 	 *
 	 * @return true if an entry was removed.
 	 */
-	public synchronized boolean remove(String key) throws IOException {
-		checkNotClosed();
+	public boolean remove(String key) throws IOException {
 		validateKey(key);
+		return removeImpl(key);
+	}
+
+	/**
+	 * Drops the entry for {@code key} if it exists and can be removed. Entries
+	 * actively being edited cannot be removed. Unsafe as it allows arbitrary directories to be accessed!
+	 *
+	 * @return true if an entry was removed.
+	 */
+	public boolean removeUnsafe(String key) throws IOException {
+		validateUnsafeKey(key);
+		return removeImpl(key);
+	}
+
+	private synchronized boolean removeImpl(String key) throws IOException {
+		checkNotClosed();
 		Entry entry = lruEntries.get(key);
 		if (entry == null || entry.currentEditor != null) {
 			return false;
@@ -661,7 +700,14 @@ public final class DiskLruCache implements Closeable {
 	private void validateKey(String key) {
 		Matcher matcher = LEGAL_KEY_PATTERN.matcher(key);
 		if (!matcher.matches()) {
-			throw new IllegalArgumentException("keys must match regex " + STRING_KEY_PATTERN + ": \"" + key + "\"");
+			throw new IllegalArgumentException("keys must match regex " + LEGAL_KEY_PATTERN + ": \"" + key + "\"");
+		}
+	}
+
+	private void validateUnsafeKey(String key) {
+		Matcher matcher = UNSAFE_LEGAL_KEY_PATTERN.matcher(key);
+		if (!matcher.matches()) {
+			throw new IllegalArgumentException("keys must match regex " + UNSAFE_LEGAL_KEY_PATTERN + ": \"" + key + "\"");
 		}
 	}
 
@@ -684,7 +730,7 @@ public final class DiskLruCache implements Closeable {
 		 * changed since this snapshot was created or if another edit is in progress.
 		 */
 		public Editor edit() throws IOException {
-			return DiskLruCache.this.edit(key, sequenceNumber);
+			return DiskLruCache.this.editImpl(key, sequenceNumber);
 		}
 
 		/** Returns the unbuffered stream with the value for {@code index}. */
@@ -798,7 +844,7 @@ public final class DiskLruCache implements Closeable {
 					outputStream = new FileOutputStream(dirtyFile);
 				} catch (FileNotFoundException e) {
 					// Attempt to recreate the cache directory.
-					directory.mkdirs();
+					dirtyFile.getParentFile().mkdirs();
 					try {
 						outputStream = new FileOutputStream(dirtyFile);
 					} catch (FileNotFoundException e2) {
