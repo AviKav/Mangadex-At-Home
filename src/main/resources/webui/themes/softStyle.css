@@ -51,7 +51,7 @@
 }
 
 .numerical_data {
-    border-radius: 10px;
+    border-radius: 0 0 10px 10px;
 }
 
 #gDat {
@@ -59,7 +59,7 @@
 }
 
 .line_graph_data {
-    border-radius: 10px;
+    border-radius: 0 0 10px 10px;
 }
 
 /*Console and options positions*/
@@ -143,3 +143,21 @@ input:checked + .slider:before {
 
 ::-webkit-scrollbar-track {
 }
+
+/*Golden Layout Overrides*/
+
+.lm_header {
+    border-radius: 10px 10px 0 0;
+}
+
+.lm_tabs:first-child .lm_tab{
+    border-top-left-radius: 10px;
+}
+.lm_tabs:first-child .lm_tab ~ .lm_tab{
+    border-top-left-radius: 0;
+}
+
+.lm_splitter {
+    border-radius: 10px;
+}
+

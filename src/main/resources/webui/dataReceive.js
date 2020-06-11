@@ -8,13 +8,160 @@ let maxConsoleLines;
 let graphTimeFrame;
 let showConsoleLatest;
 let doAnimations;
+let lockDash;
 //non-option var
 let statRequest;
 //stat vars
 
+//dockable things
+let config = {
+    settings: {
+        hasHeaders: true,
+        constrainDragToContainer: false,
+        reorderEnabled: true,
+        selectionEnabled: false,
+        popoutWholeStack: false,
+        blockedPopoutsThrowError: true,
+        closePopoutsOnUnload: true,
+        showPopoutIcon: false,
+        showMaximiseIcon: false,
+        showCloseIcon: lockDash
+    },
+    dimensions: {
+        borderWidth: 20,
+        minItemHeight: 10,
+        minItemWidth: 10,
+        headerHeight: 20,
+        dragProxyWidth: 300,
+        dragProxyHeight: 200
+    },
+    labels: {
+        close: 'close',
+        maximise: 'maximise',
+        minimise: 'minimise',
+        popout: 'open in new window'
+    },
+    content: [{
+        type: 'column',
+        content: [{
+            type: 'row',
+            content: [{
+                type: 'column',
+                content: [{
+                    type: 'row',
+                    content: [{
+                        type: 'component',
+                        componentName: 'Hit Percent',
+                        width: 50,
+                        componentState: {label: 'F'}
+                    }, {
+                        type: 'component',
+                        componentName: 'Hits',
+                        componentState: {label: 'B'}
+                    }, {
+                        type: 'component',
+                        componentName: 'Misses',
+                        componentState: {label: 'C'}
+                    }]
+                }, {
+                    type: 'row',
+                    content: [{
+                        type: 'component',
+                        componentName: 'Requests Served',
+                        componentState: {label: 'B'}
+                    }, {
+                        type: 'component',
+                        componentName: 'Bytes Sent',
+                        componentState: {label: 'C'}
+                    }]
+                }]
+            }, {
+                type: 'column',
+                content: [{
+                    type: 'component',
+                    componentName: 'Network Utilization',
+                    componentState: {label: 'B'}
+                }, {
+                    type: 'component',
+                    componentName: 'CPU Utilization',
+                    componentState: {label: 'C'}
+                }, {
+                    type: 'component',
+                    componentName: 'Disk Utilization',
+                    componentState: {label: 'D'}
+                }, {
+                    type: 'component',
+                    componentName: 'RAM Utilization',
+                    componentState: {label: 'E'}
+                }]
+            }]
+        }, {
+            type: 'row',
+            height: 20,
+            content: [{
+                type: 'component',
+                componentName: 'Cache Size',
+                componentState: {label: 'F'}
+            }]
+        }]
+    }]
+};
+let dashlayout;
+
+function loadDash() {
+    let savedState = localStorage.getItem("dashState");
+    if (savedState !== null) {
+        dashlayout = new GoldenLayout(JSON.parse(savedState), $("#dashboard"));
+    } else {
+    dashlayout = new GoldenLayout(config, $("#dashboard"));
+    }
+    //graphs
+    dashlayout.registerComponent('Network Utilization', function (container, state) {
+        container.getElement().append('<div id="networkUtil" class="line_graph_data"></div>');
+    });
+    dashlayout.registerComponent('CPU Utilization', function (container, state) {
+        container.getElement().append('<div id="cpuUtil" class="line_graph_data"></div>');
+    });
+    dashlayout.registerComponent('Disk Utilization', function (container, state) {
+        container.getElement().append('<div id="discUtil" class="line_graph_data"></div>');
+    });
+    dashlayout.registerComponent('Cache Size', function (container, state) {
+
+        container.getElement().append('<div id="cacheSize" class="line_graph_data"></div>');
+    });
+    dashlayout.registerComponent('RAM Utilization', function (container, state) {
+        container.getElement().append(' <div id="ramUtil" class="line_graph_data"></div>');
+    });
+    // numbers
+    dashlayout.registerComponent('Hits', function (container, state) {
+        container.getElement().append('<div id="hits" class="numerical_data"></div>');
+    });
+    dashlayout.registerComponent('Misses', function (container, state) {
+        container.getElement().append('<div id="misses" class="numerical_data"></div>');
+    });
+    dashlayout.registerComponent('Requests Served', function (container, state) {
+        container.getElement().append('<div id="reqServed" class="numerical_data"></div>');
+    });
+    dashlayout.registerComponent('Bytes Sent', function (container, state) {
+        container.getElement().append('<div id="bytesSent" class="numerical_data"></div>');
+    });
+    dashlayout.registerComponent('Hit Percent', function (container, state) {
+        container.getElement().append('<div id="hitPercent" class="numerical_data"></div>');
+    });
+
+    dashlayout.init();
+    dashlayout.on('stateChanged', function () {
+        localStorage.setItem('dashState', JSON.stringify(dashlayout.toConfig()));
+    });
+}
 
 jQuery(document).ready(function () {
+    loadDash();
     loadOptions();
+    $(window).resize(function () {
+        let dash = $("#dashboard");
+        dashlayout.updateSize(dash.width(), dash.height());
+    });
     $("#theme").attr("href", "themes/" + theme + ".css");
     $("#style").attr("href", "themes/" + style + ".css");
     if (doAnimations) {
@@ -62,7 +209,8 @@ function loadOptions() {
             max_console_lines: 1000,
             show_console_latest: false,
             graph_time_frame: 30000,
-            do_animations: true
+            do_animations: true,
+            lock_dashboard: true
         }
     }
     theme = options.theme;
@@ -74,6 +222,7 @@ function loadOptions() {
     graphTimeFrame = options.graph_time_frame;
     showConsoleLatest = options.show_console_latest;
     doAnimations = options.do_animations;
+    lockDash = options.lock_dashboard;
     $("#dataRefreshRate").val(refreshRate);
     $("#port").val(port);
     $("#ip").val(ip);
@@ -83,10 +232,11 @@ function loadOptions() {
     $("#styleIn").val(style);
     $("#newestconsole").prop("checked", showConsoleLatest);
     $("#doAnimations").prop("checked", doAnimations);
+    $("#lockDash").prop("checked", lockDash)
 }
 
 function resetOptions() {
-    if (confirm("Do you really want to reset to defaults?")) {
+    if (confirm("Do you really want to reset all customizations to defaults?")) {
         $("#dataRefreshRate").val(5000);
         $("#port").val(33333);
         $("#ip").val("localhost");
@@ -96,6 +246,12 @@ function resetOptions() {
         $("#styleIn").val("sharpStyle");
         $("#newestconsole").prop("checked", false);
         $("#doAnimations").prop("checked", true);
+        dashlayout.destroy();
+        localStorage.removeItem('dashState');
+        loadDash();
+        selectTab('dash', 'dashb');
+        let dash = $("#dashboard");
+        dashlayout.updateSize(dash.width(), dash.height());
         applyOptions()
     }
 }
@@ -110,7 +266,8 @@ function applyOptions() {
         max_console_lines: parseInt($("#maxConsoleLines").val()),
         show_console_latest: $("#newestconsole").prop("checked"),
         graph_time_frame: parseInt($("#graphTimeFrame").val()),
-        do_animations: $("#doAnimations").prop("checked")
+        do_animations: $("#doAnimations").prop("checked"),
+        lock_dashboard: $("#lockDash").prop("checked")
     };
     if (options.do_animations !== doAnimations) {
         doAnimations = options.do_animations;
@@ -215,6 +372,19 @@ function applyOptions() {
             }
         ).prop("checked", showConsoleLatest);
     }
+    if (options.lock_dashboard !== lockDash) {
+        lockDash = options.lock_dashboard;
+        config.settings.showCloseIcon = !lockDash;
+        // localStorage.setItem('dashState', JSON.stringify(dashlayout.toConfig()));
+        // $("#dashboard").empty();
+        // loadDash();
+        $("#lockDashcb").addClass("updated").on(
+            "animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd",
+            function () {
+                $(this).removeClass("updated");
+            }
+        ).prop("checked", showConsoleLatest);
+    }
     localStorage.setItem("options", JSON.stringify(options));
 }
 
@@ -266,8 +436,8 @@ function expSide() {
 
 function applyTheme(t) {
     if (doAnimations)
-        $("*").each(function () {
-            if (!$(this).attr("hidden"))
+        $(document.body).children().each(function () {
+            if (!($(this).attr("hidden")))
                 $(this).addClass("tempsmooth").on(
                     "webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend",
                     function () {
@@ -280,8 +450,8 @@ function applyTheme(t) {
 
 function applyStyle(s) {
     if (doAnimations)
-        $("*").each(function () {
-            if (!$(this).attr("hidden"))
+        $(document.body).children().each(function () {
+            if (!($(this).attr("hidden")))
                 $(this).addClass("tempsmooth").on(
                     "webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend",
                     function () {
