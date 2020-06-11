@@ -45,7 +45,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
     val executor = Executors.newCachedThreadPool()
 
     if (LOGGER.isInfoEnabled) {
-        LOGGER.info("Starting ApacheClient with {} threads", THREADS_TO_ALLOCATE)
+        LOGGER.info("Starting image retriever")
     }
 
     val client = ApacheClient(responseBodyMode = BodyMode.Stream, client = HttpClients.custom()
@@ -144,7 +144,6 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                     if (LOGGER.isTraceEnabled) {
                         LOGGER.trace("Upstream query for $sanitizedUri errored with status {}", mdResponse.status)
                     }
-                    mdResponse.close()
                     Response(mdResponse.status)
                 } else {
                     if (LOGGER.isTraceEnabled) {
@@ -195,7 +194,6 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                         }
                         respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified)
                     }
-                    mdResponse.close()
                 }
             }
         }
