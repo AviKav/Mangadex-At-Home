@@ -35,12 +35,12 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.net.ssl.SSLException
 
 private val LOGGER = LoggerFactory.getLogger("Application")
-private val THREADS_TO_ALLOCATE = Runtime.getRuntime().availableProcessors() * 32 / 2
+private val THREADS_TO_ALLOCATE = Runtime.getRuntime().availableProcessors()
 
 class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings: ClientSettings, private val stats: AtomicReference<Statistics>) : ServerConfig {
     override fun toServer(httpHandler: HttpHandler): Http4kServer = object : Http4kServer {
-        private val masterGroup = NioEventLoopGroup(THREADS_TO_ALLOCATE)
-        private val workerGroup = NioEventLoopGroup(THREADS_TO_ALLOCATE)
+        private val masterGroup = NioEventLoopGroup(THREADS_TO_ALLOCATE * clientSettings.getThreadsPerCPU())
+        private val workerGroup = NioEventLoopGroup(THREADS_TO_ALLOCATE * clientSettings.getThreadsPerCPU())
         private lateinit var closeFuture: ChannelFuture
         private lateinit var address: InetSocketAddress
 
@@ -54,7 +54,7 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
 
         override fun start(): Http4kServer = apply {
             if (LOGGER.isInfoEnabled) {
-                LOGGER.info("Starting webserver with {} threads", THREADS_TO_ALLOCATE)
+                LOGGER.info("Starting webserver with {} threads", THREADS_TO_ALLOCATE * clientSettings.getThreadsPerCPU())
             }
 
             val (mainCert, chainCert) = getX509Certs(tls.certificate)
