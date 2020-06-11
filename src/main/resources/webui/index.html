@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>MD@H Client</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://golden-layout.com/files/latest/js/goldenlayout.min.js"></script>
     <script src="dataReceive.js"></script>
     <link rel="stylesheet" type="text/css" href="layout.css">
     <link rel="stylesheet" type="text/css" href="" id="style">
@@ -46,19 +47,9 @@
         <div class="contentHeader">
             <h1 style="margin: 0;position:absolute; top: 42px; padding-left: 30px">Dashboard</h1>
         </div>
-        <div id="nDat">
-            <div id="hits" class="numerical_data"></div>
-            <div id="misses" class="numerical_data"></div>
-            <div id="hitPercent" class="numerical_data"></div>
-            <div id="reqServed" class="numerical_data"></div>
-            <div id="bytesSent" class="numerical_data"></div>
-        </div>
-        <div id="gDat">
-            <div id="cpuUtil" class="line_graph_data"></div>
-            <div id="networkUtil" class="line_graph_data"></div>
-            <div id="discUtil" class="line_graph_data"></div>
-            <div id="cacheSize" class="line_graph_data"></div>
-            <div id="ramUtil" class="line_graph_data"></div>
+        <div id="dashboard"></div>
+        <div id="gDat" hidden>
+
         </div>
     </div>
     <div id="console" class="content" hidden>
@@ -107,8 +98,8 @@
                 <label><select id="themeIn" class="optionInput input">
                     <option value="lightTheme">Light</option>
                     <option value="darkTheme">Dark</option>
-                    <option value="midnightTheme">Midnight</option>
-                    <option value="eyekillerTheme">High Vibrancy</option>
+                    <option value="midnightTheme">Midnight (not maintained)</option>
+                    <option value="eyekillerTheme">High Vibrancy (not maintained)</option>
                 </select></label>
             </div>
             <div class="option">
@@ -130,6 +121,13 @@
                 <label class="switch switchInput">
                     <input id="doAnimations" type="checkbox">
                     <span id="doAnimationscb" class="slider"></span>
+                </label>
+            </div>
+            <div class="option">
+                <h4>Lock Dashboard <br>(does not work)</h4>
+                <label class="switch switchInput">
+                    <input id="lockDash" type="checkbox">
+                    <span id="lockDashcb" class="slider"></span>
                 </label>
             </div>
         </div>
