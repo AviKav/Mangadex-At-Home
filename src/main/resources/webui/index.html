@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MD@H Client</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="dataReceive.js"></script>
+    <link rel="stylesheet" type="text/css" href="layout.css">
+    <link rel="stylesheet" type="text/css" href="" id="style">
+    <link rel="stylesheet" type="text/css" href="themes/darkTheme.css" id="theme">
+</head>
+<body>
+<div id="pageBar">
+    <a href="https://mangadex.org/">
+        <img src="https://mangadex.org/images/misc/navbar.svg?3" alt="mangadex" width="65px"
+             height="65px" style="float: left; padding: 5px; border-radius: 50%">
+    </a>
+    <h1 style="position: absolute; left: 75px; margin-left: 10px">MangaDex@Home Client Interface</h1>
+    <div id="consoleLatest" hidden></div>
+    <button id="connection" class="connecting button" onclick="reconnect()">Disconnected</button>
+</div>
+<div id="sideBar">
+    <div id="expSide" class="sideOption" onclick="expSide()">
+        <img src="icons/showmore.png" alt="dash" width="30px" height="30px" style="padding: 10px" class="img">
+        <h2 style="position: absolute; left: 50px; top: 0; margin: calc((50px - 29px)/2)">Menu</h2>
+    </div>
+    <div id="dash" class="sideOption sideSelected" onclick="selectTab('dash','dashb')">
+        <img src="icons/dashboard.png" alt="dash" width="30px" height="30px" style="padding: 10px" class="img">
+        <h2 style="position: absolute; left: 50px; top: 50px; margin: calc((50px - 29px)/2)">Dashboard</h2>
+    </div>
+    <div id="cons" class="sideOption" onclick="selectTab('cons','console')">
+        <img src="icons/console.png" alt="dash" width="30px" height="30px" style="padding: 10px" class="img">
+        <h2 style="position: absolute; left: 50px; top: 100px; margin: calc((50px - 29px)/2)">Console</h2>
+    </div>
+    <div id="opt" class="sideOption" onclick="selectTab('opt','dashOptions')">
+        <img src="icons/options.png" alt="dash" width="30px" height="30px" style="padding: 10px" class="img">
+        <h2 style="position: absolute; left: 50px; top: 150px; margin: calc((50px - 29px)/2)">Options</h2>
+    </div>
+    <div id="inf" class="sideOption" onclick="selectTab('inf','info')">
+        <img src="icons/info.png" alt="dash" width="30px" height="30px" style="padding: 10px" class="img">
+        <h2 style="position: absolute; left: 50px; top: 200px; margin: calc((50px - 29px)/2)">Info</h2>
+    </div>
+</div>
+<div id="content">
+    <div id="dashb" class="content">
+        <div class="contentHeader">
+            <h1 style="margin: 0;position:absolute; top: 42px; padding-left: 30px">Dashboard</h1>
+        </div>
+        <div id="nDat">
+            <div id="hits" class="numerical_data"></div>
+            <div id="misses" class="numerical_data"></div>
+            <div id="hitPercent" class="numerical_data"></div>
+            <div id="reqServed" class="numerical_data"></div>
+            <div id="bytesSent" class="numerical_data"></div>
+        </div>
+        <div id="gDat">
+            <div id="cpuUtil" class="line_graph_data"></div>
+            <div id="networkUtil" class="line_graph_data"></div>
+            <div id="discUtil" class="line_graph_data"></div>
+            <div id="cacheSize" class="line_graph_data"></div>
+            <div id="ramUtil" class="line_graph_data"></div>
+        </div>
+    </div>
+    <div id="console" class="content" hidden>
+        <div class="contentHeader">
+            <h1 style="margin: 0;position:absolute; top: 42px; padding-left: 30px">Console</h1>
+        </div>
+        <div id="buttonBoard">
+            <!--            client control stuffs-->
+            <h2 style="margin-left: 40px">Client Status: Stopped</h2>
+        </div>
+        <div id="liveConsole">
+            <div id="console_text"></div>
+            <div id="console_input" contenteditable="true"></div>
+        </div>
+    </div>
+    <div id="dashOptions" class="content" hidden>
+        <div class="contentHeader">
+            <h1 style="margin: 0;position:absolute; top: 42px; padding-left: 30px">Options</h1>
+        </div>
+        <div id="options">
+            <h3>General</h3>
+            <div class="option">
+                <h4>Data Refresh Rate</h4>
+                <label><input id="dataRefreshRate" type="number" class="optionInput input" placeholder="5000" min="500"></label>
+            </div>
+            <div class="option">
+                <h4>Websocket Port</h4>
+                <label><input id="port" type="number" class="optionInput input" placeholder="33333"></label>
+            </div>
+            <div class="option">
+                <h4>Client IP</h4>
+                <label><input id="ip" type="text" class="optionInput input" placeholder="localhost"></label>
+            </div>
+            <div class="option">
+                <h4>Max Console Lines</h4>
+                <label><input id="maxConsoleLines" type="number" class="optionInput input" placeholder="1000" min="100"></label>
+            </div>
+            <div class="option">
+                <h4>Graph Time Frame</h4>
+                <label><input id="graphTimeFrame" type="number" class="optionInput input" placeholder="30000"
+                              min="5000"></label>
+            </div>
+            <h3>Display</h3>
+            <div class="option">
+                <h4>Theme</h4>
+                <label><select id="themeIn" class="optionInput input">
+                    <option value="lightTheme">Light</option>
+                    <option value="darkTheme">Dark</option>
+                    <option value="midnightTheme">Midnight</option>
+                    <option value="eyekillerTheme">High Vibrancy</option>
+                </select></label>
+            </div>
+            <div class="option">
+                <h4>Style</h4>
+                <label><select id="styleIn" class="optionInput input">
+                    <option value="sharpStyle">Sharp</option>
+                    <option value="softStyle">Soft</option>
+                </select></label>
+            </div>
+            <div class="option">
+                <h4>Show Console Latest</h4>
+                <label class="switch switchInput">
+                    <input id="newestconsole" type="checkbox">
+                    <span id="newestconsolecb" class="slider"></span>
+                </label>
+            </div>
+            <div class="option">
+                <h4>Animations</h4>
+                <label class="switch switchInput">
+                    <input id="doAnimations" type="checkbox">
+                    <span id="doAnimationscb" class="slider"></span>
+                </label>
+            </div>
+        </div>
+        <button id="apply" class="button" onclick="applyOptions()">Apply</button>
+        <button id="reset" class="button" onclick="resetOptions()">Reset</button>
+    </div>
+    <div id="info" class="content" hidden>
+        <div class="contentHeader">
+            <h1 style="margin: 0;position:absolute; top: 42px; padding-left: 30px">Client Info</h1>
+        </div>
+        <div id="information">
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

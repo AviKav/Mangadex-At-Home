@@ -3,6 +3,7 @@ package mdnet.base;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONObject;
+import mdnet.base.settings.ClientSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

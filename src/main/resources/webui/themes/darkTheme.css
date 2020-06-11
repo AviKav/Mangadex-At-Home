@@ -1,0 +1,167 @@
+body {
+    background-color: #404040;
+    color: #f0f0f0;
+}
+
+#pageBar {
+    background-color: #303030;
+}
+
+#consoleLatest{
+    background-color: black;
+    color: #f0f0f0;
+}
+
+.connected {
+    border-color: #0fff00 !important;
+}
+
+.disconnected {
+    border-color: #e50100 !important;
+}
+
+.connecting {
+    border-color: #e5d700 !important;
+}
+
+#sideBar {
+    background-color: #303030;
+}
+
+.sideOption {
+    background-color: #303030;
+}
+
+.sideOption:hover {
+    background-color: #404040;
+}
+
+.sideSelected {
+    background-color: #606060;
+}
+
+#content {
+    background-color: #404040;
+}
+
+.contentHeader {
+    background-color: #606060;
+}
+
+/*Main dashboard colors*/
+
+#dashb {
+
+}
+
+#nDat {
+}
+
+.numerical_data {
+    background-color: #606060;
+}
+
+#gDat {
+}
+
+.line_graph_data {
+    background-color: #606060;
+}
+
+/*Console and options colors*/
+
+#liveConsole {
+    background-color: black;
+    caret-color: #f0f0f0;
+}
+
+#console_text {
+    color: #f0f0f0;
+}
+
+#console_input {
+    color: #f0f0f0;
+}
+
+.unsent {
+    color: #e50100;
+}
+
+.sent {
+    color: #0fff00;
+}
+
+
+/*Web option colors*/
+#dashOptions {
+}
+
+#options {
+}
+
+.option {
+}
+
+.optionLabel {
+
+}
+
+.optionInput {
+    border-color: rgba(0, 0, 0, 0);
+    background-color: #606060;
+    color: #f0f0f0;
+}
+
+/*misc*/
+
+.button{
+    border-color: rgba(0, 0, 0, 0);
+    background-color: #606060;
+    color: #f0f0f0;
+}
+
+.button:hover{
+    background-color: #909090;
+}
+
+.img {
+    filter: invert(100%);
+}
+
+.updated {
+    border-color: #1ec70d !important;
+}
+
+.slider {
+    border-color: rgba(0, 0, 0, 0);
+    background-color: #606060;
+}
+
+.slider::before{
+    background-color: #f0f0f0;
+}
+
+input:checked + .slider {
+    background-color: #909090;
+}
+
+/*Webkit colors*/
+
+::-webkit-scrollbar {
+}
+
+::-webkit-scrollbar-button {
+
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #555555;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #888888;
+}
+
+::-webkit-scrollbar-track {
+
+}

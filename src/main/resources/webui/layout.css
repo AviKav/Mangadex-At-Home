@@ -1,0 +1,372 @@
+body {
+    margin: 0;
+    font-family: Calibri, serif;
+    overflow: hidden;
+}
+
+.smooth {
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.tempsmooth {
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+/*Content holder positions*/
+
+#pageBar {
+    height: 75px;
+    width: 100%;
+    position: absolute;
+}
+
+#consoleLatest {
+    position: absolute;
+    min-height: 20px;
+    width: calc(100% - 755px);
+    margin: 30px 20px 25px 20px;
+    left: 545px;
+    overflow-x: scroll;
+    overflow-y: hidden;
+}
+
+#consoleLatest::-webkit-scrollbar {
+    height: 3px;
+}
+
+#connection {
+    position: absolute;
+    right: 0;
+    margin: 20px 20px 20px 20px;
+    width: 150px;
+    height: 35px;
+    border-style: solid;
+    outline: none;
+}
+
+.connecting {
+    animation: connecting 1.5s;
+    animation-iteration-count: infinite;
+}
+
+@keyframes connecting {
+    0%, 100% {
+        filter: brightness(120%)
+    }
+    50% {
+        filter: brightness(80%)
+    }
+}
+
+#sideBar {
+    height: calc(100% - 75px);
+    width: 50px;
+    top: 75px;
+    position: absolute;
+    z-index: 10;
+    overflow: hidden;
+    user-select: none;
+}
+
+.sideOption {
+    width: 100%;
+    height: 50px;
+    float: left;;
+}
+
+.expand {
+    animation: expand 150ms ease-out;
+    -webkit-animation-fill-mode: forwards;
+}
+
+.expanded {
+    width: 200px !important;
+}
+
+.retract {
+    animation: expand 150ms reverse ease-in;
+    -webkit-animation-fill-mode: forwards;
+}
+
+@keyframes expand {
+    0% {
+        width: 50px
+    }
+    100% {
+        width: 200px
+    }
+}
+
+
+#content {
+    height: calc(100% - 75px);
+    width: calc(100% - 50px);
+    top: 75px;
+    left: 50px;
+    position: absolute;
+    /*overflow-y: auto;*/
+}
+
+.contentHeader {
+    width: calc(100% - 40px);
+    height: 80px;
+    margin: 20px;
+}
+
+/*Main dashboard positions*/
+
+#dashb {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+#nDat {
+    width: 40%;
+    height: calc(100% - 140px);
+    margin: 20px;
+    top: 100px;
+    position: absolute;
+
+}
+
+.numerical_data {
+    height: 150px;
+    width: calc(50% - 20px);
+    margin: 10px;
+    float: left;
+}
+
+#gDat {
+    height: calc(100% - 140px);
+    width: calc(60% - 60px);
+    margin: 20px;
+    position: absolute;
+    top: 100px;
+    left: calc(40% + 20px);
+    overflow-y: scroll;
+}
+
+.line_graph_data {
+    height: 200px;
+    width: calc((100% - 20px));
+    margin: 10px;
+    float: left;
+}
+
+/*Console and options positions*/
+
+#console {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+#buttonBoard {
+    width: calc(100% - 40px);
+    height: calc(40% - 20px);
+    margin: 20px;
+    position: absolute;
+    top: 100px;
+}
+
+#liveConsole {
+    width: calc(100% - 40px);
+    height: calc(60% - 180px);
+    margin: 20px;
+    position: absolute;
+    top: calc(40% + 100px);
+    padding-bottom: 40px;
+    font-family: monospace;
+}
+
+.consoleLine {
+    width: calc(100% - 5px);
+    float: left;
+    margin: 0 5px 0;
+    left: 0;
+    white-space: nowrap;
+}
+
+.consoleLine > p {
+    margin: 0;
+}
+
+#console_input {
+    position: absolute;
+    width: calc(100% - 30px);
+    height: 20px;
+    bottom: 10px;
+    left: 0;
+    margin: 0 15px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    white-space: nowrap;
+    border-width: 0;
+    outline: none;
+    background-color: inherit;
+    overflow: hidden;
+}
+
+#console_text {
+    height: calc(100% - 40px);
+    width: calc(100% - 20px);
+    position: absolute;
+    outline: none;
+    border-width: 0;
+    resize: none;
+    font-family: monospace;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 40px;
+    background-color: rgba(0, 0, 0, 0);
+    overflow: scroll;
+}
+
+/*Web option positions*/
+#dashOptions {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+#options {
+    width: calc(100% - 80px);
+    height: calc(100% - 140px);
+    position: absolute;
+    top: 100px;
+    margin: 20px 20px 20px 60px;
+}
+
+#apply {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 150px;
+    height: 30px;
+}
+
+#reset{
+    position: fixed;
+    bottom: 20px;
+    right: 190px;
+    width: 150px;
+    height: 30px;
+}
+
+.option {
+    height: 40px;
+    margin: 10px;
+}
+
+.option > h4 {
+    margin: 0;
+    float: left;
+    font-weight: normal;
+}
+
+.optionLabel {
+
+}
+
+.optionInput {
+    left: 200px;
+    position: absolute;
+    border-style: solid;
+    border-width: 2px;
+}
+
+.switchInput > span {
+    left: 200px;
+    position: absolute;
+    border-style: solid;
+}
+
+.updated {
+    animation: fade 1.5s linear;
+}
+
+@keyframes fade {
+    0%, 100% {
+        filter: alpha(100%);
+    }
+    100% {
+        filter: alpha(0%);
+    }
+}
+
+/*misc modifications*/
+
+.input {
+    outline: 0;
+}
+
+.button {
+    outline: none;
+    border-width: 2px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+
+}
+
+.slider:before {
+    /*border-width: 1px;*/
+    position: absolute;
+    content: "";
+}
+
+.smoothslider:before {
+    position: absolute;
+    content: "";
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+/*Webkit modifications*/
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-button {
+    width: 0;
+    height: 0;
+}
+
+::-webkit-scrollbar-thumb {
+}
+
+::-webkit-scrollbar-track {
+
+}
+
+::-webkit-scrollbar-corner {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+/*animations*/
+
+.slide_up {
+    animation: slideup .1s ease-out;
+}
+
+@keyframes slideup {
+    0% {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0px);
+        opacity: 1;
+    }
+}

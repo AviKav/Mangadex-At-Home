@@ -1,6 +1,7 @@
 /* ktlint-disable no-wildcard-imports */
 package mdnet.base
 
+import mdnet.base.settings.ClientSettings
 import mdnet.cache.DiskLruCache
 import org.apache.http.client.config.CookieSpecs
 import org.apache.http.client.config.RequestConfig
@@ -18,8 +19,10 @@ import org.http4k.filter.CachingFilters
 import org.http4k.filter.MaxAgeTtl
 import org.http4k.filter.ServerFilters
 import org.http4k.lens.Path
+import org.http4k.routing.ResourceLoader
 import org.http4k.routing.bind
 import org.http4k.routing.routes
+import org.http4k.routing.singlePageApp
 import org.http4k.server.Http4kServer
 import org.http4k.server.asServer
 import org.slf4j.LoggerFactory
@@ -211,7 +214,9 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                 "/data/{chapterHash}/{fileName}" bind Method.GET to app(false),
                 "/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true),
                 "/{token}/data/{chapterHash}/{fileName}" bind Method.GET to app(false),
-                "/{token}/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true)
+                "/{token}/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true),
+
+                singlePageApp(ResourceLoader.Classpath("/webui"))
             )
         )
         .asServer(Netty(serverSettings.tls, clientSettings, statistics))
