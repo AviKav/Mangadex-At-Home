@@ -185,6 +185,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
 
                                 editor.abort()
                             }
+                            mdResponse.close()
                         }
                         respondWithImage(tee, contentLength, contentType, lastModified)
                     } else {
