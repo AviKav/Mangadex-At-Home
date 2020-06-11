@@ -144,6 +144,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                     if (LOGGER.isTraceEnabled) {
                         LOGGER.trace("Upstream query for $sanitizedUri errored with status {}", mdResponse.status)
                     }
+                    mdResponse.close()
                     Response(mdResponse.status)
                 } else {
                     if (LOGGER.isTraceEnabled) {
