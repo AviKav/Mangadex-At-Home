@@ -38,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -1002,7 +1003,7 @@ public final class DiskLruCache implements Closeable {
 			Path new_cache = Paths.get(directory + subkeypath + File.separator + key + "." + i);
 			if (Files.exists(old_cache)) {
 				try {
-					Files.move(old_cache, new_cache);
+					Files.move(old_cache, new_cache, StandardCopyOption.ATOMIC_MOVE);
 				} catch (FileAlreadyExistsException faee) {
 					try {
 						Files.delete(old_cache);
@@ -1019,7 +1020,7 @@ public final class DiskLruCache implements Closeable {
 			Path new_cache = Paths.get(directory + subkeypath + File.separator + key + "." + i + ".tmp");
 			if (Files.exists(old_cache)) {
 				try {
-					Files.move(old_cache, new_cache);
+					Files.move(old_cache, new_cache, StandardCopyOption.ATOMIC_MOVE);
 				} catch (FileAlreadyExistsException faee) {
 					try {
 						Files.delete(old_cache);
