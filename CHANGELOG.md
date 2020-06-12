@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Fixed
+- [2020-06-12] Re-added missing default `threads_per_cpu` setting by [@lflare].
 
 ### Security
 - [2020-06-12] Update ClientSettings.java changed showing client secret in logs back to hidden by [@dskilly].

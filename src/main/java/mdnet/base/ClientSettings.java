@@ -50,14 +50,14 @@ public final class ClientSettings {
 	}
 
 	public int getThreadsPerCpu() {
-		return threadsPerCpu;
+		return (threadsPerCpu > 0) ? threadsPerCpu : 16;
 	}
 
 	@Override
 	public String toString() {
 		return "ClientSettings{" + "maxCacheSizeMib=" + maxCacheSizeMib + ", maxBandwidthMibPerHour="
 				+ maxBandwidthMibPerHour + ", maxBurstRateKibPerSecond=" + maxBurstRateKibPerSecond + ", clientPort="
-				+ clientPort + ", clientSecret='" + "<hidden>" + '\'' + ", threadsPerCpu=" + threadsPerCpu + '}';
+				+ clientPort + ", clientSecret='" + "<hidden>" + '\'' + ", threadsPerCpu=" + getThreadsPerCpu() + '}';
 	}
 
 	public static boolean isSecretValid(String clientSecret) {
