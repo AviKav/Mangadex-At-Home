@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [2020-06-12] Re-added missing default `threads_per_cpu` setting by [@lflare].
+- [2020-06-12] Replaced exponential calculation for ApacheClient threads by [@lflare].
 
 ### Security
 - [2020-06-12] Update ClientSettings.java changed showing client secret in logs back to hidden by [@dskilly].
