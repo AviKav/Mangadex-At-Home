@@ -966,6 +966,10 @@ public final class DiskLruCache implements Closeable {
 			// Move files to new caching tree if exists
 			Path oldCache = Paths.get(directory + File.separator + key + "." + i);
 			Path newCache = Paths.get(directory + subKeyPath + File.separator + key + "." + i);
+
+			File newCacheDirectory = new File(directory + subKeyPath, key + "." + i + ".tmp");
+			newCacheDirectory.getParentFile().mkdirs();
+
 			if (Files.exists(oldCache)) {
 				try {
 					Files.move(oldCache, newCache, StandardCopyOption.ATOMIC_MOVE);
@@ -985,6 +989,10 @@ public final class DiskLruCache implements Closeable {
 			// Move files to new caching tree if exists
 			Path oldCache = Paths.get(directory + File.separator + key + "." + i + ".tmp");
 			Path newCache = Paths.get(directory + subKeyPath + File.separator + key + "." + i + ".tmp");
+
+			File newCacheDirectory = new File(directory + subKeyPath, key + "." + i + ".tmp");
+			newCacheDirectory.getParentFile().mkdirs();
+
 			if (Files.exists(oldCache)) {
 				try {
 					Files.move(oldCache, newCache, StandardCopyOption.ATOMIC_MOVE);
