@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - [2020-06-12] Raised ApacheClient socket limit to `2**18` by [@lflare].
+- [2020-06-12] Changed gradle versioning to using `git describe` by [@lflare].
 
 ### Deprecated
 
