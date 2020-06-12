@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+## [1.0.0-RC13] - 2020-06-12
+### Added
 - [2020-06-12] Added CHANGELOG.md by [@lflare].
 - [2020-06-12] Added on-read atomic image migrator to 4-deep subdirectory format by [@lflare].
 
@@ -14,10 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2020-06-12] Changed gradle versioning to using `git describe` by [@lflare].
 - [2020-06-12] Made Netty thread count global instead of per-cpu by [@lflare].
 - [2020-06-12] Store cache files in a 4-deep subdirectory to improve performance by [@lflare].
-
-### Deprecated
-
-### Removed
 
 ### Fixed
 - [2020-06-12] Re-added missing default `threads_per_cpu` setting by [@lflare].
@@ -40,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [2020-06-11] Tweaked logging configuration to reduce log file sizes by [@carbotaniuman].
 
-[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/compare/v1.0.0-rc12...HEAD
+[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/compare/v1.0.0-rc13...HEAD
+[1.0.0-rc12]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc12...1.0.0-rc13
 [1.0.0-rc12]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc11...1.0.0-rc12
 [1.0.0-rc11]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc10...1.0.0-rc11
