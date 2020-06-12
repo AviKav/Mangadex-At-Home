@@ -32,7 +32,7 @@ public final class ClientSettings {
 	}
 
 	public ClientSettings(long maxCacheSizeMib, long maxBandwidthMibPerHour, long maxBurstRateKibPerSecond,
-						  int clientPort, String clientSecret, int threads, WebSettings webSettings) {
+			int clientPort, String clientSecret, int threads, WebSettings webSettings) {
 		this.maxCacheSizeMib = maxCacheSizeMib;
 		this.maxBandwidthMibPerHour = maxBandwidthMibPerHour;
 		this.maxBurstRateKibPerSecond = maxBurstRateKibPerSecond;

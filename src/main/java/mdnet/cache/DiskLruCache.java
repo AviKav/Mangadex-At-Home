@@ -82,10 +82,9 @@ import java.util.regex.Pattern;
  * <li>When an entry is being <strong>edited</strong>, it is not necessary to
  * supply data for every value; values default to their previous value.
  * </ul>
- * Every {@link #editImpl} call must be matched by a call to
- * {@link Editor#commit} or {@link Editor#abort}. Committing is atomic: a read
- * observes the full set of values as they were before or after the commit, but
- * never a mix of values.
+ * Every {@link #edit} call must be matched by a call to {@link Editor#commit}
+ * or {@link Editor#abort}. Committing is atomic: a read observes the full set
+ * of values as they were before or after the commit, but never a mix of values.
  *
  * <p>
  * Clients call {@link #get} to read a snapshot of an entry. The read will

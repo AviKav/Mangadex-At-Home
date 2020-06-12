@@ -2,8 +2,6 @@ package mdnet.webui;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.util.concurrent.atomic.AtomicReference;
-import mdnet.base.Statistics;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -78,30 +76,30 @@ public abstract class WebConsole extends WebSocketServer {
 	// }
 
 	public void sendMessage(String type, Object message) {
-//		JSONObject out = new JSONObject();
-//		switch (type) {
-//			case "command" :
-//				out.put("type", "command");
-//				out.put("data", message.toString());
-//				break;
-//			case "stats" :
-//				out.put("type", "stats");
-//				AtomicReference<Statistics> temp = (AtomicReference<Statistics>) message;
-//				out.put("hits", temp.get().getCacheHits());
-//				out.put("misses", temp.get().getCacheMisses());
-//				out.put("bytes_sent", temp.get().getBytesSent());
-//				out.put("req_served", temp.get().getRequestsServed());
-//				out.put("dataval", "empty");
-//				out.put("dataval", "empty");
-//				out.put("dataval", "empty");
-//				break;
-//			case "auth" :
-//				break;
-//			default :
-//				out.put("type", "command");
-//				out.put("data", message.toString());
-//				break;
-//		}
-//		broadcast(out.toString());
+		// JSONObject out = new JSONObject();
+		// switch (type) {
+		// case "command" :
+		// out.put("type", "command");
+		// out.put("data", message.toString());
+		// break;
+		// case "stats" :
+		// out.put("type", "stats");
+		// AtomicReference<Statistics> temp = (AtomicReference<Statistics>) message;
+		// out.put("hits", temp.get().getCacheHits());
+		// out.put("misses", temp.get().getCacheMisses());
+		// out.put("bytes_sent", temp.get().getBytesSent());
+		// out.put("req_served", temp.get().getRequestsServed());
+		// out.put("dataval", "empty");
+		// out.put("dataval", "empty");
+		// out.put("dataval", "empty");
+		// break;
+		// case "auth" :
+		// break;
+		// default :
+		// out.put("type", "command");
+		// out.put("data", message.toString());
+		// break;
+		// }
+		// broadcast(out.toString());
 	}
 }

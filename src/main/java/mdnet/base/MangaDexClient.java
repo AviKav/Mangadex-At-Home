@@ -3,6 +3,8 @@ package mdnet.base;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import mdnet.base.settings.ClientSettings;
+import mdnet.base.web.ApplicationKt;
+import mdnet.base.web.WebUiKt;
 import mdnet.cache.DiskLruCache;
 import mdnet.webui.WebConsole;
 import org.http4k.server.Http4kServer;
@@ -29,6 +31,7 @@ public class MangaDexClient {
 
 	// if this is null, then the server has shutdown
 	private Http4kServer engine;
+	private Http4kServer webUi;
 	private DiskLruCache cache;
 
 	public MangaDexClient(ClientSettings clientSettings) {
@@ -46,7 +49,7 @@ public class MangaDexClient {
 
 	// This function also does most of the program initialization.
 	public void runLoop() {
-		statistics.set(new Statistics());
+		statistics.set(new Statistics(0));
 		loginAndStartServer();
 		if (serverSettings.getLatestBuild() > Constants.CLIENT_BUILD) {
 			if (LOGGER.isWarnEnabled()) {
@@ -58,6 +61,9 @@ public class MangaDexClient {
 		if (LOGGER.isInfoEnabled()) {
 			LOGGER.info("MDNet initialization completed successfully. Starting normal operation.");
 		}
+
+		webUi = WebUiKt.getUiServer(clientSettings.getWebSettings(), statistics);
+		webUi.start();
 
 		// we don't really care about the Atomic part here
 		AtomicInteger counter = new AtomicInteger();
@@ -71,7 +77,7 @@ public class MangaDexClient {
 				if (LOGGER.isInfoEnabled()) {
 					LOGGER.info("Hourly update: refreshing statistics");
 				}
-				statistics.set(new Statistics());
+				statistics.set(new Statistics(statistics.get().getSequenceNumber() + 1));
 
 				if (engine == null) {
 					if (LOGGER.isInfoEnabled()) {
@@ -218,7 +224,7 @@ public class MangaDexClient {
 			// TODO: system.out redirect
 			ClientSettings finalSettings = settings;
 			new Thread(() -> {
-				WebConsole webConsole = new WebConsole(finalSettings.getWebSettings().getClientWebsocketPort()) {
+				WebConsole webConsole = new WebConsole(finalSettings.getWebSettings().getUiWebsocketPort()) {
 					@Override
 					protected void parseMessage(String message) {
 						System.out.println(message);

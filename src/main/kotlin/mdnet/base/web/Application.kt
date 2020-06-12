@@ -1,15 +1,18 @@
 /* ktlint-disable no-wildcard-imports */
-package mdnet.base
+package mdnet.base.web
 
+import mdnet.base.Constants
+import mdnet.base.Netty
+import mdnet.base.ServerSettings
+import mdnet.base.Statistics
 import mdnet.base.settings.ClientSettings
+import mdnet.cache.CachingInputStream
 import mdnet.cache.DiskLruCache
 import org.apache.http.client.config.CookieSpecs
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.impl.client.HttpClients
 import org.http4k.client.ApacheClient
 import org.http4k.core.BodyMode
-import org.http4k.core.Filter
-import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -28,8 +31,6 @@ import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.InputStream
 import java.security.MessageDigest
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Executors
@@ -40,7 +41,7 @@ import javax.crypto.CipherOutputStream
 import javax.crypto.spec.SecretKeySpec
 
 private val LOGGER = LoggerFactory.getLogger("Application")
-private val THREADS_TO_ALLOCATE = 262144 // 2**18 // Honestly, no reason to not just let 'er rip. Inactive connections will expire on their own :D
+private const val THREADS_TO_ALLOCATE = 262144 // 2**18 // Honestly, no reason to not just let 'er rip. Inactive connections will expire on their own :D
 
 fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSettings: ClientSettings, statistics: AtomicReference<Statistics>): Http4kServer {
     val executor = Executors.newCachedThreadPool()
@@ -226,30 +227,6 @@ private fun getRc4(key: ByteArray): Cipher {
 
 private val HTTP_TIME_FORMATTER = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O", Locale.ENGLISH)
 
-private fun addCommonHeaders(): Filter {
-    return Filter { next: HttpHandler ->
-        { request: Request ->
-            val response = next(request)
-            response.header("Date", HTTP_TIME_FORMATTER.format(ZonedDateTime.now(ZoneOffset.UTC)))
-                    .header("Server", "Mangadex@Home Node ${Constants.CLIENT_VERSION} (${Constants.CLIENT_BUILD})")
-        }
-    }
-}
-
-private fun catchAllHideDetails(): Filter {
-    return Filter { next: HttpHandler ->
-        { request: Request ->
-            try {
-                next(request)
-            } catch (e: Exception) {
-                if (LOGGER.isWarnEnabled) {
-                    LOGGER.warn("Request error detected", e)
-                }
-                Response(Status.INTERNAL_SERVER_ERROR)
-            }
-        }
-    }
-}
 
 private fun md5Bytes(stringToHash: String): ByteArray {
     val digest = MessageDigest.getInstance("MD5")
