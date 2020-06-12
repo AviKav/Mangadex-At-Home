@@ -945,6 +945,9 @@ public final class DiskLruCache implements Closeable {
 		/** Lengths of this entry's files. */
 		private final long[] lengths;
 
+		/** Subkey pathing for cache files. */
+		private final String subkeypath;
+
 		/** True if this entry has ever been published. */
 		private boolean readable;
 
@@ -957,6 +960,9 @@ public final class DiskLruCache implements Closeable {
 		private Entry(String key) {
 			this.key = key;
 			this.lengths = new long[valueCount];
+
+			// Splits the keys into a list of two characters, and join it together to use it for sub-directorying
+			this.subkeypath = File.separator + String.join(File.separator, key.substring(0, 8).replaceAll("..(?!$)", "$0 ").split(" "));
 		}
 
 		public String getLengths() {
@@ -987,11 +993,17 @@ public final class DiskLruCache implements Closeable {
 		}
 
 		public File getCleanFile(int i) {
-			return new File(directory, key + "." + i);
+			// Move files to new caching tree if exists
+			File old_cache = new File(directory, key + "." + i);
+			File new_cache = new File(directory + subkeypath, key + "." + i);
+			if (old_cache.exists()) {
+				old_cache.renameTo(new_cache);
+			}
+			return new_cache;
 		}
 
 		public File getDirtyFile(int i) {
-			return new File(directory, key + "." + i + ".tmp");
+			return new File(directory + subkeypath, key + "." + i + ".tmp");
 		}
 	}
 }
