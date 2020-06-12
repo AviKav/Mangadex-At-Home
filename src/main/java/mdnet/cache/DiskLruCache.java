@@ -34,6 +34,10 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -994,15 +998,35 @@ public final class DiskLruCache implements Closeable {
 
 		public File getCleanFile(int i) {
 			// Move files to new caching tree if exists
-			File old_cache = new File(directory, key + "." + i);
-			File new_cache = new File(directory + subkeypath, key + "." + i);
-			if (old_cache.exists()) {
-				old_cache.renameTo(new_cache);
+			Path old_cache = Paths.get(directory + File.separator + key + "." + i);
+			Path new_cache = Paths.get(directory + subkeypath + File.separator + key + "." + i);
+			if (Files.exists(old_cache)) {
+				try {
+					Files.move(old_cache, new_cache);
+				} catch (FileAlreadyExistsException faee) {
+					try {
+						Files.delete(old_cache);
+					} catch (IOException ex) {}
+				} catch (IOException ex) {}
 			}
-			return new_cache;
+
+			return new File(directory + subkeypath, key + "." + i);
 		}
 
 		public File getDirtyFile(int i) {
+			// Move files to new caching tree if exists
+			Path old_cache = Paths.get(directory + File.separator + key + "." + i + ".tmp");
+			Path new_cache = Paths.get(directory + subkeypath + File.separator + key + "." + i + ".tmp");
+			if (Files.exists(old_cache)) {
+				try {
+					Files.move(old_cache, new_cache);
+				} catch (FileAlreadyExistsException faee) {
+					try {
+						Files.delete(old_cache);
+					} catch (IOException ex) {}
+				} catch (IOException ex) {}
+			}
+
 			return new File(directory + subkeypath, key + "." + i + ".tmp");
 		}
 	}
