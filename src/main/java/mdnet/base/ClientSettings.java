@@ -16,17 +16,17 @@ public final class ClientSettings {
 	private final int clientPort;
 	@SerializedName("client_secret")
 	private final String clientSecret;
-	@SerializedName("threads_per_cpu")
-	private final int threadsPerCpu;
+	@SerializedName("threads")
+	private final int threads;
 
 	public ClientSettings(long maxCacheSizeMib, long maxBandwidthMibPerHour, long maxBurstRateKibPerSecond,
-			int clientPort, String clientSecret, int threadsPerCpu) {
+			int clientPort, String clientSecret, int threads) {
 		this.maxCacheSizeMib = maxCacheSizeMib;
 		this.maxBandwidthMibPerHour = maxBandwidthMibPerHour;
 		this.maxBurstRateKibPerSecond = maxBurstRateKibPerSecond;
 		this.clientPort = clientPort;
 		this.clientSecret = Objects.requireNonNull(clientSecret);
-		this.threadsPerCpu = threadsPerCpu;
+		this.threads = threads;
 	}
 
 	public long getMaxCacheSizeMib() {
@@ -49,15 +49,15 @@ public final class ClientSettings {
 		return clientSecret;
 	}
 
-	public int getThreadsPerCpu() {
-		return (threadsPerCpu > 0) ? threadsPerCpu : 16;
+	public int getThreads() {
+		return (threads > 0) ? threads : 16;
 	}
 
 	@Override
 	public String toString() {
 		return "ClientSettings{" + "maxCacheSizeMib=" + maxCacheSizeMib + ", maxBandwidthMibPerHour="
 				+ maxBandwidthMibPerHour + ", maxBurstRateKibPerSecond=" + maxBurstRateKibPerSecond + ", clientPort="
-				+ clientPort + ", clientSecret='" + "<hidden>" + '\'' + ", threadsPerCpu=" + getThreadsPerCpu() + '}';
+				+ clientPort + ", clientSecret='" + "<hidden>" + '\'' + ", threads=" + getThreads() + '}';
 	}
 
 	public static boolean isSecretValid(String clientSecret) {
