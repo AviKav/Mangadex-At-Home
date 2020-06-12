@@ -46,7 +46,7 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
         private lateinit var address: InetSocketAddress
 
         private val burstLimiter = object : GlobalTrafficShapingHandler(
-            workerGroup, 1024 * clientSettings.maxBurstRateKibPerSecond, 0, 50) {
+                workerGroup, 1024 * clientSettings.maxBurstRateKibPerSecond, 0, 50) {
             override fun doAccounting(counter: TrafficCounter) {
                 stats.get().bytesSent.getAndAdd(counter.cumulativeWrittenBytes())
                 counter.resetCumulativeTime()
@@ -60,9 +60,9 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
 
             val (mainCert, chainCert) = getX509Certs(tls.certificate)
             val sslContext = SslContextBuilder
-                .forServer(getPrivateKey(tls.privateKey), mainCert, chainCert)
-                .protocols("TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1")
-                .build()
+                    .forServer(getPrivateKey(tls.privateKey), mainCert, chainCert)
+                    .protocols("TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1")
+                    .build()
 
             val bootstrap = ServerBootstrap()
             bootstrap.group(masterGroup, workerGroup)
