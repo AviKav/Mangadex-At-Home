@@ -37,8 +37,7 @@ import javax.net.ssl.SSLException
 private val LOGGER = LoggerFactory.getLogger("Application")
 
 class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings: ClientSettings, private val stats: AtomicReference<Statistics>) : ServerConfig {
-    private val threadsToAllocate: Int
-        get() = Runtime.getRuntime().availableProcessors() * clientSettings.threadsPerCpu
+    private val threadsToAllocate = clientSettings.getThreads()
 
     override fun toServer(httpHandler: HttpHandler): Http4kServer = object : Http4kServer {
         private val masterGroup = NioEventLoopGroup(threadsToAllocate)
