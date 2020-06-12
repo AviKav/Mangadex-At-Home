@@ -19,10 +19,8 @@ import org.http4k.filter.CachingFilters
 import org.http4k.filter.MaxAgeTtl
 import org.http4k.filter.ServerFilters
 import org.http4k.lens.Path
-import org.http4k.routing.ResourceLoader
 import org.http4k.routing.bind
 import org.http4k.routing.routes
-import org.http4k.routing.singlePageApp
 import org.http4k.server.Http4kServer
 import org.http4k.server.asServer
 import org.slf4j.LoggerFactory
@@ -52,16 +50,16 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
     }
 
     val client = ApacheClient(responseBodyMode = BodyMode.Stream, client = HttpClients.custom()
-        .setDefaultRequestConfig(RequestConfig.custom()
-            .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-            .setConnectTimeout(3000)
-            .setSocketTimeout(3000)
-            .setConnectionRequestTimeout(3000)
+            .setDefaultRequestConfig(RequestConfig.custom()
+                    .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
+                    .setConnectTimeout(3000)
+                    .setSocketTimeout(3000)
+                    .setConnectionRequestTimeout(3000)
+                    .build())
+            .setMaxConnTotal(THREADS_TO_ALLOCATE)
+            .setMaxConnPerRoute(THREADS_TO_ALLOCATE)
+            // Have it at the maximum open sockets a user can have in most modern OSes. No reason to limit this, just limit it at the Netty side.
             .build())
-        .setMaxConnTotal(THREADS_TO_ALLOCATE)
-        .setMaxConnPerRoute(THREADS_TO_ALLOCATE)
-        // Have it at the maximum open sockets a user can have in most modern OSes. No reason to limit this, just limit it at the Netty side.
-        .build())
 
     val app = { dataSaver: Boolean ->
         { request: Request ->
@@ -89,28 +87,28 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
 
             // Netty doesn't do Content-Length or Content-Type, so we have the pleasure of doing that ourselves
             fun respondWithImage(input: InputStream, length: String?, type: String, lastModified: String?): Response =
-                Response(Status.OK)
-                    .header("Content-Type", type)
-                    .header("X-Content-Type-Options", "nosniff")
-                    .header(
-                        "Cache-Control",
-                        listOf("public", MaxAgeTtl(Constants.MAX_AGE_CACHE).toHeaderValue()).joinToString(", ")
-                    )
-                    .header("Timing-Allow-Origin", "https://mangadex.org")
-                    .let {
-                        if (length != null) {
-                            it.body(input, length.toLong()).header("Content-Length", length)
-                        } else {
-                            it.body(input).header("Transfer-Encoding", "chunked")
-                        }
-                    }
-                    .let {
-                        if (lastModified != null) {
-                            it.header("Last-Modified", lastModified)
-                        } else {
-                            it
-                        }
-                    }
+                    Response(Status.OK)
+                            .header("Content-Type", type)
+                            .header("X-Content-Type-Options", "nosniff")
+                            .header(
+                                    "Cache-Control",
+                                    listOf("public", MaxAgeTtl(Constants.MAX_AGE_CACHE).toHeaderValue()).joinToString(", ")
+                            )
+                            .header("Timing-Allow-Origin", "https://mangadex.org")
+                            .let {
+                                if (length != null) {
+                                    it.body(input, length.toLong()).header("Content-Length", length)
+                                } else {
+                                    it.body(input).header("Transfer-Encoding", "chunked")
+                                }
+                            }
+                            .let {
+                                if (lastModified != null) {
+                                    it.header("Last-Modified", lastModified)
+                                } else {
+                                    it
+                                }
+                            }
 
             val snapshot = cache.get(cacheId)
             if (snapshot != null) {
@@ -126,15 +124,15 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                     snapshot.close()
 
                     Response(Status.NOT_MODIFIED)
-                        .header("Last-Modified", lastModified)
+                            .header("Last-Modified", lastModified)
                 } else {
                     if (LOGGER.isInfoEnabled) {
                         LOGGER.info("Request for $sanitizedUri hit cache")
                     }
 
                     respondWithImage(
-                        CipherInputStream(BufferedInputStream(snapshot.getInputStream(0)), getRc4(rc4Bytes)),
-                        snapshot.getLength(0).toString(), snapshot.getString(1), snapshot.getString(2)
+                            CipherInputStream(BufferedInputStream(snapshot.getInputStream(0)), getRc4(rc4Bytes)),
+                            snapshot.getLength(0).toString(), snapshot.getString(1), snapshot.getString(2)
                     )
                 }
             } else {
@@ -171,8 +169,8 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                         editor.setString(2, lastModified)
 
                         val tee = CachingInputStream(
-                            mdResponse.body.stream,
-                            executor, CipherOutputStream(BufferedOutputStream(editor.newOutputStream(0)), getRc4(rc4Bytes))
+                                mdResponse.body.stream,
+                                executor, CipherOutputStream(BufferedOutputStream(editor.newOutputStream(0)), getRc4(rc4Bytes))
                         ) {
                             // Note: if neither of the options get called/are in the log
                             // check that tee gets closed and for exceptions in this lambda
@@ -207,19 +205,17 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
     CachingFilters
 
     return catchAllHideDetails()
-        .then(ServerFilters.CatchLensFailure)
-        .then(addCommonHeaders())
-        .then(
-            routes(
-                "/data/{chapterHash}/{fileName}" bind Method.GET to app(false),
-                "/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true),
-                "/{token}/data/{chapterHash}/{fileName}" bind Method.GET to app(false),
-                "/{token}/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true),
-
-                singlePageApp(ResourceLoader.Classpath("/webui"))
+            .then(ServerFilters.CatchLensFailure)
+            .then(addCommonHeaders())
+            .then(
+                    routes(
+                            "/data/{chapterHash}/{fileName}" bind Method.GET to app(false),
+                            "/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true),
+                            "/{token}/data/{chapterHash}/{fileName}" bind Method.GET to app(false),
+                            "/{token}/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true)
+                    )
             )
-        )
-        .asServer(Netty(serverSettings.tls, clientSettings, statistics))
+            .asServer(Netty(serverSettings.tls, clientSettings, statistics))
 }
 
 private fun getRc4(key: ByteArray): Cipher {
@@ -235,7 +231,7 @@ private fun addCommonHeaders(): Filter {
         { request: Request ->
             val response = next(request)
             response.header("Date", HTTP_TIME_FORMATTER.format(ZonedDateTime.now(ZoneOffset.UTC)))
-                .header("Server", "Mangadex@Home Node ${Constants.CLIENT_VERSION} (${Constants.CLIENT_BUILD})")
+                    .header("Server", "Mangadex@Home Node ${Constants.CLIENT_VERSION} (${Constants.CLIENT_BUILD})")
         }
     }
 }
