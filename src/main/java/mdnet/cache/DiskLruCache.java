@@ -82,9 +82,10 @@ import java.util.regex.Pattern;
  * <li>When an entry is being <strong>edited</strong>, it is not necessary to
  * supply data for every value; values default to their previous value.
  * </ul>
- * Every {@link #editImpl} call must be matched by a call to {@link Editor#commit}
- * or {@link Editor#abort}. Committing is atomic: a read observes the full set
- * of values as they were before or after the commit, but never a mix of values.
+ * Every {@link #editImpl} call must be matched by a call to
+ * {@link Editor#commit} or {@link Editor#abort}. Committing is atomic: a read
+ * observes the full set of values as they were before or after the commit, but
+ * never a mix of values.
  *
  * <p>
  * Clients call {@link #get} to read a snapshot of an entry. The read will
@@ -110,7 +111,6 @@ public final class DiskLruCache implements Closeable {
 	private static final long ANY_SEQUENCE_NUMBER = -1;
 
 	public static final Pattern LEGAL_KEY_PATTERN = Pattern.compile("[a-z0-9_-]{1,120}");
-	public static final Pattern UNSAFE_LEGAL_KEY_PATTERN = Pattern.compile("[a-z0-9_-][\\/a-z0-9_-]{0,119}");
 
 	private static final String CLEAN = "CLEAN";
 	private static final String DIRTY = "DIRTY";
@@ -412,16 +412,6 @@ public final class DiskLruCache implements Closeable {
 		return getImpl(key);
 	}
 
-	/**
-	 * Returns a snapshot of the entry named {@code key}, or null if it doesn't
-	 * exist is not currently readable. If a value is returned, it is moved to the
-	 * head of the LRU queue. Unsafe as it allows arbitrary directories to be accessed!
-	 */
-	public Snapshot getUnsafe(String key) throws IOException {
-		validateUnsafeKey(key);
-		return getImpl(key);
-	}
-
 	public synchronized Snapshot getImpl(String key) throws IOException {
 		checkNotClosed();
 		Entry entry = lruEntries.get(key);
@@ -471,15 +461,6 @@ public final class DiskLruCache implements Closeable {
 	 */
 	public Editor edit(String key) throws IOException {
 		validateKey(key);
-		return editImpl(key, ANY_SEQUENCE_NUMBER);
-	}
-
-	/**
-	 * Returns an editor for the entry named {@code key}, or null if another edit is
-	 * in progress. Unsafe as it allows arbitrary directories to be accessed!
-	 */
-	public Editor editUnsafe(String key) throws IOException {
-		validateUnsafeKey(key);
 		return editImpl(key, ANY_SEQUENCE_NUMBER);
 	}
 
@@ -614,17 +595,6 @@ public final class DiskLruCache implements Closeable {
 		return removeImpl(key);
 	}
 
-	/**
-	 * Drops the entry for {@code key} if it exists and can be removed. Entries
-	 * actively being edited cannot be removed. Unsafe as it allows arbitrary directories to be accessed!
-	 *
-	 * @return true if an entry was removed.
-	 */
-	public boolean removeUnsafe(String key) throws IOException {
-		validateUnsafeKey(key);
-		return removeImpl(key);
-	}
-
 	private synchronized boolean removeImpl(String key) throws IOException {
 		checkNotClosed();
 		Entry entry = lruEntries.get(key);
@@ -709,13 +679,6 @@ public final class DiskLruCache implements Closeable {
 		}
 	}
 
-	private void validateUnsafeKey(String key) {
-		Matcher matcher = UNSAFE_LEGAL_KEY_PATTERN.matcher(key);
-		if (!matcher.matches()) {
-			throw new IllegalArgumentException("keys must match regex " + UNSAFE_LEGAL_KEY_PATTERN + ": \"" + key + "\"");
-		}
-	}
-
 	/** A snapshot of the values for an entry. */
 	public final class Snapshot implements Closeable {
 		private final String key;
@@ -790,7 +753,7 @@ public final class DiskLruCache implements Closeable {
 		 * Returns an unbuffered input stream to read the last committed value, or null
 		 * if no value has been committed.
 		 */
-		public InputStream newInputStream(int index) {
+		public synchronized InputStream newInputStream(int index) {
 			synchronized (DiskLruCache.this) {
 				if (entry.currentEditor != this) {
 					throw new IllegalStateException();
@@ -807,31 +770,12 @@ public final class DiskLruCache implements Closeable {
 		}
 
 		/**
-		 * Returns the last committed value as a string, or null if no value has been
-		 * committed.
-		 */
-		public String getString(int index) throws IOException {
-			try (InputStream in = newInputStream(index)) {
-				return in != null ? IOUtils.toString(in, StandardCharsets.UTF_8) : null;
-			}
-		}
-
-		/**
-		 * Write a string to the specified index.
-		 */
-		public void setString(int index, String value) throws IOException {
-			try (OutputStream out = newOutputStream(index)) {
-				IOUtils.write(value, out, StandardCharsets.UTF_8);
-			}
-		}
-
-		/**
 		 * Returns a new unbuffered output stream to write the value at {@code index}.
 		 * If the underlying output stream encounters errors when writing to the
 		 * filesystem, this edit will be aborted when {@link #commit} is called. The
 		 * returned output stream does not throw IOExceptions.
 		 */
-		public OutputStream newOutputStream(int index) {
+		public synchronized OutputStream newOutputStream(int index) {
 			if (index < 0 || index >= valueCount) {
 				throw new IllegalArgumentException("Expected index " + index + " to "
 						+ "be greater than 0 and less than the maximum value count " + "of " + valueCount);
@@ -859,6 +803,25 @@ public final class DiskLruCache implements Closeable {
 					}
 				}
 				return new FaultHidingOutputStream(outputStream);
+			}
+		}
+
+		/**
+		 * Returns the last committed value as a string, or null if no value has been
+		 * committed.
+		 */
+		public String getString(int index) throws IOException {
+			try (InputStream in = newInputStream(index)) {
+				return in != null ? IOUtils.toString(in, StandardCharsets.UTF_8) : null;
+			}
+		}
+
+		/**
+		 * Write a string to the specified index.
+		 */
+		public void setString(int index, String value) throws IOException {
+			try (OutputStream out = newOutputStream(index)) {
+				IOUtils.write(value, out, StandardCharsets.UTF_8);
 			}
 		}
 
@@ -966,8 +929,10 @@ public final class DiskLruCache implements Closeable {
 			this.key = key;
 			this.lengths = new long[valueCount];
 
-			// Splits the keys into a list of two characters, and join it together to use it for sub-directorying
-			this.subKeyPath = File.separator + String.join(File.separator, key.substring(0, 8).replaceAll("..(?!$)", "$0 ").split(" "));
+			// Splits the keys into a list of two characters, and join it together to use it
+			// for sub-directorying
+			this.subKeyPath = File.separator
+					+ String.join(File.separator, key.substring(0, 8).replaceAll("..(?!$)", "$0 ").split(" "));
 		}
 
 		public String getLengths() {
@@ -1007,8 +972,10 @@ public final class DiskLruCache implements Closeable {
 				} catch (FileAlreadyExistsException faee) {
 					try {
 						Files.delete(oldCache);
-					} catch (IOException ex) {}
-				} catch (IOException ex) {}
+					} catch (IOException ex) {
+					}
+				} catch (IOException ex) {
+				}
 			}
 
 			return new File(directory + subKeyPath, key + "." + i);
@@ -1024,8 +991,10 @@ public final class DiskLruCache implements Closeable {
 				} catch (FileAlreadyExistsException faee) {
 					try {
 						Files.delete(oldCache);
-					} catch (IOException ex) {}
-				} catch (IOException ex) {}
+					} catch (IOException ex) {
+					}
+				} catch (IOException ex) {
+				}
 			}
 
 			return new File(directory + subKeyPath, key + "." + i + ".tmp");
