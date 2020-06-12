@@ -18,6 +18,7 @@ import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.stream.ChunkedWriteHandler
 import io.netty.handler.traffic.GlobalTrafficShapingHandler
 import io.netty.handler.traffic.TrafficCounter
+import mdnet.base.settings.ClientSettings
 import org.http4k.core.HttpHandler
 import org.http4k.server.Http4kChannelHandler
 import org.http4k.server.Http4kServer

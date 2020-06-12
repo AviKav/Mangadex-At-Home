@@ -4,7 +4,6 @@
 }
 
 #connection {
-    border-radius: 10px;
 }
 
 #consoleLatest {
@@ -89,7 +88,6 @@
 }
 
 #apply {
-    border-radius: 10px;
 }
 
 .option {
@@ -106,6 +104,10 @@
 
 .input {
     padding-left: 5px;
+    border-radius: 10px;
+}
+
+.button{
     border-radius: 10px;
 }
 

@@ -50,18 +50,12 @@ body {
 
 }
 
-#nDat {
-}
-
 .numerical_data {
-    background-color: #404040;
-}
-
-#gDat {
+    background-color: #353535;
 }
 
 .line_graph_data {
-    background-color: #404040;
+    background-color: #353535;
 }
 
 /*Console and options colors*/
@@ -161,3 +155,173 @@ input:checked + .slider {
 ::-webkit-scrollbar-track {
 
 }
+
+/*golden layout*/
+.lm_goldenlayout {
+    background: rgba(0, 0, 0, 0);
+}
+
+.lm_content {
+    background: rgba(0, 0, 0, 0);
+}
+
+.lm_dragProxy .lm_content {
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9)
+}
+
+.lm_dropTargetIndicator {
+    box-shadow: inset 0 0 30px #000000;
+    outline: 1px dashed #cccccc;
+    transition: all 200ms ease
+}
+
+.lm_dropTargetIndicator .lm_inner {
+    background: #000000;
+    opacity: .2
+}
+
+.lm_splitter {
+    background: inherit;
+    opacity: .001;
+    transition: opacity 200ms ease
+}
+
+.lm_splitter:hover, .lm_splitter.lm_dragging {
+    background: #303030;
+    opacity: 1
+}
+
+.lm_header {
+    background-color: #404040;
+    height: 20px;
+    user-select: none
+}
+
+.lm_header.lm_selectable {
+    cursor: pointer
+}
+
+.lm_header .lm_tab {
+    font-size: 12px;
+    color: #bfbfbf;
+    background-color: #404040;
+    margin-right: 2px;
+    padding-bottom: 2px;
+    padding-top: 1px
+}
+
+.lm_header .lm_tab .lm_close_tab {
+    width: 9px;
+    height: 9px;
+    background-image: url("../icons/close.png");
+    filter: invert(100%);
+    background-size: 14px 14px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    top: 4px;
+    right: 6px;
+    opacity: .4
+}
+
+.lm_header .lm_tab .lm_close_tab:hover {
+    opacity: 1
+}
+
+.lm_header .lm_tab.lm_active {
+    background-color: #606060;
+}
+.lm_header .lm_tab.lm_active:hover {
+    background-color: #505050;
+}
+
+.lm_header .lm_tab.lm_active .lm_close_tab:hover {
+    opacity: 1
+}
+
+.lm_dragProxy.lm_bottom .lm_header .lm_tab, .lm_stack.lm_bottom .lm_header .lm_tab {
+    box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.3)
+}
+
+.lm_dragProxy.lm_bottom .lm_header .lm_tab.lm_active, .lm_stack.lm_bottom .lm_header .lm_tab.lm_active {
+    box-shadow: 0 2px 2px #000000
+}
+
+.lm_selected .lm_header {
+    background-color: #452500
+}
+
+.lm_tab:hover{
+    background-color: #505050;
+    color: #bfbfbf
+}
+
+  .lm_header .lm_controls .lm_tabdropdown:before {
+    color: #ffffff
+}
+
+.lm_controls > li {
+    position: relative;
+    background-position: center center;
+    background-repeat: no-repeat;
+    opacity: .4;
+    transition: opacity 300ms ease
+}
+
+.lm_controls > li:hover {
+    opacity: 1
+}
+
+.lm_controls .lm_popout {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAAPklEQVR4nI2Q0QoAIAwCNfr/X7aXCpGN8snBdgejJOzckpkxs9jR6K6T5JpU0nWl5pSXTk7qwh8SnNT+CAAWCgkKFpuSWsUAAAAASUVORK5CYII=)
+}
+
+.lm_controls .lm_maximise {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAAKElEQVR4nGP8////fwYCgImQAgYGBgYWKM2IR81/okwajIpgvsMbVgAwgQYRVakEKQAAAABJRU5ErkJggg==)
+}
+
+.lm_controls .lm_close {
+    top: 2px;
+    width: 18px !important;
+    height: 18px !important;
+    background-image: url("../icons/close.png");
+    background-size: 16px 16px;
+    background-position: center center;
+    filter: invert(100%);
+}
+
+.lm_maximised .lm_header {
+    background-color: #000000
+}
+
+.lm_maximised .lm_controls .lm_maximise {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAJ0lEQVR4nGP8//8/AzGAiShVI1YhCwMDA8OsWbPwBmZaWhoj0SYCAN1lBxMAX4n0AAAAAElFTkSuQmCC)
+}
+
+.lm_transition_indicator {
+    background-color: #000000;
+    border: 1px dashed #555555
+}
+
+.lm_popin {
+    cursor: pointer
+}
+
+.lm_popin .lm_bg {
+    background: #ffffff;
+    opacity: .3
+}
+
+.lm_popin .lm_icon {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAJCAYAAADpeqZqAAAAWklEQVR4nJWOyw3AIAxDHcQC7L8jbwT3AlJBfNp3SiI7dtRaLSlKKeoA1oEsKSQZCEluexw8Tm3ohk+E7bnOUHUGcNh+HwbBygw4AZ7FN/Lt84p0l+yTflV8AKQyLdcCRJi/AAAAAElFTkSuQmCC);
+    background-position: center center;
+    background-repeat: no-repeat;
+    border-left: 1px solid #eeeeee;
+    border-top: 1px solid #eeeeee;
+    opacity: .7
+}
+
+.lm_popin:hover .lm_icon {
+    opacity: 1
+}
+
+/*# sourceMappingURL=goldenlayout-dark-theme.css.map */
