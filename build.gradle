@@ -23,7 +23,7 @@ dependencies {
   implementation group: "org.http4k", name: "http4k-server-netty", version: "$http_4k_version"
   implementation group: "org.http4k", name: "http4k-client-apache", version: "$http_4k_version"
   implementation group: "commons-io", name: "commons-io", version: "2.7"
-
+  compile "org.java-websocket:Java-WebSocket:1.5.1"
   implementation "ch.qos.logback:logback-classic:$logback_version"
   runtimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.30.Final'
 }
