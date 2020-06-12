@@ -951,7 +951,7 @@ public final class DiskLruCache implements Closeable {
 		private final long[] lengths;
 
 		/** Subkey pathing for cache files. */
-		private final String subkeypath;
+		private final String subKeyPath;
 
 		/** True if this entry has ever been published. */
 		private boolean readable;
@@ -967,7 +967,7 @@ public final class DiskLruCache implements Closeable {
 			this.lengths = new long[valueCount];
 
 			// Splits the keys into a list of two characters, and join it together to use it for sub-directorying
-			this.subkeypath = File.separator + String.join(File.separator, key.substring(0, 8).replaceAll("..(?!$)", "$0 ").split(" "));
+			this.subKeyPath = File.separator + String.join(File.separator, key.substring(0, 8).replaceAll("..(?!$)", "$0 ").split(" "));
 		}
 
 		public String getLengths() {
@@ -999,36 +999,36 @@ public final class DiskLruCache implements Closeable {
 
 		public File getCleanFile(int i) {
 			// Move files to new caching tree if exists
-			Path old_cache = Paths.get(directory + File.separator + key + "." + i);
-			Path new_cache = Paths.get(directory + subkeypath + File.separator + key + "." + i);
-			if (Files.exists(old_cache)) {
+			Path oldCache = Paths.get(directory + File.separator + key + "." + i);
+			Path newCache = Paths.get(directory + subKeyPath + File.separator + key + "." + i);
+			if (Files.exists(oldCache)) {
 				try {
-					Files.move(old_cache, new_cache, StandardCopyOption.ATOMIC_MOVE);
+					Files.move(oldCache, newCache, StandardCopyOption.ATOMIC_MOVE);
 				} catch (FileAlreadyExistsException faee) {
 					try {
-						Files.delete(old_cache);
+						Files.delete(oldCache);
 					} catch (IOException ex) {}
 				} catch (IOException ex) {}
 			}
 
-			return new File(directory + subkeypath, key + "." + i);
+			return new File(directory + subKeyPath, key + "." + i);
 		}
 
 		public File getDirtyFile(int i) {
 			// Move files to new caching tree if exists
-			Path old_cache = Paths.get(directory + File.separator + key + "." + i + ".tmp");
-			Path new_cache = Paths.get(directory + subkeypath + File.separator + key + "." + i + ".tmp");
-			if (Files.exists(old_cache)) {
+			Path oldCache = Paths.get(directory + File.separator + key + "." + i + ".tmp");
+			Path newCache = Paths.get(directory + subKeyPath + File.separator + key + "." + i + ".tmp");
+			if (Files.exists(oldCache)) {
 				try {
-					Files.move(old_cache, new_cache, StandardCopyOption.ATOMIC_MOVE);
+					Files.move(oldCache, newCache, StandardCopyOption.ATOMIC_MOVE);
 				} catch (FileAlreadyExistsException faee) {
 					try {
-						Files.delete(old_cache);
+						Files.delete(oldCache);
 					} catch (IOException ex) {}
 				} catch (IOException ex) {}
 			}
 
-			return new File(directory + subkeypath, key + "." + i + ".tmp");
+			return new File(directory + subKeyPath, key + "." + i + ".tmp");
 		}
 	}
 }
