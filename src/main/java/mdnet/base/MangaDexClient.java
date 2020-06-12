@@ -84,6 +84,11 @@ public class MangaDexClient {
 				counter.set(num + 1);
 			}
 
+			// if the server is offline then don't try and refresh certs
+			if (engine == null) {
+				return;
+			}
+
 			if (clientSettings.getMaxBandwidthMibPerHour() != 0 && clientSettings.getMaxBandwidthMibPerHour() * 1024
 					* 1024 /* MiB to bytes */ < statistics.get().getBytesSent().get()) {
 				if (LOGGER.isInfoEnabled()) {
@@ -93,11 +98,6 @@ public class MangaDexClient {
 				synchronized (shutdownLock) {
 					logoutAndStopServer();
 				}
-			}
-
-			// if the server is offline then don't try and refresh certs
-			if (engine == null) {
-				return;
 			}
 
 			ServerSettings n = serverHandler.pingControl(serverSettings);
