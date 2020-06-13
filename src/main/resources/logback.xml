@@ -1,5 +1,4 @@
 <configuration>
-    <shutdownHook/>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>${file-level:-TRACE}</level>
