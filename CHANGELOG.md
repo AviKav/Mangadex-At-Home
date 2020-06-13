@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+## [1.0.0-RC15] - 2020-06-13
+### Added
 - [2020-06-13] Allow for the two log levels to be configurable by [@lflare].
 - [2020-06-13] Added X-Cache header to image responses by [@lflare].
 - [2020-06-13] Added .gitattributes to help sort out CHANGELOG.md merge conflicts by [@lflare].
@@ -15,12 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - [2020-06-13] Modified AsyncAppender queue size to 1024 by [@lflare].
 - [2020-06-13] Bumped client version to 5 by [@lflare].
-
-### Deprecated
-
-### Removed
-
-### Fixed
 
 ## [1.0.0-RC14] - 2020-06-12
 ### Fixed
@@ -58,7 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [2020-06-11] Tweaked logging configuration to reduce log file sizes by [@carbotaniuman].
 
-[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/compare/v1.0.0-rc14...HEAD
+[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/v1.0.0-rc15...HEAD
+[1.0.0-rc15]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc14...1.0.0-rc15
 [1.0.0-rc14]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc13...1.0.0-rc14
 [1.0.0-rc13]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc12...1.0.0-rc13
 [1.0.0-rc12]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc11...1.0.0-rc12
