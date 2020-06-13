@@ -12,6 +12,10 @@ let lockDash;
 //non-option var
 let statRequest;
 //stat vars
+let hitmiss,
+    byte,
+    cached,
+    req;
 
 //dockable things
 let config = {
@@ -113,7 +117,7 @@ function loadDash() {
     if (savedState !== null) {
         dashlayout = new GoldenLayout(JSON.parse(savedState), $("#dashboard"));
     } else {
-    dashlayout = new GoldenLayout(config, $("#dashboard"));
+        dashlayout = new GoldenLayout(config, $("#dashboard"));
     }
     //graphs
     dashlayout.registerComponent('Network Utilization', function (container, state) {
@@ -180,11 +184,101 @@ jQuery(document).ready(function () {
             $(this).text("");
             $('#console_text').scrollTop($("#console_text")[0].scrollHeight)
         }
-    })
-    statRequest = setInterval(function () {
-        requestStats();
-    }, refreshRate);
+    });
+    loadStuff();
+    fetch("/api/allStats")
+        .then(response => async function () {
+            let respj = JSON.parse(await response.text());
+            updateValues(respj);
+            console.log(respj);
+        });
+    statRequest = setInterval(getStats, refreshRate);
 });
+
+function loadStuff() {
+    hitmiss = new Chart(document.getElementById('hitpie').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [0, 0]
+            }],
+            labels: [
+                'Hits',
+                'Misses'
+            ]
+        },
+        options: {}
+    });
+    req = new Chart(document.getElementById('requestsserved').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Requests Served',
+                backgroundColor: "#f00",
+                borderColor: "#f00",
+                data: [],
+                fill: false
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+    byte = new Chart(document.getElementById('bytessent').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: [1, 2, 3, 4],
+            datasets: [{
+                label: 'Bytes Sent',
+                backgroundColor: "#f00",
+                borderColor: "#f00",
+                data: [36, 98, 45, 67],
+                fill: false
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+    cached = new Chart(document.getElementById('browsercached').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: [1, 2, 3, 4],
+            datasets: [{
+                label: 'Cached',
+                backgroundColor: "#f00",
+                borderColor: "#f00",
+                data: [36, 98, 45, 67],
+                fill: false
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+}
 
 //site functions, no connections involved
 
@@ -491,17 +585,51 @@ function updateWithMessage(m) {
 
 function getStats() {
     fetch("/api/stats")
-        .then(response => parseResponse(response));
+        .then(response => async function () {
+            let respj = JSON.parse(await response.text());
+            parseResponse(respj);
+            console.log(respj);
+        });
     //TODO: use values and update web info
 }
 
 function parseResponse(x) {
-    let respj = JSON.parse(x);
-    console.log(x);
+    hitmiss.data.datasets[0].data[0] = (x.cache_hits);
+    hitmiss.data.datasets[0].data[1] = (x.misses);
+    req.data.labels.push(x.snap_time);
+    req.data.datasets.forEach((dataset) => {
+        dataset.data.push(x.requests_served);
+    });
+    byte.data.labels.push(x.snap_time);
+    byte.data.datasets.forEach((dataset) => {
+        dataset.data.push(x.bytes_sent);
+    });
+    cached.data.labels.push(x.snap_time);
+    cached.data.datasets.forEach((dataset) => {
+        dataset.data.push(x.browser_cached);
+    });
 }
 
-function updateValues() {
-
+function updateValues(data) {
+    for (let key in data) {
+        if (data.hasOwnProperty(key)) {
+            let x = data[key];
+            hitmiss.data.datasets[0].data[0] = (x.cache_hits);
+            hitmiss.data.datasets[0].data[1] = (x.misses);
+            req.data.labels.push(key);
+            req.data.datasets.forEach((dataset) => {
+                dataset.data.push(x.requests_served);
+            });
+            byte.data.labels.push(key);
+            byte.data.datasets.forEach((dataset) => {
+                dataset.data.push(x.bytes_sent);
+            });
+            cached.data.labels.push(key);
+            cached.data.datasets.forEach((dataset) => {
+                dataset.data.push(x.browser_cached);
+            });
+        }
+    }
 }
 
 //console functions

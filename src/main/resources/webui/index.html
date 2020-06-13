@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>MD@H Client</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
     <script type="text/javascript" src="https://golden-layout.com/files/latest/js/goldenlayout.min.js"></script>
     <script src="dataReceive.js"></script>
     <link rel="stylesheet" type="text/css" href="layout.css">
@@ -43,13 +44,30 @@
     </div>
 </div>
 <div id="content">
-    <div id="dashb" class="content">
+    <div id="dashb" class="content" style="overflow-y: scroll">
         <div class="contentHeader">
             <h1 style="margin: 0;position:absolute; top: 42px; padding-left: 30px">Dashboard</h1>
         </div>
-        <div id="dashboard"></div>
-        <div id="gDat" hidden>
+        <div id="dashboard" hidden></div>
+        <div id="pleasejustwork" style="height: calc(100% - 140px); width: calc(100% - 40px); margin: 20px">
+            <div id="thelonelynumber" style="position: absolute; width: 30%; margin: 20px;">
+                <div class="line_graph_data">
+                    <canvas id="hitpie"></canvas>
+                </div>
 
+            </div>
+            <div id="thegraphfamily"
+                 style="position: absolute; width: calc(70% - 80px); margin: 20px; left: calc(30% + 40px); top: 100px">
+                <div style="margin: 20px; width: calc(100% - 40px)" class="line_graph_data">
+                    <canvas id="bytessent" style="height: 250px"></canvas>
+                </div>
+                <div style="margin: 20px; width: calc(100% - 40px)" class="line_graph_data">
+                    <canvas id="requestsserved" style="height: 250px"></canvas>
+                </div>
+                <div style="margin: 20px; width: calc(100% - 40px)" class="line_graph_data">
+                    <canvas id="browsercached" style="height: 250px"></canvas>
+                </div>
+            </div>
         </div>
     </div>
     <div id="console" class="content" hidden>
