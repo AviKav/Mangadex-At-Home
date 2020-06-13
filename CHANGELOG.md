@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2020-06-13] Added X-Cache header to image responses by [@lflare].
 - [2020-06-13] Added .gitattributes to help sort out CHANGELOG.md merge conflicts by [@lflare].
 - [2020-06-13] Added rudimentary web-ui by [@carbotaniuman & @RedMatriz].
+- [2020-06-13] Added additional entry to server ping for network speed by [@lflare].
 
 ### Changed
 - [2020-06-13] Modified AsyncAppender queue size to 1024 by [@lflare].
