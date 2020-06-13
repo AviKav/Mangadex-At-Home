@@ -2,7 +2,6 @@ package mdnet.base;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import mdnet.base.settings.ClientSettings;
 import mdnet.base.web.ApplicationKt;
 import mdnet.base.web.WebUiKt;
@@ -13,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -121,7 +119,8 @@ public class MangaDexClient {
 					editor.setString(2, "");
 					editor.commit();
 				}
-			} catch (IOException ignored) {}
+			} catch (IOException ignored) {
+			}
 
 			// if the server is offline then don't try and refresh certs
 			if (engine == null) {
