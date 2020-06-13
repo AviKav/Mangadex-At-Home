@@ -42,7 +42,7 @@ public class ServerHandler {
 		params.put("secret", settings.getClientSecret());
 		params.put("port", settings.getClientPort());
 		params.put("disk_space", settings.getMaxCacheSizeMib() * 1024 * 1024 /* MiB to bytes */);
-		params.put("network_speed", settings.getMaxBurstRateKibPerSecond() * 1024 /*KiB to bytes */);
+		params.put("network_speed", settings.getMaxBurstRateKibPerSecond() * 1024 /* KiB to bytes */);
 		params.put("build_version", Constants.CLIENT_BUILD);
 
 		HttpResponse<ServerSettings> response = Unirest.post(SERVER_ADDRESS + "ping")

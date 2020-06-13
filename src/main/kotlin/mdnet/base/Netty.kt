@@ -56,7 +56,7 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
 
         override fun start(): Http4kServer = apply {
             if (LOGGER.isInfoEnabled) {
-                LOGGER.info("Starting webserver with {} threads", clientSettings.threads)
+                LOGGER.info("Starting Netty with {} threads", clientSettings.threads)
             }
 
             val (mainCert, chainCert) = getX509Certs(tls.certificate)
