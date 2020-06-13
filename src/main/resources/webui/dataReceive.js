@@ -181,6 +181,9 @@ jQuery(document).ready(function () {
             $('#console_text').scrollTop($("#console_text")[0].scrollHeight)
         }
     })
+    statRequest = setInterval(function () {
+        requestStats();
+    }, refreshRate);
 });
 
 //site functions, no connections involved
@@ -474,7 +477,6 @@ function updateWithMessage(m) {
                 updateConsole(result.data, 2);
                 break;
             case "stats":
-
                 updateValues();
                 break;
             default:
@@ -486,8 +488,19 @@ function updateWithMessage(m) {
     }
 }
 
-function updateValues() {
+function getStats() {
+    fetch("/api/stats")
+        .then(response => parseResponse(response));
     //TODO: use values and update web info
+}
+
+function parseResponse(x) {
+    let respj = JSON.parse(x);
+    console.log(x);
+}
+
+function updateValues() {
+
 }
 
 //console functions
@@ -552,9 +565,7 @@ function addListeners(c) {
         $("#connection").removeClass("disconnected").removeClass("connecting").addClass("connected").text("Connected");
         opened = true;
         updateConsole("[WEB-CONSOLE] Successfully to connect to client on " + ip + ":" + port, 2);
-        statRequest = setInterval(function () {
-            requestStats();
-        }, refreshRate);
+
     };
     c.onclose = function (event) {
         $("#connection").addClass("disconnected").removeClass("connecting").removeClass("connected").text("Disconnected");
@@ -562,7 +573,7 @@ function addListeners(c) {
             updateConsole("[WEB-CONSOLE] Disconnected from client");
         else
             updateConsole("[WEB-CONSOLE] Failed to connect to client on " + ip + ":" + port, 2);
-        clearInterval(statRequest);
+        // clearInterval(statRequest);
     };
     c.onmessage = function (event) {
         updateWithMessage(event.data());
