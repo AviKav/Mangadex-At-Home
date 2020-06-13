@@ -84,16 +84,6 @@ public class MangaDexClient {
 		}
 
 		statsMap.put(Instant.now(), statistics.get());
-		try {
-			DiskLruCache.Editor editor = cache.edit("statistics");
-			if (editor != null) {
-				String json = GSON.toJson(statistics.get(), Statistics.class);
-				editor.setString(0, json);
-				editor.setString(1, "");
-				editor.setString(2, "");
-				editor.commit();
-			}
-		} catch (IOException ignored) {}
 
 		if (clientSettings.getWebSettings() != null) {
 			webUi = WebUiKt.getUiServer(clientSettings.getWebSettings(), statistics, statsMap);
@@ -121,6 +111,17 @@ public class MangaDexClient {
 			}
 
 			statsMap.put(Instant.now(), statistics.get());
+
+			try {
+				DiskLruCache.Editor editor = cache.edit("statistics");
+				if (editor != null) {
+					String json = GSON.toJson(statistics.get(), Statistics.class);
+					editor.setString(0, json);
+					editor.setString(1, "");
+					editor.setString(2, "");
+					editor.commit();
+				}
+			} catch (IOException ignored) {}
 
 			// if the server is offline then don't try and refresh certs
 			if (engine == null) {
