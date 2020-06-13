@@ -203,7 +203,8 @@ function applyOptions() {
         ).prop("checked", doAnimations);
     }
     if (options.refresh_rate !== refreshRate) {
-        console.log(options.refresh_rate + " " + refreshRate);
+        clearInterval(statRequest);
+        statRequest = setInterval(getStats, refreshRate);
         refreshRate = Math.max(options.refresh_rate, 500);
         $("#dataRefreshRate").addClass("updated").on(
             "animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd",
@@ -336,34 +337,34 @@ function updateValues(data) {
             hitmiss.data.datasets[0].data[1] = x.cache_misses;
             hitmiss.data.datasets[0].data[2] = x.browser_cached;
             hitmiss.update();
-            req.data.labels.push(key);
+            req.data.labels.push(key.substring(key.indexOf("T") + 1, key.indexOf("Z")));
             req.data.datasets.forEach((dataset) => {
                 dataset.data.push(x.requests_served);
             });
             req.update();
-            byte.data.labels.push(key);
+            byte.data.labels.push(key.substring(key.indexOf("T") + 1, key.indexOf("Z")));
             byte.data.datasets.forEach((dataset) => {
                 dataset.data.push(x.bytes_sent);
             });
             byte.update();
-            cached.data.labels.push(key);
+            cached.data.labels.push(key.substring(key.indexOf("T") + 1, key.indexOf("Z")));
             cached.data.datasets.forEach((dataset) => {
                 dataset.data.push(x.bytes_on_disk);
             });
-            cached.update()
+            cached.update();
         }
     }
     let points = graphTimeFrame / refreshRate;
-    if (req.data.label.length > points) {
-        req.data.labels.splice(0, req.data.label.length - points);
+    if (req.data.labels.length > points) {
+        req.data.labels.splice(0, req.data.labels.length - points);
         req.data.datasets.splice(0, req.data.datasets.length - points);
     }
-    if (byte.data.label.length > points) {
-        byte.data.labels.splice(0, req.data.label.length - points);
-        byte.data.datasets.splice(0, req.data.datasets.length - points);
+    if (byte.data.labels.length > points) {
+        byte.data.labels.splice(0, byte.data.labels.length - points);
+        byte.data.datasets.splice(0, byte.data.datasets.length - points);
     }
-    if (cached.data.label.length > points) {
-        cached.data.labels.splice(0, req.data.label.length - points);
-        cached.data.datasets.splice(0, req.data.datasets.length - points);
+    if (cached.data.labels.length > points) {
+        cached.data.labels.splice(0, cached.data.labels.length - points);
+        cached.data.datasets.splice(0, cached.data.datasets.length - points);
     }
 }
