@@ -18,9 +18,15 @@ import org.http4k.server.Netty
 import org.http4k.server.asServer
 import java.util.concurrent.atomic.AtomicReference
 import org.http4k.format.Gson.auto
+import java.time.Instant
 
-fun getUiServer(webSettings: WebSettings, statistics: AtomicReference<Statistics>): Http4kServer {
+fun getUiServer(
+    webSettings: WebSettings,
+    statistics: AtomicReference<Statistics>,
+    statsMap: Map<Instant, Statistics>
+): Http4kServer {
     val statisticsLens = Body.auto<Statistics>().toLens()
+    val statsMapLens = Body.auto<Map<Instant, Statistics>>().toLens()
 
     return catchAllHideDetails()
         .then(ServerFilters.CatchLensFailure)
@@ -29,6 +35,11 @@ fun getUiServer(webSettings: WebSettings, statistics: AtomicReference<Statistics
             routes(
                 "/api/stats" bind Method.GET to {
                     statisticsLens(statistics.get(), Response(Status.OK))
+                },
+                "/api/pastStats" bind Method.GET to {
+                    synchronized(statsMap) {
+                        statsMapLens(statsMap, Response(Status.OK))
+                    }
                 },
                 singlePageApp(ResourceLoader.Classpath("/webui"))
             )

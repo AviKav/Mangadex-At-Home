@@ -966,20 +966,7 @@ public final class DiskLruCache implements Closeable {
 			Path oldCache = Paths.get(directory + File.separator + key + "." + i);
 			Path newCache = Paths.get(directory + subKeyPath + File.separator + key + "." + i);
 
-			File newCacheDirectory = new File(directory + subKeyPath, key + "." + i + ".tmp");
-			newCacheDirectory.getParentFile().mkdirs();
-
-			if (Files.exists(oldCache)) {
-				try {
-					Files.move(oldCache, newCache, StandardCopyOption.ATOMIC_MOVE);
-				} catch (FileAlreadyExistsException faee) {
-					try {
-						Files.delete(oldCache);
-					} catch (IOException ex) {
-					}
-				} catch (IOException ex) {
-				}
-			}
+			migrateCacheFile(i, oldCache, newCache);
 
 			return new File(directory + subKeyPath, key + "." + i);
 		}
@@ -989,6 +976,12 @@ public final class DiskLruCache implements Closeable {
 			Path oldCache = Paths.get(directory + File.separator + key + "." + i + ".tmp");
 			Path newCache = Paths.get(directory + subKeyPath + File.separator + key + "." + i + ".tmp");
 
+			migrateCacheFile(i, oldCache, newCache);
+
+			return new File(directory + subKeyPath, key + "." + i + ".tmp");
+		}
+
+		private void migrateCacheFile(int i, Path oldCache, Path newCache) {
 			File newCacheDirectory = new File(directory + subKeyPath, key + "." + i + ".tmp");
 			newCacheDirectory.getParentFile().mkdirs();
 
@@ -998,13 +991,11 @@ public final class DiskLruCache implements Closeable {
 				} catch (FileAlreadyExistsException faee) {
 					try {
 						Files.delete(oldCache);
-					} catch (IOException ex) {
+					} catch (IOException ignored) {
 					}
-				} catch (IOException ex) {
+				} catch (IOException ignored) {
 				}
 			}
-
-			return new File(directory + subKeyPath, key + "." + i + ".tmp");
 		}
 	}
 }

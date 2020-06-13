@@ -4,17 +4,19 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import mdnet.base.settings.ClientSettings;
-import mdnet.base.settings.WebSettings;
 import mdnet.base.web.ApplicationKt;
 import mdnet.base.web.WebUiKt;
 import mdnet.cache.DiskLruCache;
-import mdnet.webui.WebConsole;
 import org.http4k.server.Http4kServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +32,14 @@ public class MangaDexClient {
 	private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 	private final ServerHandler serverHandler;
 	private final ClientSettings clientSettings;
+
+	private final Map<Instant, Statistics> statsMap = Collections
+			.synchronizedMap(new LinkedHashMap<Instant, Statistics>(80) {
+				@Override
+				protected boolean removeEldestEntry(Map.Entry eldest) {
+					return this.size() > 80;
+				}
+			});
 	private final AtomicReference<Statistics> statistics;
 
 	private ServerSettings serverSettings;
@@ -74,8 +84,10 @@ public class MangaDexClient {
 			}
 		}
 
+		statsMap.put(Instant.now(), statistics.get());
+
 		if (clientSettings.getWebSettings() != null) {
-			webUi = WebUiKt.getUiServer(clientSettings.getWebSettings(), statistics);
+			webUi = WebUiKt.getUiServer(clientSettings.getWebSettings(), statistics, statsMap);
 			webUi.start();
 		}
 
@@ -98,6 +110,8 @@ public class MangaDexClient {
 			} else {
 				counter++;
 			}
+
+			statsMap.put(Instant.now(), statistics.get());
 
 			// if the server is offline then don't try and refresh certs
 			if (engine == null) {
@@ -215,23 +229,6 @@ public class MangaDexClient {
 		}
 
 		validateSettings(settings);
-
-		if (settings.getWebSettings() != null) {
-			WebSettings webSettings = settings.getWebSettings();
-
-			// TODO: system.out redirect
-			new Thread(() -> {
-				WebConsole webConsole = new WebConsole(webSettings.getUiWebsocketPort()) {
-					@Override
-					protected void parseMessage(String message) {
-						System.out.println(message);
-						// TODO: something happens here
-						// the message should be formatted in json
-					}
-				};
-				// TODO: webConsole.sendMessage(t,m) whenever system.out is written to
-			}).start();
-		}
 
 		if (LOGGER.isInfoEnabled()) {
 			LOGGER.info("Client settings loaded: {}", settings);
