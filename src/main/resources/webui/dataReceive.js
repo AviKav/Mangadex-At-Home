@@ -1,14 +1,8 @@
-let connection;
 let theme;
 let style;
-let port;
-let ip;
 let refreshRate;
-let maxConsoleLines;
 let graphTimeFrame;
-let showConsoleLatest;
 let doAnimations;
-let lockDash;
 //non-option var
 let statRequest;
 //stat vars
@@ -17,155 +11,8 @@ let hitmiss,
     cached,
     req;
 
-//dockable things
-let config = {
-    settings: {
-        hasHeaders: true,
-        constrainDragToContainer: false,
-        reorderEnabled: true,
-        selectionEnabled: false,
-        popoutWholeStack: false,
-        blockedPopoutsThrowError: true,
-        closePopoutsOnUnload: true,
-        showPopoutIcon: false,
-        showMaximiseIcon: false,
-        showCloseIcon: lockDash
-    },
-    dimensions: {
-        borderWidth: 20,
-        minItemHeight: 10,
-        minItemWidth: 10,
-        headerHeight: 20,
-        dragProxyWidth: 300,
-        dragProxyHeight: 200
-    },
-    labels: {
-        close: 'close',
-        maximise: 'maximise',
-        minimise: 'minimise',
-        popout: 'open in new window'
-    },
-    content: [{
-        type: 'column',
-        content: [{
-            type: 'row',
-            content: [{
-                type: 'column',
-                content: [{
-                    type: 'row',
-                    content: [{
-                        type: 'component',
-                        componentName: 'Hit Percent',
-                        width: 50,
-                        componentState: {label: 'F'}
-                    }, {
-                        type: 'component',
-                        componentName: 'Hits',
-                        componentState: {label: 'B'}
-                    }, {
-                        type: 'component',
-                        componentName: 'Misses',
-                        componentState: {label: 'C'}
-                    }]
-                }, {
-                    type: 'row',
-                    content: [{
-                        type: 'component',
-                        componentName: 'Requests Served',
-                        componentState: {label: 'B'}
-                    }, {
-                        type: 'component',
-                        componentName: 'Bytes Sent',
-                        componentState: {label: 'C'}
-                    }]
-                }]
-            }, {
-                type: 'column',
-                content: [{
-                    type: 'component',
-                    componentName: 'Network Utilization',
-                    componentState: {label: 'B'}
-                }, {
-                    type: 'component',
-                    componentName: 'CPU Utilization',
-                    componentState: {label: 'C'}
-                }, {
-                    type: 'component',
-                    componentName: 'Disk Utilization',
-                    componentState: {label: 'D'}
-                }, {
-                    type: 'component',
-                    componentName: 'RAM Utilization',
-                    componentState: {label: 'E'}
-                }]
-            }]
-        }, {
-            type: 'row',
-            height: 20,
-            content: [{
-                type: 'component',
-                componentName: 'Cache Size',
-                componentState: {label: 'F'}
-            }]
-        }]
-    }]
-};
-let dashlayout;
-
-function loadDash() {
-    let savedState = localStorage.getItem("dashState");
-    if (savedState !== null) {
-        dashlayout = new GoldenLayout(JSON.parse(savedState), $("#dashboard"));
-    } else {
-        dashlayout = new GoldenLayout(config, $("#dashboard"));
-    }
-    //graphs
-    dashlayout.registerComponent('Network Utilization', function (container, state) {
-        container.getElement().append('<div id="networkUtil" class="line_graph_data"></div>');
-    });
-    dashlayout.registerComponent('CPU Utilization', function (container, state) {
-        container.getElement().append('<div id="cpuUtil" class="line_graph_data"></div>');
-    });
-    dashlayout.registerComponent('Disk Utilization', function (container, state) {
-        container.getElement().append('<div id="discUtil" class="line_graph_data"></div>');
-    });
-    dashlayout.registerComponent('Cache Size', function (container, state) {
-
-        container.getElement().append('<div id="cacheSize" class="line_graph_data"></div>');
-    });
-    dashlayout.registerComponent('RAM Utilization', function (container, state) {
-        container.getElement().append(' <div id="ramUtil" class="line_graph_data"></div>');
-    });
-    // numbers
-    dashlayout.registerComponent('Hits', function (container, state) {
-        container.getElement().append('<div id="hits" class="numerical_data"></div>');
-    });
-    dashlayout.registerComponent('Misses', function (container, state) {
-        container.getElement().append('<div id="misses" class="numerical_data"></div>');
-    });
-    dashlayout.registerComponent('Requests Served', function (container, state) {
-        container.getElement().append('<div id="reqServed" class="numerical_data"></div>');
-    });
-    dashlayout.registerComponent('Bytes Sent', function (container, state) {
-        container.getElement().append('<div id="bytesSent" class="numerical_data"></div>');
-    });
-    dashlayout.registerComponent('Hit Percent', function (container, state) {
-        container.getElement().append('<div id="hitPercent" class="numerical_data"></div>');
-    });
-
-    dashlayout.init();
-    dashlayout.on('stateChanged', function () {
-        localStorage.setItem('dashState', JSON.stringify(dashlayout.toConfig()));
-    });
-}
-
 jQuery(document).ready(function () {
-    loadDash();
     loadOptions();
-    $(window).resize(function () {
-        let dash = $("#dashboard");
-        dashlayout.updateSize(dash.width(), dash.height());
-    });
     $("#theme").attr("href", "themes/" + theme + ".css");
     $("#style").attr("href", "themes/" + style + ".css");
     if (doAnimations) {
@@ -175,16 +22,6 @@ jQuery(document).ready(function () {
         $(".sideOption").addClass("smooth");
         $(".button").addClass("smooth");
     }
-    if (showConsoleLatest)
-        $("#consoleLatest").attr("hidden", false);
-    reconnect();
-    $("#console_input").keyup(function (e) {
-        if (e.keyCode === 13) {
-            sendCommand($(this).text());
-            $(this).text("");
-            $('#console_text').scrollTop($("#console_text")[0].scrollHeight)
-        }
-    });
     loadStuff();
     fetch("/api/allStats")
         .then(response => async function () {
@@ -302,54 +139,30 @@ function loadOptions() {
             refresh_rate: 5000,
             theme: "lightTheme",
             style: "sharpStyle",
-            client_port: 33333,
-            client_ip: "localhost",
-            max_console_lines: 1000,
-            show_console_latest: false,
             graph_time_frame: 30000,
             do_animations: true,
-            lock_dashboard: true
         }
     }
     theme = options.theme;
     style = options.style;
-    port = options.client_port;
-    ip = options.client_ip;
     refreshRate = options.refresh_rate;
-    maxConsoleLines = options.max_console_lines;
     graphTimeFrame = options.graph_time_frame;
-    showConsoleLatest = options.show_console_latest;
     doAnimations = options.do_animations;
-    lockDash = options.lock_dashboard;
     $("#dataRefreshRate").val(refreshRate);
-    $("#port").val(port);
-    $("#ip").val(ip);
-    $("#maxConsoleLines").val(maxConsoleLines);
     $("#graphTimeFrame").val(graphTimeFrame);
     $("#themeIn").val(theme);
     $("#styleIn").val(style);
-    $("#newestconsole").prop("checked", showConsoleLatest);
     $("#doAnimations").prop("checked", doAnimations);
-    $("#lockDash").prop("checked", lockDash)
 }
 
 function resetOptions() {
     if (confirm("Do you really want to reset all customizations to defaults?")) {
         $("#dataRefreshRate").val(5000);
-        $("#port").val(33333);
-        $("#ip").val("localhost");
-        $("#maxConsoleLines").val(1000);
         $("#graphTimeFrame").val(30000);
         $("#themeIn").val("lightTheme");
         $("#styleIn").val("sharpStyle");
-        $("#newestconsole").prop("checked", false);
         $("#doAnimations").prop("checked", true);
-        dashlayout.destroy();
-        localStorage.removeItem('dashState');
-        loadDash();
         selectTab('dash', 'dashb');
-        let dash = $("#dashboard");
-        dashlayout.updateSize(dash.width(), dash.height());
         applyOptions()
     }
 }
@@ -419,26 +232,6 @@ function applyOptions() {
             }
         );
     }
-    if (options.client_port !== port) {
-        port = options.client_port;
-        $("#port").addClass("updated").on(
-            "animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd",
-            function () {
-                $(this).removeClass("updated");
-            }
-        ).val(port);
-        reconnect();
-    }
-    if (options.client_ip !== ip) {
-        ip = options.client_ip;
-        $("#ip").addClass("updated").on(
-            "animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd",
-            function () {
-                $(this).removeClass("updated");
-            }
-        ).val(ip);
-        reconnect();
-    }
     if (options.graph_time_frame !== graphTimeFrame) {
         graphTimeFrame = Math.max(options.graph_time_frame, 5000);
         $("#graphTimeFrame").addClass("updated").on(
@@ -447,41 +240,6 @@ function applyOptions() {
                 $(this).removeClass("updated");
             }
         ).val(graphTimeFrame);
-    }
-    if (options.max_console_lines !== maxConsoleLines) {
-        maxConsoleLines = Math.max(options.max_console_lines, 100);
-        $("#maxConsoleLines").addClass("updated").on(
-            "animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd",
-            function () {
-                $(this).removeClass("updated");
-            }
-        ).val(maxConsoleLines);
-    }
-    if (options.show_console_latest !== showConsoleLatest) {
-        showConsoleLatest = options.show_console_latest;
-        if (showConsoleLatest)
-            $("#consoleLatest").attr("hidden", false);
-        else
-            $("#consoleLatest").attr("hidden", true);
-        $("#newestconsolecb").addClass("updated").on(
-            "animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd",
-            function () {
-                $(this).removeClass("updated");
-            }
-        ).prop("checked", showConsoleLatest);
-    }
-    if (options.lock_dashboard !== lockDash) {
-        lockDash = options.lock_dashboard;
-        config.settings.showCloseIcon = !lockDash;
-        // localStorage.setItem('dashState', JSON.stringify(dashlayout.toConfig()));
-        // $("#dashboard").empty();
-        // loadDash();
-        $("#lockDashcb").addClass("updated").on(
-            "animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd",
-            function () {
-                $(this).removeClass("updated");
-            }
-        ).prop("checked", showConsoleLatest);
     }
     localStorage.setItem("options", JSON.stringify(options));
 }
@@ -562,36 +320,12 @@ function applyStyle(s) {
 
 //update data functions
 
-function updateWithMessage(m) {
-    //TODO: get this to talk with client
-    let result;
-    try {
-        result = JSON.parse(m);
-        switch (result.type) {
-            case "command":
-                updateConsole(result.data, 2);
-                break;
-            case "stats":
-
-                updateValues();
-                break;
-            default:
-                updateConsole("[WEB-INFO] The message received is improperly formatted: " + result.data, 2);
-                break;
-        }
-    } catch (e) {
-        updateConsole("[WEB-INFO] There was an error parsing the data \n" + e, 2);
-    }
-}
-
 function getStats() {
     fetch("/api/stats")
         .then(response => response.json())
         .then(response => {
             updateValues(response);
-            console.log(response);
         });
-    //TODO: use values and update web info
 }
 
 function updateValues(data) {
@@ -601,18 +335,17 @@ function updateValues(data) {
             hitmiss.data.datasets[0].data[0] = x.cache_hits;
             hitmiss.data.datasets[0].data[1] = x.cache_misses;
             hitmiss.data.datasets[0].data[2] = x.browser_cached;
-
-            hitmiss.update()
+            hitmiss.update();
             req.data.labels.push(key);
             req.data.datasets.forEach((dataset) => {
                 dataset.data.push(x.requests_served);
             });
-            req.update()
+            req.update();
             byte.data.labels.push(key);
             byte.data.datasets.forEach((dataset) => {
                 dataset.data.push(x.bytes_sent);
             });
-            byte.update()
+            byte.update();
             cached.data.labels.push(key);
             cached.data.datasets.forEach((dataset) => {
                 dataset.data.push(x.bytes_on_disk);
@@ -620,86 +353,17 @@ function updateValues(data) {
             cached.update()
         }
     }
-}
-
-//console functions
-
-function updateConsole(x, status) {
-    let scroll = false;
-    let temp = $('#console_text');
-    let latest = $("#consoleLatest");
-    if (temp.scrollTop() === (temp[0].scrollHeight - temp[0].clientHeight))
-        scroll = true;
-    switch (status) {
-        case 1:
-            temp.append('<div class="consoleLine sent">' + x + '</div>');
-            break;
-        case 0:
-            temp.append('<div class="consoleLine unsent">' + x + '</div>');
-            break;
-        default:
-            temp.append('<div class="consoleLine">' + x + '</div>');
-            latest.html('<div class="consoleLine">' + x + '</div>');
+    let points = graphTimeFrame / refreshRate;
+    if (req.data.label.length > points) {
+        req.data.labels.splice(0, req.data.label.length - points);
+        req.data.datasets.splice(0, req.data.datasets.length - points);
     }
-    let childs = temp.children();
-    if (childs.length > maxConsoleLines) {
-        let length = childs.length;
-        for (let i = 0; i < length - maxConsoleLines; i++) {
-            childs[i].remove();
-        }
+    if (byte.data.label.length > points) {
+        byte.data.labels.splice(0, req.data.label.length - points);
+        byte.data.datasets.splice(0, req.data.datasets.length - points);
     }
-    if (scroll)
-        temp.scrollTop(temp[0].scrollHeight);
-}
-
-function sendCommand(x) {
-    if (x === "")
-        return;
-    if (connection.readyState === "OPEN") {
-        let data = {
-            type: "command",
-            data: x
-        };
-        let message = JSON.stringify(data);
-        connection.send(message);
-    } else {
-        updateConsole(x, 0);
+    if (cached.data.label.length > points) {
+        cached.data.labels.splice(0, req.data.label.length - points);
+        cached.data.datasets.splice(0, req.data.datasets.length - points);
     }
-}
-
-//network commuication
-
-function reconnect() {
-    if (connection != null)
-        connection.close();
-    updateConsole("[WEB-CONSOLE] Attempting to connect to client on " + ip + ":" + port, 2);
-    connection = new WebSocket("ws://" + ip + ":" + port);
-    $("#connection").removeClass("disconnected").removeClass("connected").addClass("connecting").text("Connecting");
-    addListeners(connection)
-}
-
-function addListeners(c) {
-    let opened = false;
-    c.onopen = function (event) {
-        $("#connection").removeClass("disconnected").removeClass("connecting").addClass("connected").text("Connected");
-        opened = true;
-        updateConsole("[WEB-CONSOLE] Successfully to connect to client on " + ip + ":" + port, 2);
-
-    };
-    c.onclose = function (event) {
-        $("#connection").addClass("disconnected").removeClass("connecting").removeClass("connected").text("Disconnected");
-        if (opened)
-            updateConsole("[WEB-CONSOLE] Disconnected from client");
-        else
-            updateConsole("[WEB-CONSOLE] Failed to connect to client on " + ip + ":" + port, 2);
-        // clearInterval(statRequest);
-    };
-    c.onmessage = function (event) {
-        updateWithMessage(event.data());
-    };
-}
-
-function requestStats() {
-    let req = {type: "stats"};
-    connection.send(JSON.stringify(req));
 }

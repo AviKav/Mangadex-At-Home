@@ -5,11 +5,10 @@
     <title>MD@H Client</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
-    <script type="text/javascript" src="https://golden-layout.com/files/latest/js/goldenlayout.min.js"></script>
     <script src="dataReceive.js"></script>
     <link rel="stylesheet" type="text/css" href="layout.css">
-    <link rel="stylesheet" type="text/css" href="" id="style">
-    <link rel="stylesheet" type="text/css" href="themes/darkTheme.css" id="theme">
+    <link rel="stylesheet" type="text/css" href="themes/sharpStyle.css" id="style">
+    <link rel="stylesheet" type="text/css" href="themes/lightTheme.css" id="theme">
 </head>
 <body>
 <div id="pageBar">
@@ -19,7 +18,6 @@
     </a>
     <h1 style="position: absolute; left: 75px; margin-left: 10px">MangaDex@Home Client Interface</h1>
     <div id="consoleLatest" hidden></div>
-    <button id="connection" class="connecting button" onclick="reconnect()">Disconnected</button>
 </div>
 <div id="sideBar" >
     <div id="expSide" class="sideOption" onclick="expSide()">
@@ -40,13 +38,11 @@
         <div class="contentHeader">
             <h1 style="margin: 0;position:absolute; top: 42px; padding-left: 30px">Dashboard</h1>
         </div>
-        <div id="dashboard" hidden></div>
         <div id="pleasejustwork" style="height: calc(100% - 140px); width: calc(100% - 40px); margin: 20px">
             <div id="thelonelynumber" style="position: absolute; width: 30%; margin: 20px;">
                 <div class="line_graph_data">
                     <canvas id="hitpie"></canvas>
                 </div>
-
             </div>
             <div id="thegraphfamily"
                  style="position: absolute; width: calc(70% - 80px); margin: 20px; left: calc(30% + 40px); top: 100px">
@@ -62,19 +58,6 @@
             </div>
         </div>
     </div>
-    <div id="console" class="content" hidden>
-        <div class="contentHeader">
-            <h1 style="margin: 0;position:absolute; top: 42px; padding-left: 30px">Console</h1>
-        </div>
-        <div id="buttonBoard">
-            <!--            client control stuffs-->
-            <h2 style="margin-left: 40px">Client Status: Stopped</h2>
-        </div>
-        <div id="liveConsole">
-            <div id="console_text"></div>
-            <div id="console_input" contenteditable="true"></div>
-        </div>
-    </div>
     <div id="dashOptions" class="content" hidden>
         <div class="contentHeader">
             <h1 style="margin: 0;position:absolute; top: 42px; padding-left: 30px">Options</h1>
@@ -82,8 +65,12 @@
         <div id="options">
             <h3>General</h3>
             <div class="option">
-                <h4>Data Refresh Rate</h4>
+                <h4>Data Refresh Rate (ms)</h4>
                 <label><input id="dataRefreshRate" type="number" class="optionInput input" placeholder="5000" min="500"></label>
+            </div>
+            <div class="option">
+                <h4>Graph Time Frame (ms)</h4>
+                <label><input id="graphTimeFrame" type="number" class="optionInput input" placeholder="30000" min="10000"></label>
             </div>
             <h3>Display</h3>
             <div class="option">
@@ -92,7 +79,6 @@
                     <option value="lightTheme">Light</option>
                     <option value="darkTheme">Dark</option>
                     <option value="midnightTheme">Midnight</option>
-                    <option value="eyekillerTheme">High Vibrancy (not maintained)</option>
                 </select></label>
             </div>
             <div class="option">
@@ -112,14 +98,6 @@
         </div>
         <button id="apply" class="button" onclick="applyOptions()">Apply</button>
         <button id="reset" class="button" onclick="resetOptions()">Reset</button>
-    </div>
-    <div id="info" class="content" hidden>
-        <div class="contentHeader">
-            <h1 style="margin: 0;position:absolute; top: 42px; padding-left: 30px">Client Info</h1>
-        </div>
-        <div id="information">
-
-        </div>
     </div>
 </div>
 </body>
