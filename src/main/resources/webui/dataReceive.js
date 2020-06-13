@@ -37,7 +37,8 @@ function loadStuff() {
         type: 'doughnut',
         data: {
             datasets: [{
-                data: [0, 0, 0]
+                data: [0, 0, 0],
+                backgroundColor: ["#72a555", "#ca566f", "#ab62c0"]
             }],
             labels: [
                 'Hits',
