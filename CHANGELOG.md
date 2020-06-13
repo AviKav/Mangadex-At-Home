@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - [2020-06-13] Modified AsyncAppender queue size to 1024 by [@lflare].
+- [2020-06-13] Bumped client version to 5 by [@lflare].
 
 ### Deprecated
 
