@@ -3,8 +3,8 @@ package mdnet.base;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import mdnet.base.settings.ClientSettings;
-import mdnet.base.web.ApplicationKt;
-import mdnet.base.web.WebUiKt;
+import mdnet.base.server.ApplicationKt;
+import mdnet.base.server.WebUiKt;
 import mdnet.cache.DiskLruCache;
 import org.http4k.server.Http4kServer;
 import org.slf4j.Logger;
@@ -32,10 +32,10 @@ public class MangaDexClient {
 	private final ClientSettings clientSettings;
 
 	private final Map<Instant, Statistics> statsMap = Collections
-			.synchronizedMap(new LinkedHashMap<Instant, Statistics>(80) {
+			.synchronizedMap(new LinkedHashMap<Instant, Statistics>(240) {
 				@Override
 				protected boolean removeEldestEntry(Map.Entry eldest) {
-					return this.size() > 80;
+					return this.size() > 240;
 				}
 			});
 	private final AtomicReference<Statistics> statistics;
@@ -66,7 +66,6 @@ public class MangaDexClient {
 			} else {
 				statistics.set(new Statistics());
 			}
-			lastBytesSent = statistics.get().getBytesSent();
 		} catch (IOException e) {
 			MangaDexClient.dieWithError(e);
 		}
@@ -81,6 +80,7 @@ public class MangaDexClient {
 			}
 		}
 
+		lastBytesSent = statistics.get().getBytesSent();
 		statsMap.put(Instant.now(), statistics.get());
 
 		if (clientSettings.getWebSettings() != null) {
@@ -89,8 +89,28 @@ public class MangaDexClient {
 		}
 
 		if (LOGGER.isInfoEnabled()) {
-			LOGGER.info("MDNet initialization completed successfully. Starting normal operation.");
+			LOGGER.info("Mangadex@Home Client initialization completed successfully. Starting normal operation.");
 		}
+
+		executorService.scheduleWithFixedDelay(() -> {
+			statistics.updateAndGet(n -> n.copy(n.getRequestsServed(), n.getCacheHits(), n.getCacheMisses(),
+					n.getBrowserCached(), n.getBytesSent(), cache.size()));
+
+			statsMap.put(Instant.now(), statistics.get());
+
+			try {
+				DiskLruCache.Editor editor = cache.edit("statistics");
+				if (editor != null) {
+					String json = GSON.toJson(statistics.get(), Statistics.class);
+					editor.setString(0, json);
+					editor.setString(1, "");
+					editor.setString(2, "");
+					editor.commit();
+				}
+			} catch (IOException ignored) {
+			}
+
+		}, 15, 15, TimeUnit.SECONDS);
 
 		executorService.scheduleAtFixedRate(() -> {
 			if (counter == 80) {
@@ -106,20 +126,6 @@ public class MangaDexClient {
 				}
 			} else {
 				counter++;
-			}
-
-			statsMap.put(Instant.now(), statistics.get());
-
-			try {
-				DiskLruCache.Editor editor = cache.edit("statistics");
-				if (editor != null) {
-					String json = GSON.toJson(statistics.get(), Statistics.class);
-					editor.setString(0, json);
-					editor.setString(1, "");
-					editor.setString(2, "");
-					editor.commit();
-				}
-			} catch (IOException ignored) {
 			}
 
 			// if the server is offline then don't try and refresh certs

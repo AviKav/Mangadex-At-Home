@@ -1,5 +1,5 @@
 /* ktlint-disable no-wildcard-imports */
-package mdnet.base.web
+package mdnet.base.server
 
 import mdnet.base.Constants
 import org.http4k.core.Filter
