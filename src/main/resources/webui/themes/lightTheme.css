@@ -1,0 +1,329 @@
+body {
+    background-color: #ffffff;
+    color: #202020;
+}
+
+#pageBar {
+    background-color: #f8f9fa;
+}
+
+#consoleLatest{
+    background-color: black;
+    color: #f0f0f0;
+}
+
+.connected {
+    border-color: #0fff00 !important;
+}
+
+.disconnected {
+    border-color: #e50100 !important;
+}
+
+.connecting {
+    border-color: #e5d700 !important;
+}
+
+#sideBar {
+    background-color: #f8f9fa;
+}
+
+.sideOption {
+
+}
+
+.sideOption:hover {
+    background-color: #eeeeee;
+}
+
+.sideSelected {
+    background-color: #e1e1e1;
+}
+
+#content {
+    background-color: #ffffff;
+}
+
+.contentHeader {
+    background-color: #ededed;
+}
+
+/*Main dashboard colors*/
+
+#dashb {
+
+}
+
+#nDat {
+}
+
+.numerical_data {
+    background-color: #ededed;
+}
+
+#gDat {
+}
+
+.line_graph_data {
+    background-color: #ededed;
+}
+
+/*Console and options colors*/
+
+#liveConsole {
+    background-color: black;
+    caret-color: #f0f0f0;
+}
+
+#console_text {
+    color: #f0f0f0;
+}
+
+#console_input {
+    color: #f0f0f0;
+}
+
+.unsent {
+    color: #cb0000;
+}
+
+.sent {
+    color: #1ec70d;
+}
+
+
+/*Web option colors*/
+#dashOptions {
+}
+
+#options {
+}
+
+.option {
+}
+
+.optionLabel {
+
+}
+
+.optionInput {
+    border-color: rgba(0, 0, 0, 0);
+    background-color: #eaeaea;
+    color: #202020;
+}
+
+/*misc*/
+
+.button{
+    border-color: rgba(0, 0, 0, 0);
+    background-color: #eaeaea;
+    color: #202020;
+}
+
+.button:hover{
+    background-color: #dadada;
+}
+
+.img {
+}
+
+.updated {
+    border-color: #1ec70d !important;
+}
+
+.slider {
+    border-color: rgba(0, 0, 0, 0);
+    background-color: #eaeaea;
+}
+
+.slider::before{
+    background-color: #202020;
+}
+
+input:checked + .slider {
+    background-color: #adadad;
+}
+
+/*Webkit colors*/
+
+::-webkit-scrollbar {
+}
+
+::-webkit-scrollbar-button {
+
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #cacaca;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #dedede;
+}
+
+::-webkit-scrollbar-track {
+
+}
+
+/*golden layout overrides*/
+
+.lm_goldenlayout {
+    background: rgba(0, 0, 0, 0);
+}
+
+.lm_content {
+    background: rgba(0, 0, 0, 0);
+}
+
+.lm_dragProxy .lm_content {
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9)
+}
+
+.lm_dropTargetIndicator {
+    box-shadow: inset 0 0 30px #000000;
+    outline: 1px dashed #cccccc;
+    transition: all 200ms ease
+}
+
+.lm_dropTargetIndicator .lm_inner {
+    background: #000000;
+    opacity: .2
+}
+
+.lm_splitter {
+    background: inherit;
+    opacity: .001;
+    transition: opacity 200ms ease
+}
+
+.lm_splitter:hover, .lm_splitter.lm_dragging {
+    background-color: #dadada;
+    opacity: 1
+}
+
+.lm_header {
+    background-color: #ededed;
+    height: 20px;
+    user-select: none
+}
+
+.lm_header.lm_selectable {
+    cursor: pointer
+}
+
+.lm_header .lm_tab {
+    font-size: 12px;
+    color: #202020;
+    background-color: #f8f9fa;
+    margin-right: 2px;
+    padding-bottom: 2px;
+    padding-top: 1px
+}
+
+.lm_header .lm_tab .lm_close_tab {
+    width: 9px;
+    height: 9px;
+    background-image: url("../icons/close.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+    top: 4px;
+    right: 6px;
+    opacity: .4
+}
+
+.lm_header .lm_tab .lm_close_tab:hover {
+    opacity: 1
+}
+
+.lm_header .lm_tab.lm_active {
+    background-color: #e1e1e1;
+}
+
+.lm_header .lm_tab.lm_active .lm_close_tab:hover {
+    opacity: 1
+}
+
+.lm_dragProxy.lm_bottom .lm_header .lm_tab, .lm_stack.lm_bottom .lm_header .lm_tab {
+    box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.3)
+}
+
+.lm_dragProxy.lm_bottom .lm_header .lm_tab.lm_active, .lm_stack.lm_bottom .lm_header .lm_tab.lm_active {
+    box-shadow: 0 2px 2px #000000
+}
+
+.lm_selected .lm_header {
+    background-color: #452500
+}
+
+.lm_tab:hover, .lm_tab.lm_active {
+    background-color: #dadada;
+}
+
+.lm_header .lm_controls .lm_tabdropdown:before {
+    color: #ffffff
+}
+
+.lm_controls > li {
+    position: relative;
+    background-position: center center;
+    background-repeat: no-repeat;
+    opacity: .4;
+    transition: opacity 300ms ease
+}
+
+.lm_controls > li:hover {
+    opacity: 1
+}
+
+.lm_controls .lm_popout {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAAPklEQVR4nI2Q0QoAIAwCNfr/X7aXCpGN8snBdgejJOzckpkxs9jR6K6T5JpU0nWl5pSXTk7qwh8SnNT+CAAWCgkKFpuSWsUAAAAASUVORK5CYII=)
+}
+
+.lm_controls .lm_maximise {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAAKElEQVR4nGP8////fwYCgImQAgYGBgYWKM2IR81/okwajIpgvsMbVgAwgQYRVakEKQAAAABJRU5ErkJggg==)
+}
+
+.lm_controls .lm_close {
+    top: 2px;
+    width: 10px !important;
+    height: 10px !important;
+    background-image: url("../icons/close.png");
+    background-position: center center;
+}
+
+.lm_maximised .lm_header {
+    background-color: #000000
+}
+
+.lm_maximised .lm_controls .lm_maximise {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAJ0lEQVR4nGP8//8/AzGAiShVI1YhCwMDA8OsWbPwBmZaWhoj0SYCAN1lBxMAX4n0AAAAAElFTkSuQmCC)
+}
+
+.lm_transition_indicator {
+    background-color: #000000;
+    border: 1px dashed #555555
+}
+
+.lm_popin {
+    cursor: pointer
+}
+
+.lm_popin .lm_bg {
+    background: #ffffff;
+    opacity: .3
+}
+
+.lm_popin .lm_icon {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAJCAYAAADpeqZqAAAAWklEQVR4nJWOyw3AIAxDHcQC7L8jbwT3AlJBfNp3SiI7dtRaLSlKKeoA1oEsKSQZCEluexw8Tm3ohk+E7bnOUHUGcNh+HwbBygw4AZ7FN/Lt84p0l+yTflV8AKQyLdcCRJi/AAAAAElFTkSuQmCC);
+    background-position: center center;
+    background-repeat: no-repeat;
+    border-left: 1px solid #eeeeee;
+    border-top: 1px solid #eeeeee;
+    opacity: .7
+}
+
+.lm_popin:hover .lm_icon {
+    opacity: 1
+}
+
+/*# sourceMappingURL=goldenlayout-dark-theme.css.map */

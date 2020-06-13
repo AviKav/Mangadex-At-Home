@@ -1,0 +1,680 @@
+body {
+    margin: 0;
+    font-family: Calibri, serif;
+    overflow: hidden;
+}
+
+.smooth {
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.tempsmooth {
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+/*Content holder positions*/
+
+#pageBar {
+    height: 75px;
+    width: 100%;
+    position: absolute;
+}
+
+#consoleLatest {
+    position: absolute;
+    min-height: 20px;
+    width: calc(100% - 755px);
+    margin: 30px 20px 25px 20px;
+    left: 545px;
+    overflow-x: scroll;
+    overflow-y: hidden;
+}
+
+#consoleLatest::-webkit-scrollbar {
+    height: 3px;
+}
+
+#connection {
+    position: absolute;
+    right: 0;
+    margin: 20px 20px 20px 20px;
+    height: 35px;
+    border-style: solid;
+    outline: none;
+}
+
+.connecting {
+    animation: connecting 1.5s;
+    animation-iteration-count: infinite;
+}
+
+@keyframes connecting {
+    0%, 100% {
+        filter: brightness(120%)
+    }
+    50% {
+        filter: brightness(80%)
+    }
+}
+
+#sideBar {
+    height: calc(100% - 75px);
+    width: 50px;
+    top: 75px;
+    position: absolute;
+    z-index: 10;
+    overflow: hidden;
+    user-select: none;
+}
+
+.sideOption {
+    width: 100%;
+    height: 50px;
+    float: left;;
+}
+
+.expand {
+    animation: expand 150ms ease-out;
+    -webkit-animation-fill-mode: forwards;
+}
+
+.expanded {
+    width: 200px !important;
+}
+
+.retract {
+    animation: expand 150ms reverse ease-in;
+    -webkit-animation-fill-mode: forwards;
+}
+
+@keyframes expand {
+    0% {
+        width: 50px
+    }
+    100% {
+        width: 200px
+    }
+}
+
+
+#content {
+    height: calc(100% - 75px);
+    width: calc(100% - 50px);
+    top: 75px;
+    left: 50px;
+    position: absolute;
+    /*overflow-y: auto;*/
+}
+
+.contentHeader {
+    width: calc(100% - 40px);
+    height: 80px;
+    margin: 20px;
+}
+
+/*Main dashboard positions*/
+
+#dashb {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+#dashboard{
+    position: absolute;
+    margin: 20px;
+    width: calc(100% - 40px);
+    height: calc(100% - 140px);
+    top: 100px;
+}
+
+.numerical_data {
+    height: 100%;
+    width: 100%;
+}
+
+#gDat {
+    height: calc(100% - 140px);
+    width: calc(60% - 60px);
+    margin: 20px;
+    position: absolute;
+    top: 100px;
+    left: calc(40% + 20px);
+    overflow-y: scroll;
+}
+
+/*.line_graph_data {*/
+/*    height: 100%;*/
+/*    width: 100%;*/
+/*}*/
+
+/*Console and options positions*/
+
+#console {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+#buttonBoard {
+    width: calc(100% - 40px);
+    height: calc(40% - 20px);
+    margin: 20px;
+    position: absolute;
+    top: 100px;
+}
+
+#liveConsole {
+    width: calc(100% - 40px);
+    height: calc(60% - 180px);
+    margin: 20px;
+    position: absolute;
+    top: calc(40% + 100px);
+    padding-bottom: 40px;
+    font-family: monospace;
+}
+
+.consoleLine {
+    width: calc(100% - 5px);
+    float: left;
+    margin: 0 5px 0;
+    left: 0;
+    white-space: nowrap;
+}
+
+.consoleLine > p {
+    margin: 0;
+}
+
+#console_input {
+    position: absolute;
+    width: calc(100% - 30px);
+    height: 20px;
+    bottom: 10px;
+    left: 0;
+    margin: 0 15px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    white-space: nowrap;
+    border-width: 0;
+    outline: none;
+    background-color: inherit;
+    overflow: hidden;
+}
+
+#console_text {
+    height: calc(100% - 40px);
+    width: calc(100% - 20px);
+    position: absolute;
+    outline: none;
+    border-width: 0;
+    resize: none;
+    font-family: monospace;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 40px;
+    background-color: rgba(0, 0, 0, 0);
+    overflow: scroll;
+}
+
+/*Web option positions*/
+#dashOptions {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+#options {
+    width: calc(100% - 80px);
+    height: calc(100% - 140px);
+    position: absolute;
+    top: 100px;
+    margin: 20px 20px 20px 60px;
+}
+
+#apply {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 150px;
+    height: 30px;
+}
+
+#reset{
+    position: fixed;
+    bottom: 20px;
+    right: 190px;
+}
+
+.option {
+    height: 40px;
+    margin: 10px;
+}
+
+.option > h4 {
+    margin: 0;
+    float: left;
+    font-weight: normal;
+}
+
+.optionLabel {
+
+}
+
+.optionInput {
+    left: 200px;
+    position: absolute;
+    border-style: solid;
+    border-width: 2px;
+}
+
+.switchInput > span {
+    left: 200px;
+    position: absolute;
+    border-style: solid;
+}
+
+.updated {
+    animation: fade 1.5s linear;
+}
+
+@keyframes fade {
+    0%, 100% {
+        filter: alpha(100%);
+    }
+    100% {
+        filter: alpha(0%);
+    }
+}
+
+/*misc modifications*/
+
+.input {
+    outline: 0;
+}
+
+.button {
+    outline: none;
+    border-width: 2px;
+    width: 150px;
+    height: 30px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+
+}
+
+.slider:before {
+    /*border-width: 1px;*/
+    position: absolute;
+    content: "";
+}
+
+.smoothslider:before {
+    position: absolute;
+    content: "";
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+/*Webkit modifications*/
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-button {
+    width: 0;
+    height: 0;
+}
+
+::-webkit-scrollbar-thumb {
+}
+
+::-webkit-scrollbar-track {
+
+}
+
+::-webkit-scrollbar-corner {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+/*animations*/
+
+.slide_up {
+    animation: slideup .1s ease-out;
+}
+
+@keyframes slideup {
+    0% {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0px);
+        opacity: 1;
+    }
+}
+
+/*golden layout*/
+.lm_root {
+    position: relative
+}
+
+.lm_row > .lm_item {
+    float: left
+}
+
+.lm_content {
+    overflow: hidden;
+    position: relative
+}
+
+.lm_dragging, .lm_dragging * {
+    cursor: move !important;
+    user-select: none
+}
+
+.lm_maximised {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 40
+}
+
+.lm_maximise_placeholder {
+    display: none
+}
+
+.lm_splitter {
+    position: relative;
+    z-index: 20
+}
+
+.lm_splitter:hover, .lm_splitter.lm_dragging {
+    background: orange
+}
+
+.lm_splitter.lm_vertical .lm_drag_handle {
+    width: 100%;
+    height: 15px;
+    position: absolute;
+    top: -5px;
+    cursor: ns-resize
+}
+
+.lm_splitter.lm_horizontal {
+    float: left;
+    height: 100%
+}
+
+.lm_splitter.lm_horizontal .lm_drag_handle {
+    width: 15px;
+    height: 100%;
+    position: absolute;
+    left: -5px;
+    cursor: ew-resize
+}
+
+.lm_header {
+    overflow: visible;
+    position: relative;
+    z-index: 1
+}
+
+.lm_header [class^=lm_] {
+    box-sizing: content-box !important
+}
+
+.lm_header .lm_controls {
+    position: absolute;
+    right: 3px
+}
+
+.lm_header .lm_controls > li {
+    cursor: pointer;
+    float: left;
+    width: 18px;
+    height: 18px;
+    text-align: center
+}
+
+.lm_header ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none
+}
+
+.lm_header .lm_tabs {
+    position: absolute;
+}
+
+.lm_header .lm_tab {
+    cursor: pointer;
+    float: left;
+    height: 14px;
+    padding: 0 25px 5px 10px;
+    top: 1px;
+    position: relative
+}
+
+.lm_header .lm_tab i {
+    width: 2px;
+    height: 19px;
+    position: absolute
+}
+
+.lm_header .lm_tab i.lm_left {
+    top: 0;
+    left: -2px
+}
+
+.lm_header .lm_tab i.lm_right {
+    top: 0;
+    right: -2px
+}
+
+.lm_header .lm_tab .lm_title {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+
+.lm_header .lm_tab .lm_close_tab {
+    width: 14px;
+    height: 14px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    text-align: center
+}
+
+.lm_stack.lm_left .lm_header, .lm_stack.lm_right .lm_header {
+    height: 100%
+}
+
+.lm_dragProxy.lm_left .lm_header, .lm_dragProxy.lm_right .lm_header, .lm_stack.lm_left .lm_header, .lm_stack.lm_right .lm_header {
+    width: 20px;
+    float: left;
+    vertical-align: top
+}
+
+.lm_dragProxy.lm_left .lm_header .lm_tabs, .lm_dragProxy.lm_right .lm_header .lm_tabs, .lm_stack.lm_left .lm_header .lm_tabs, .lm_stack.lm_right .lm_header .lm_tabs {
+    transform-origin: left top;
+    top: 0;
+    width: 1000px
+}
+
+.lm_dragProxy.lm_left .lm_header .lm_controls, .lm_dragProxy.lm_right .lm_header .lm_controls, .lm_stack.lm_left .lm_header .lm_controls, .lm_stack.lm_right .lm_header .lm_controls {
+    bottom: 0
+}
+
+.lm_dragProxy.lm_left .lm_items, .lm_dragProxy.lm_right .lm_items, .lm_stack.lm_left .lm_items, .lm_stack.lm_right .lm_items {
+    float: left
+}
+
+.lm_dragProxy.lm_left .lm_header .lm_tabs, .lm_stack.lm_left .lm_header .lm_tabs {
+    transform: rotate(-90deg) scaleX(-1);
+    left: 0
+}
+
+.lm_dragProxy.lm_left .lm_header .lm_tabs .lm_tab, .lm_stack.lm_left .lm_header .lm_tabs .lm_tab {
+    transform: scaleX(-1);
+    margin-top: 1px
+}
+
+.lm_dragProxy.lm_left .lm_header .lm_tabdropdown_list, .lm_stack.lm_left .lm_header .lm_tabdropdown_list {
+    top: initial;
+    right: initial;
+    left: 20px
+}
+
+.lm_dragProxy.lm_right .lm_content {
+    float: left
+}
+
+.lm_dragProxy.lm_right .lm_header .lm_tabs, .lm_stack.lm_right .lm_header .lm_tabs {
+    transform: rotate(90deg) scaleX(1);
+    left: 100%;
+    margin-left: 0
+}
+
+.lm_dragProxy.lm_right .lm_header .lm_controls, .lm_stack.lm_right .lm_header .lm_controls {
+    left: 3px
+}
+
+.lm_dragProxy.lm_right .lm_header .lm_tabdropdown_list, .lm_stack.lm_right .lm_header .lm_tabdropdown_list {
+    top: initial;
+    right: 20px
+}
+
+.lm_dragProxy.lm_bottom .lm_header .lm_tab, .lm_stack.lm_bottom .lm_header .lm_tab {
+    margin-top: 0;
+    border-top: none
+}
+
+.lm_dragProxy.lm_bottom .lm_header .lm_controls, .lm_stack.lm_bottom .lm_header .lm_controls {
+    top: 3px
+}
+
+.lm_dragProxy.lm_bottom .lm_header .lm_tabdropdown_list, .lm_stack.lm_bottom .lm_header .lm_tabdropdown_list {
+    top: initial;
+    bottom: 20px
+}
+
+.lm_drop_tab_placeholder {
+    float: left;
+    width: 100px;
+    height: 10px;
+    visibility: hidden
+}
+
+.lm_header .lm_controls .lm_tabdropdown:before {
+    content: '';
+    width: 0;
+    height: 0;
+    vertical-align: middle;
+    display: inline-block;
+    border-top: 5px dashed;
+    border-right: 5px solid transparent;
+    border-left: 5px solid transparent;
+    color: white
+}
+
+.lm_header .lm_tabdropdown_list {
+    position: absolute;
+    top: 20px;
+    right: 0;
+    z-index: 5;
+    overflow: hidden
+}
+
+.lm_header .lm_tabdropdown_list .lm_tab {
+    clear: both;
+    padding-right: 10px;
+    margin: 0
+}
+
+.lm_header .lm_tabdropdown_list .lm_tab .lm_title {
+    width: 100px
+}
+
+.lm_header .lm_tabdropdown_list .lm_close_tab {
+    display: none !important
+}
+
+.lm_dragProxy {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 30
+}
+
+.lm_dragProxy .lm_header {
+    background: transparent
+}
+
+.lm_dragProxy .lm_content {
+    border-top: none;
+    overflow: hidden
+}
+
+.lm_dropTargetIndicator {
+    display: none;
+    position: absolute;
+    z-index: 20
+}
+
+.lm_dropTargetIndicator .lm_inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    top: 0;
+    left: 0
+}
+
+.lm_transition_indicator {
+    display: none;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 20
+}
+
+.lm_popin {
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    z-index: 9999
+}
+
+.lm_popin > * {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0
+}
+
+.lm_popin > .lm_bg {
+    z-index: 10
+}
+
+.lm_popin > .lm_icon {
+    z-index: 20
+}
+
+/*# sourceMappingURL=goldenlayout-base.css.map */

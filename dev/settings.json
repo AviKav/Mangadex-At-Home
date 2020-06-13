@@ -1,8 +1,12 @@
 {
-  "client_secret": "7rc7p00md0n0xsvqnv4rv17fthvjjrzpdghak1yq45833zvdvnb0",
+  "client_secret": "s76t1dazfctvtgq9dyvgw9herxc4gcz39q0q0y3taxpkgg0ahq8g",
   "max_cache_size_mib": 2048,
-  "client_port": 8080,
-  "max_burst_rate_kib_per_second": 100,
-  "max_bandwidth_mib_per_hour": 1,
-  "threads_per_cpu": 32
+  "client_port": 443,
+  "max_burst_rate_kib_per_second": 0,
+  "max_bandwidth_mib_per_hour": 0,
+  "threads_per_cpu": 32,
+  "web_settings":
+  {
+    "ui_port": 8080
+  }
 }

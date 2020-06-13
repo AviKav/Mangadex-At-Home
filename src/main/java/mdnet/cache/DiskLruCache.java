@@ -82,10 +82,9 @@ import java.util.regex.Pattern;
  * <li>When an entry is being <strong>edited</strong>, it is not necessary to
  * supply data for every value; values default to their previous value.
  * </ul>
- * Every {@link #editImpl} call must be matched by a call to
- * {@link Editor#commit} or {@link Editor#abort}. Committing is atomic: a read
- * observes the full set of values as they were before or after the commit, but
- * never a mix of values.
+ * Every {@link #edit} call must be matched by a call to {@link Editor#commit}
+ * or {@link Editor#abort}. Committing is atomic: a read observes the full set
+ * of values as they were before or after the commit, but never a mix of values.
  *
  * <p>
  * Clients call {@link #get} to read a snapshot of an entry. The read will
@@ -412,7 +411,7 @@ public final class DiskLruCache implements Closeable {
 		return getImpl(key);
 	}
 
-	public synchronized Snapshot getImpl(String key) throws IOException {
+	private synchronized Snapshot getImpl(String key) throws IOException {
 		checkNotClosed();
 		Entry entry = lruEntries.get(key);
 		if (entry == null) {
@@ -967,20 +966,7 @@ public final class DiskLruCache implements Closeable {
 			Path oldCache = Paths.get(directory + File.separator + key + "." + i);
 			Path newCache = Paths.get(directory + subKeyPath + File.separator + key + "." + i);
 
-			File newCacheDirectory = new File(directory + subKeyPath, key + "." + i + ".tmp");
-			newCacheDirectory.getParentFile().mkdirs();
-
-			if (Files.exists(oldCache)) {
-				try {
-					Files.move(oldCache, newCache, StandardCopyOption.ATOMIC_MOVE);
-				} catch (FileAlreadyExistsException faee) {
-					try {
-						Files.delete(oldCache);
-					} catch (IOException ex) {
-					}
-				} catch (IOException ex) {
-				}
-			}
+			migrateCacheFile(i, oldCache, newCache);
 
 			return new File(directory + subKeyPath, key + "." + i);
 		}
@@ -990,6 +976,12 @@ public final class DiskLruCache implements Closeable {
 			Path oldCache = Paths.get(directory + File.separator + key + "." + i + ".tmp");
 			Path newCache = Paths.get(directory + subKeyPath + File.separator + key + "." + i + ".tmp");
 
+			migrateCacheFile(i, oldCache, newCache);
+
+			return new File(directory + subKeyPath, key + "." + i + ".tmp");
+		}
+
+		private void migrateCacheFile(int i, Path oldCache, Path newCache) {
 			File newCacheDirectory = new File(directory + subKeyPath, key + "." + i + ".tmp");
 			newCacheDirectory.getParentFile().mkdirs();
 
@@ -999,13 +991,11 @@ public final class DiskLruCache implements Closeable {
 				} catch (FileAlreadyExistsException faee) {
 					try {
 						Files.delete(oldCache);
-					} catch (IOException ex) {
+					} catch (IOException ignored) {
 					}
-				} catch (IOException ex) {
+				} catch (IOException ignored) {
 				}
 			}
-
-			return new File(directory + subKeyPath, key + "." + i + ".tmp");
 		}
 	}
 }

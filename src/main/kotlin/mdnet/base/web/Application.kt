@@ -1,14 +1,18 @@
 /* ktlint-disable no-wildcard-imports */
-package mdnet.base
+package mdnet.base.web
 
+import mdnet.base.Constants
+import mdnet.base.Netty
+import mdnet.base.ServerSettings
+import mdnet.base.Statistics
+import mdnet.base.settings.ClientSettings
+import mdnet.cache.CachingInputStream
 import mdnet.cache.DiskLruCache
 import org.apache.http.client.config.CookieSpecs
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.impl.client.HttpClients
 import org.http4k.client.ApacheClient
 import org.http4k.core.BodyMode
-import org.http4k.core.Filter
-import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -27,10 +31,6 @@ import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.InputStream
 import java.security.MessageDigest
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
 import javax.crypto.Cipher
@@ -39,7 +39,7 @@ import javax.crypto.CipherOutputStream
 import javax.crypto.spec.SecretKeySpec
 
 private val LOGGER = LoggerFactory.getLogger("Application")
-private val THREADS_TO_ALLOCATE = 262144 // 2**18 // Honestly, no reason to not just let 'er rip. Inactive connections will expire on their own :D
+private const val THREADS_TO_ALLOCATE = 262144 // 2**18 // Honestly, no reason to not just let 'er rip. Inactive connections will expire on their own :D
 
 fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSettings: ClientSettings, statistics: AtomicReference<Statistics>): Http4kServer {
     val executor = Executors.newCachedThreadPool()
@@ -49,16 +49,15 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
     }
 
     val client = ApacheClient(responseBodyMode = BodyMode.Stream, client = HttpClients.custom()
-        .setDefaultRequestConfig(RequestConfig.custom()
-            .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-            .setConnectTimeout(3000)
-            .setSocketTimeout(3000)
-            .setConnectionRequestTimeout(3000)
+            .setDefaultRequestConfig(RequestConfig.custom()
+                    .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
+                    .setConnectTimeout(3000)
+                    .setSocketTimeout(3000)
+                    .setConnectionRequestTimeout(3000)
+                    .build())
+            .setMaxConnTotal(THREADS_TO_ALLOCATE)
+            .setMaxConnPerRoute(THREADS_TO_ALLOCATE)
             .build())
-        .setMaxConnTotal(THREADS_TO_ALLOCATE)
-        .setMaxConnPerRoute(THREADS_TO_ALLOCATE)
-        // Have it at the maximum open sockets a user can have in most modern OSes. No reason to limit this, just limit it at the Netty side.
-        .build())
 
     val app = { dataSaver: Boolean ->
         { request: Request ->
@@ -81,47 +80,43 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                 md5Bytes("$chapterHash.$fileName")
             }
             val cacheId = printHexString(rc4Bytes)
-
-            statistics.get().requestsServed.incrementAndGet()
+            statistics.getAndUpdate {
+                it.copy(requestsServed = it.requestsServed + 1)
+            }
 
             // Netty doesn't do Content-Length or Content-Type, so we have the pleasure of doing that ourselves
-            fun respondWithImage(input: InputStream, length: String?, type: String, lastModified: String?, cached: Boolean): Response =
-                Response(Status.OK)
-                    .header("Content-Type", type)
-                    .header("X-Content-Type-Options", "nosniff")
-                    .header(
-                        "Cache-Control",
-                        listOf("public", MaxAgeTtl(Constants.MAX_AGE_CACHE).toHeaderValue()).joinToString(", ")
-                    )
-                    .header("Timing-Allow-Origin", "https://mangadex.org")
-                    .let {
-                        if (length != null) {
-                            it.body(input, length.toLong()).header("Content-Length", length)
-                        } else {
-                            it.body(input).header("Transfer-Encoding", "chunked")
-                        }
-                    }
-                    .let {
-                        if (lastModified != null) {
-                            it.header("Last-Modified", lastModified)
-                        } else {
-                            it
-                        }
-                    }
-                    .let {
-                        if (cached != null && cached == true) {
-                            it.header("X-Cache", "HIT")
-                        } else {
-                            it.header("X-Cache", "MISS")
-                        }
-                    }
+            fun respondWithImage(input: InputStream, length: String?, type: String, lastModified: String?): Response =
+                    Response(Status.OK)
+                            .header("Content-Type", type)
+                            .header("X-Content-Type-Options", "nosniff")
+                            .header(
+                                    "Cache-Control",
+                                    listOf("public", MaxAgeTtl(Constants.MAX_AGE_CACHE).toHeaderValue()).joinToString(", ")
+                            )
+                            .header("Timing-Allow-Origin", "https://mangadex.org")
+                            .let {
+                                if (length != null) {
+                                    it.body(input, length.toLong()).header("Content-Length", length)
+                                } else {
+                                    it.body(input).header("Transfer-Encoding", "chunked")
+                                }
+                            }
+                            .let {
+                                if (lastModified != null) {
+                                    it.header("Last-Modified", lastModified)
+                                } else {
+                                    it
+                                }
+                            }
 
             val snapshot = cache.get(cacheId)
             if (snapshot != null) {
-                statistics.get().cacheHits.incrementAndGet()
-
                 // our files never change, so it's safe to use the browser cache
                 if (request.header("If-Modified-Since") != null) {
+                    statistics.getAndUpdate {
+                        it.copy(browserCached = it.browserCached + 1)
+                    }
+
                     if (LOGGER.isInfoEnabled) {
                         LOGGER.info("Request for $sanitizedUri cached by browser")
                     }
@@ -130,20 +125,26 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                     snapshot.close()
 
                     Response(Status.NOT_MODIFIED)
-                        .header("Last-Modified", lastModified)
+                            .header("Last-Modified", lastModified)
                 } else {
+                    statistics.getAndUpdate {
+                        it.copy(cacheHits = it.cacheHits + 1)
+                    }
+
                     if (LOGGER.isInfoEnabled) {
                         LOGGER.info("Request for $sanitizedUri hit cache")
                     }
 
                     respondWithImage(
-                        CipherInputStream(BufferedInputStream(snapshot.getInputStream(0)), getRc4(rc4Bytes)),
-                        snapshot.getLength(0).toString(), snapshot.getString(1), snapshot.getString(2),
-                        true
+                            CipherInputStream(BufferedInputStream(snapshot.getInputStream(0)), getRc4(rc4Bytes)),
+                            snapshot.getLength(0).toString(), snapshot.getString(1), snapshot.getString(2)
                     )
                 }
             } else {
-                statistics.get().cacheMisses.incrementAndGet()
+                statistics.getAndUpdate {
+                    it.copy(cacheMisses = it.cacheMisses + 1)
+                }
+
                 if (LOGGER.isInfoEnabled) {
                     LOGGER.info("Request for $sanitizedUri missed cache")
                 }
@@ -176,8 +177,8 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                         editor.setString(2, lastModified)
 
                         val tee = CachingInputStream(
-                            mdResponse.body.stream,
-                            executor, CipherOutputStream(BufferedOutputStream(editor.newOutputStream(0)), getRc4(rc4Bytes))
+                                mdResponse.body.stream,
+                                executor, CipherOutputStream(BufferedOutputStream(editor.newOutputStream(0)), getRc4(rc4Bytes))
                         ) {
                             // Note: if neither of the options get called/are in the log
                             // check that tee gets closed and for exceptions in this lambda
@@ -195,14 +196,14 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                                 editor.abort()
                             }
                         }
-                        respondWithImage(tee, contentLength, contentType, lastModified, false)
+                        respondWithImage(tee, contentLength, contentType, lastModified)
                     } else {
                         editor?.abort()
 
                         if (LOGGER.isTraceEnabled) {
                             LOGGER.trace("Request for $sanitizedUri is being served")
                         }
-                        respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified, false)
+                        respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified)
                     }
                 }
             }
@@ -212,50 +213,23 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
     CachingFilters
 
     return catchAllHideDetails()
-        .then(ServerFilters.CatchLensFailure)
-        .then(addCommonHeaders())
-        .then(
-            routes(
-                "/data/{chapterHash}/{fileName}" bind Method.GET to app(false),
-                "/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true),
-                "/{token}/data/{chapterHash}/{fileName}" bind Method.GET to app(false),
-                "/{token}/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true)
+            .then(ServerFilters.CatchLensFailure)
+            .then(addCommonHeaders())
+            .then(
+                    routes(
+                            "/data/{chapterHash}/{fileName}" bind Method.GET to app(false),
+                            "/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true),
+                            "/{token}/data/{chapterHash}/{fileName}" bind Method.GET to app(false),
+                            "/{token}/data-saver/{chapterHash}/{fileName}" bind Method.GET to app(true)
+                    )
             )
-        )
-        .asServer(Netty(serverSettings.tls, clientSettings, statistics))
+            .asServer(Netty(serverSettings.tls, clientSettings, statistics))
 }
 
 private fun getRc4(key: ByteArray): Cipher {
     val rc4 = Cipher.getInstance("RC4")
     rc4.init(Cipher.ENCRYPT_MODE, SecretKeySpec(key, "RC4"))
     return rc4
-}
-
-private val HTTP_TIME_FORMATTER = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O", Locale.ENGLISH)
-
-private fun addCommonHeaders(): Filter {
-    return Filter { next: HttpHandler ->
-        { request: Request ->
-            val response = next(request)
-            response.header("Date", HTTP_TIME_FORMATTER.format(ZonedDateTime.now(ZoneOffset.UTC)))
-                .header("Server", "Mangadex@Home Node ${Constants.CLIENT_VERSION} (${Constants.CLIENT_BUILD})")
-        }
-    }
-}
-
-private fun catchAllHideDetails(): Filter {
-    return Filter { next: HttpHandler ->
-        { request: Request ->
-            try {
-                next(request)
-            } catch (e: Exception) {
-                if (LOGGER.isWarnEnabled) {
-                    LOGGER.warn("Request error detected", e)
-                }
-                Response(Status.INTERNAL_SERVER_ERROR)
-            }
-        }
-    }
 }
 
 private fun md5Bytes(stringToHash: String): ByteArray {
