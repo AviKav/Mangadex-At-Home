@@ -85,7 +85,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
             statistics.get().requestsServed.incrementAndGet()
 
             // Netty doesn't do Content-Length or Content-Type, so we have the pleasure of doing that ourselves
-            fun respondWithImage(input: InputStream, length: String?, type: String, lastModified: String?): Response =
+            fun respondWithImage(input: InputStream, length: String?, type: String, lastModified: String?, cached: Boolean): Response =
                 Response(Status.OK)
                     .header("Content-Type", type)
                     .header("X-Content-Type-Options", "nosniff")
@@ -106,6 +106,13 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                             it.header("Last-Modified", lastModified)
                         } else {
                             it
+                        }
+                    }
+                    .let {
+                        if (cached != null && cached == true) {
+                            it.header("X-Cache", "HIT")
+                        } else {
+                            it.header("X-Cache", "MISS")
                         }
                     }
 
@@ -131,7 +138,8 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
 
                     respondWithImage(
                         CipherInputStream(BufferedInputStream(snapshot.getInputStream(0)), getRc4(rc4Bytes)),
-                        snapshot.getLength(0).toString(), snapshot.getString(1), snapshot.getString(2)
+                        snapshot.getLength(0).toString(), snapshot.getString(1), snapshot.getString(2),
+                        true
                     )
                 }
             } else {
@@ -187,14 +195,14 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                                 editor.abort()
                             }
                         }
-                        respondWithImage(tee, contentLength, contentType, lastModified)
+                        respondWithImage(tee, contentLength, contentType, lastModified, false)
                     } else {
                         editor?.abort()
 
                         if (LOGGER.isTraceEnabled) {
                             LOGGER.trace("Request for $sanitizedUri is being served")
                         }
-                        respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified)
+                        respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified, false)
                     }
                 }
             }
