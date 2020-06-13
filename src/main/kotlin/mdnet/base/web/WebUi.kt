@@ -25,7 +25,6 @@ fun getUiServer(
     statistics: AtomicReference<Statistics>,
     statsMap: Map<Instant, Statistics>
 ): Http4kServer {
-    val statisticsLens = Body.auto<Statistics>().toLens()
     val statsMapLens = Body.auto<Map<Instant, Statistics>>().toLens()
 
     return catchAllHideDetails()
@@ -34,7 +33,7 @@ fun getUiServer(
         .then(
             routes(
                 "/api/stats" bind Method.GET to {
-                    statisticsLens(statistics.get(), Response(Status.OK))
+                    statsMapLens(mapOf(Instant.now() to statistics.get()), Response(Status.OK))
                 },
                 "/api/pastStats" bind Method.GET to {
                     synchronized(statsMap) {

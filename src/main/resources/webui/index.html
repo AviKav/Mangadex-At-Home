@@ -21,7 +21,7 @@
     <div id="consoleLatest" hidden></div>
     <button id="connection" class="connecting button" onclick="reconnect()">Disconnected</button>
 </div>
-<div id="sideBar">
+<div id="sideBar" >
     <div id="expSide" class="sideOption" onclick="expSide()">
         <img src="icons/showmore.png" alt="dash" width="30px" height="30px" style="padding: 10px" class="img">
         <h2 style="position: absolute; left: 50px; top: 0; margin: calc((50px - 29px)/2)">Menu</h2>
@@ -30,17 +30,9 @@
         <img src="icons/dashboard.png" alt="dash" width="30px" height="30px" style="padding: 10px" class="img">
         <h2 style="position: absolute; left: 50px; top: 50px; margin: calc((50px - 29px)/2)">Dashboard</h2>
     </div>
-    <div id="cons" class="sideOption" onclick="selectTab('cons','console')">
-        <img src="icons/console.png" alt="dash" width="30px" height="30px" style="padding: 10px" class="img">
-        <h2 style="position: absolute; left: 50px; top: 100px; margin: calc((50px - 29px)/2)">Console</h2>
-    </div>
     <div id="opt" class="sideOption" onclick="selectTab('opt','dashOptions')">
         <img src="icons/options.png" alt="dash" width="30px" height="30px" style="padding: 10px" class="img">
-        <h2 style="position: absolute; left: 50px; top: 150px; margin: calc((50px - 29px)/2)">Options</h2>
-    </div>
-    <div id="inf" class="sideOption" onclick="selectTab('inf','info')">
-        <img src="icons/info.png" alt="dash" width="30px" height="30px" style="padding: 10px" class="img">
-        <h2 style="position: absolute; left: 50px; top: 200px; margin: calc((50px - 29px)/2)">Info</h2>
+        <h2 style="position: absolute; left: 50px; top: 100px; margin: calc((50px - 29px)/2)">Options</h2>
     </div>
 </div>
 <div id="content">
@@ -93,23 +85,6 @@
                 <h4>Data Refresh Rate</h4>
                 <label><input id="dataRefreshRate" type="number" class="optionInput input" placeholder="5000" min="500"></label>
             </div>
-            <div class="option">
-                <h4>Websocket Port</h4>
-                <label><input id="port" type="number" class="optionInput input" placeholder="33333"></label>
-            </div>
-            <div class="option">
-                <h4>Client IP</h4>
-                <label><input id="ip" type="text" class="optionInput input" placeholder="localhost"></label>
-            </div>
-            <div class="option">
-                <h4>Max Console Lines</h4>
-                <label><input id="maxConsoleLines" type="number" class="optionInput input" placeholder="1000" min="100"></label>
-            </div>
-            <div class="option">
-                <h4>Graph Time Frame</h4>
-                <label><input id="graphTimeFrame" type="number" class="optionInput input" placeholder="30000"
-                              min="5000"></label>
-            </div>
             <h3>Display</h3>
             <div class="option">
                 <h4>Theme</h4>
@@ -128,24 +103,10 @@
                 </select></label>
             </div>
             <div class="option">
-                <h4>Show Console Latest</h4>
-                <label class="switch switchInput">
-                    <input id="newestconsole" type="checkbox">
-                    <span id="newestconsolecb" class="slider"></span>
-                </label>
-            </div>
-            <div class="option">
                 <h4>Animations</h4>
                 <label class="switch switchInput">
                     <input id="doAnimations" type="checkbox">
                     <span id="doAnimationscb" class="slider"></span>
-                </label>
-            </div>
-            <div class="option">
-                <h4>Lock Dashboard <br>(does not work)</h4>
-                <label class="switch switchInput">
-                    <input id="lockDash" type="checkbox">
-                    <span id="lockDashcb" class="slider"></span>
                 </label>
             </div>
         </div>

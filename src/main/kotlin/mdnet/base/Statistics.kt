@@ -7,5 +7,6 @@ data class Statistics(
     @field:SerializedName("cache_hits") val cacheHits: Int = 0,
     @field:SerializedName("cache_misses") val cacheMisses: Int = 0,
     @field:SerializedName("browser_cached") val browserCached: Int = 0,
-    @field:SerializedName("bytes_sent") val bytesSent: Long = 0
+    @field:SerializedName("bytes_sent") val bytesSent: Long = 0,
+    @field:SerializedName("bytes_on_disk") val bytesOnDisk: Long = 0
 )

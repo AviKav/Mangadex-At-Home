@@ -64,8 +64,7 @@ public class MangaDexClient {
 			if (snapshot != null) {
 				String json = snapshot.getString(0);
 				snapshot.close();
-				statistics.set(GSON.fromJson(json, new TypeToken<ArrayList<Statistics>>() {
-				}.getType()));
+				statistics.set(GSON.fromJson(json, Statistics.class));
 			} else {
 				statistics.set(new Statistics());
 			}
@@ -85,6 +84,16 @@ public class MangaDexClient {
 		}
 
 		statsMap.put(Instant.now(), statistics.get());
+		try {
+			DiskLruCache.Editor editor = cache.edit("statistics");
+			if (editor != null) {
+				String json = GSON.toJson(statistics.get(), Statistics.class);
+				editor.setString(0, json);
+				editor.setString(1, "");
+				editor.setString(2, "");
+				editor.commit();
+			}
+		} catch (IOException ignored) {}
 
 		if (clientSettings.getWebSettings() != null) {
 			webUi = WebUiKt.getUiServer(clientSettings.getWebSettings(), statistics, statsMap);
