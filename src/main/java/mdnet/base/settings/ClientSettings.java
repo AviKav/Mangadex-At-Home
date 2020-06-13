@@ -24,7 +24,7 @@ public final class ClientSettings {
 		this.maxCacheSizeMib = 20480;
 		this.maxBandwidthMibPerHour = 0;
 		this.maxBurstRateKibPerSecond = 0;
-		this.clientPort = 1200;
+		this.clientPort = 443;
 		this.clientSecret = "PASTE-YOUR-SECRET-HERE";
 		this.threads = 32;
 		this.webSettings = null;
