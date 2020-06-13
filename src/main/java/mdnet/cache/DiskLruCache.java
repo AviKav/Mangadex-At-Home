@@ -411,7 +411,7 @@ public final class DiskLruCache implements Closeable {
 		return getImpl(key);
 	}
 
-	public synchronized Snapshot getImpl(String key) throws IOException {
+	private synchronized Snapshot getImpl(String key) throws IOException {
 		checkNotClosed();
 		Entry entry = lruEntries.get(key);
 		if (entry == null) {

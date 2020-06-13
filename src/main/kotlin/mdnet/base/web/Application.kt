@@ -31,8 +31,6 @@ import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.InputStream
 import java.security.MessageDigest
-import java.time.format.DateTimeFormatter
-import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
 import javax.crypto.Cipher
@@ -59,7 +57,6 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                     .build())
             .setMaxConnTotal(THREADS_TO_ALLOCATE)
             .setMaxConnPerRoute(THREADS_TO_ALLOCATE)
-            // Have it at the maximum open sockets a user can have in most modern OSes. No reason to limit this, just limit it at the Netty side.
             .build())
 
     val app = { dataSaver: Boolean ->
@@ -83,8 +80,9 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                 md5Bytes("$chapterHash.$fileName")
             }
             val cacheId = printHexString(rc4Bytes)
-
-            statistics.get().requestsServed.incrementAndGet()
+            statistics.getAndUpdate {
+                it.copy(requestsServed = it.requestsServed + 1)
+            }
 
             // Netty doesn't do Content-Length or Content-Type, so we have the pleasure of doing that ourselves
             fun respondWithImage(input: InputStream, length: String?, type: String, lastModified: String?): Response =
@@ -113,10 +111,12 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
 
             val snapshot = cache.get(cacheId)
             if (snapshot != null) {
-                statistics.get().cacheHits.incrementAndGet()
-
                 // our files never change, so it's safe to use the browser cache
                 if (request.header("If-Modified-Since") != null) {
+                    statistics.getAndUpdate {
+                        it.copy(browserCached = it.browserCached + 1)
+                    }
+
                     if (LOGGER.isInfoEnabled) {
                         LOGGER.info("Request for $sanitizedUri cached by browser")
                     }
@@ -127,6 +127,10 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                     Response(Status.NOT_MODIFIED)
                             .header("Last-Modified", lastModified)
                 } else {
+                    statistics.getAndUpdate {
+                        it.copy(cacheHits = it.cacheHits + 1)
+                    }
+
                     if (LOGGER.isInfoEnabled) {
                         LOGGER.info("Request for $sanitizedUri hit cache")
                     }
@@ -137,7 +141,10 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                     )
                 }
             } else {
-                statistics.get().cacheMisses.incrementAndGet()
+                statistics.getAndUpdate {
+                    it.copy(cacheMisses = it.cacheMisses + 1)
+                }
+
                 if (LOGGER.isInfoEnabled) {
                     LOGGER.info("Request for $sanitizedUri missed cache")
                 }
@@ -224,9 +231,6 @@ private fun getRc4(key: ByteArray): Cipher {
     rc4.init(Cipher.ENCRYPT_MODE, SecretKeySpec(key, "RC4"))
     return rc4
 }
-
-private val HTTP_TIME_FORMATTER = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O", Locale.ENGLISH)
-
 
 private fun md5Bytes(stringToHash: String): ByteArray {
     val digest = MessageDigest.getInstance("MD5")
