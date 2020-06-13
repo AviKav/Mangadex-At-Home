@@ -20,8 +20,6 @@ public final class WebSettings {
 
 	@Override
 	public String toString() {
-		return "WebSettings{" +
-				"uiPort=" + uiPort +
-				'}';
+		return "WebSettings{" + "uiPort=" + uiPort + '}';
 	}
 }

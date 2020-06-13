@@ -85,9 +85,12 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
                                         if (LOGGER.isTraceEnabled) {
                                             LOGGER.trace("Ignored invalid SSL connection")
                                         }
-                                    } else if (cause is IOException && cause.message?.contains("peer") == true) {
+                                    } else if (cause is IOException) {
+                                        if (LOGGER.isInfoEnabled) {
+                                            LOGGER.info("User (downloader) abruptly closed the connection")
+                                        }
                                         if (LOGGER.isTraceEnabled) {
-                                            LOGGER.trace("User (downloader) closed the connection")
+                                            LOGGER.trace("IOException in pipeline", cause)
                                         }
                                     } else {
                                         ctx.fireExceptionCaught(cause)
