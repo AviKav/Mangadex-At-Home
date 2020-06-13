@@ -17,6 +17,7 @@
     </appender>
 
     <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>1024</queueSize>
         <appender-ref ref="FILE" />
     </appender>
 
