@@ -290,10 +290,6 @@ public class MangaDexClient {
 			if (settings.getWebSettings().getUiPort() == 0) {
 				MangaDexClient.dieWithError("Config Error: Invalid UI port number");
 			}
-
-			if (settings.getWebSettings().getUiWebsocketPort() == 0) {
-				MangaDexClient.dieWithError("Config Error: Invalid websocket port number");
-			}
 		}
 	}
 

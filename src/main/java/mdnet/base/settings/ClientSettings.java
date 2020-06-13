@@ -27,7 +27,7 @@ public final class ClientSettings {
 		this.clientPort = 1200;
 		this.clientSecret = "PASTE-YOUR-SECRET-HERE";
 		this.threads = 32;
-		this.webSettings = new WebSettings();
+		this.webSettings = null;
 	}
 
 	public ClientSettings(long maxCacheSizeMib, long maxBandwidthMibPerHour, long maxBurstRateKibPerSecond,
