@@ -2,21 +2,29 @@ package mdnet.base;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import mdnet.base.settings.ClientSettings;
+import mdnet.base.web.ApplicationKt;
+import mdnet.base.web.WebUiKt;
 import mdnet.cache.DiskLruCache;
-import mdnet.webui.WebConsole;
 import org.http4k.server.Http4kServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 
 public class MangaDexClient {
+	private final static Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private final static Logger LOGGER = LoggerFactory.getLogger(MangaDexClient.class);
 
 	// This lock protects the Http4kServer from concurrent restart attempts
@@ -24,12 +32,24 @@ public class MangaDexClient {
 	private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 	private final ServerHandler serverHandler;
 	private final ClientSettings clientSettings;
-	private final AtomicReference<Statistics> statistics;
-	private ServerSettings serverSettings;
 
-	// if this is null, then the server has shutdown
-	private Http4kServer engine;
+	private final Map<Instant, Statistics> statsMap = Collections
+			.synchronizedMap(new LinkedHashMap<Instant, Statistics>(80) {
+				@Override
+				protected boolean removeEldestEntry(Map.Entry eldest) {
+					return this.size() > 80;
+				}
+			});
+	private final AtomicReference<Statistics> statistics;
+
+	private ServerSettings serverSettings;
+	private Http4kServer engine; // if this is null, then the server has shutdown
+	private Http4kServer webUi;
 	private DiskLruCache cache;
+
+	// these variables are for runLoop();
+	private int counter = 0;
+	private long lastBytesSent = 0;
 
 	public MangaDexClient(ClientSettings clientSettings) {
 		this.clientSettings = clientSettings;
@@ -39,14 +59,23 @@ public class MangaDexClient {
 		try {
 			cache = DiskLruCache.open(new File("cache"), 3, 3,
 					clientSettings.getMaxCacheSizeMib() * 1024 * 1024 /* MiB to bytes */);
+
+			DiskLruCache.Snapshot snapshot = cache.get("statistics");
+			if (snapshot != null) {
+				String json = snapshot.getString(0);
+				snapshot.close();
+				statistics.set(GSON.fromJson(json, new TypeToken<ArrayList<Statistics>>() {
+				}.getType()));
+			} else {
+				statistics.set(new Statistics());
+			}
+			lastBytesSent = statistics.get().getBytesSent();
 		} catch (IOException e) {
 			MangaDexClient.dieWithError(e);
 		}
 	}
 
-	// This function also does most of the program initialization.
 	public void runLoop() {
-		statistics.set(new Statistics());
 		loginAndStartServer();
 		if (serverSettings.getLatestBuild() > Constants.CLIENT_BUILD) {
 			if (LOGGER.isWarnEnabled()) {
@@ -55,23 +84,21 @@ public class MangaDexClient {
 			}
 		}
 
+		statsMap.put(Instant.now(), statistics.get());
+
+		if (clientSettings.getWebSettings() != null) {
+			webUi = WebUiKt.getUiServer(clientSettings.getWebSettings(), statistics, statsMap);
+			webUi.start();
+		}
+
 		if (LOGGER.isInfoEnabled()) {
 			LOGGER.info("MDNet initialization completed successfully. Starting normal operation.");
 		}
 
-		// we don't really care about the Atomic part here
-		AtomicInteger counter = new AtomicInteger();
-		// ping keep-alive every 45 seconds
 		executorService.scheduleAtFixedRate(() -> {
-			int num = counter.get();
-			if (num == 80) {
-				counter.set(0);
-
-				// if server is stopped due to egress limits, restart it
-				if (LOGGER.isInfoEnabled()) {
-					LOGGER.info("Hourly update: refreshing statistics");
-				}
-				statistics.set(new Statistics());
+			if (counter == 80) {
+				counter = 0;
+				lastBytesSent = statistics.get().getBytesSent();
 
 				if (engine == null) {
 					if (LOGGER.isInfoEnabled()) {
@@ -81,16 +108,19 @@ public class MangaDexClient {
 					loginAndStartServer();
 				}
 			} else {
-				counter.set(num + 1);
+				counter++;
 			}
+
+			statsMap.put(Instant.now(), statistics.get());
 
 			// if the server is offline then don't try and refresh certs
 			if (engine == null) {
 				return;
 			}
 
-			if (clientSettings.getMaxBandwidthMibPerHour() != 0 && clientSettings.getMaxBandwidthMibPerHour() * 1024
-					* 1024 /* MiB to bytes */ < statistics.get().getBytesSent().get()) {
+			long currentBytesSent = statistics.get().getBytesSent() - lastBytesSent;
+			if (clientSettings.getMaxBandwidthMibPerHour() != 0
+					&& clientSettings.getMaxBandwidthMibPerHour() * 1024 * 1024 /* MiB to bytes */ < currentBytesSent) {
 				if (LOGGER.isInfoEnabled()) {
 					LOGGER.info("Shutting down server as hourly bandwidth limit reached");
 				}
@@ -164,6 +194,12 @@ public class MangaDexClient {
 
 			logoutAndStopServer();
 		}
+		webUi.close();
+		try {
+			cache.close();
+		} catch (IOException e) {
+			LOGGER.error("Cache failed to close", e);
+		}
 	}
 
 	public static void main(String[] args) {
@@ -178,31 +214,21 @@ public class MangaDexClient {
 			MangaDexClient.dieWithError("Expected one argument: path to config file, or nothing");
 		}
 
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		ClientSettings settings;
 
 		try {
-			settings = gson.fromJson(new FileReader(file), ClientSettings.class);
+			settings = GSON.fromJson(new FileReader(file), ClientSettings.class);
 		} catch (FileNotFoundException ignored) {
 			settings = new ClientSettings();
 			LOGGER.warn("Settings file {} not found, generating file", file);
 			try (FileWriter writer = new FileWriter(file)) {
-				writer.write(gson.toJson(settings));
+				writer.write(GSON.toJson(settings));
 			} catch (IOException e) {
 				MangaDexClient.dieWithError(e);
 			}
 		}
 
-		if (!ClientSettings.isSecretValid(settings.getClientSecret()))
-			MangaDexClient.dieWithError("Config Error: API Secret is invalid, must be 52 alphanumeric characters");
-
-		if (settings.getClientPort() == 0) {
-			MangaDexClient.dieWithError("Config Error: Invalid port number");
-		}
-
-		if (settings.getMaxCacheSizeMib() < 1024) {
-			MangaDexClient.dieWithError("Config Error: Invalid max cache size, must be >= 1024 MiB (1GiB)");
-		}
+		validateSettings(settings);
 
 		if (LOGGER.isInfoEnabled()) {
 			LOGGER.info("Client settings loaded: {}", settings);
@@ -211,24 +237,6 @@ public class MangaDexClient {
 		MangaDexClient client = new MangaDexClient(settings);
 		Runtime.getRuntime().addShutdownHook(new Thread(client::shutdown));
 		client.runLoop();
-
-		if (settings.getWebSettings() != null) {
-			// java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-			// System.setOut(new java.io.PrintStream(out));
-			// TODO: system.out redirect
-			ClientSettings finalSettings = settings;
-			new Thread(() -> {
-				WebConsole webConsole = new WebConsole(finalSettings.getWebSettings().getClientWebsocketPort()) {
-					@Override
-					protected void parseMessage(String message) {
-						System.out.println(message);
-						// TODO: something happens here
-						// the message should be formatted in json
-					}
-				};
-				// TODO: webConsole.sendMessage(t,m) whenever system.out is written to
-			}).start();
-		}
 	}
 
 	public static void dieWithError(Throwable e) {
@@ -240,8 +248,48 @@ public class MangaDexClient {
 
 	public static void dieWithError(String error) {
 		if (LOGGER.isErrorEnabled()) {
-			LOGGER.error("Critical Error: " + error);
+			LOGGER.error("Critical Error: {}", error);
 		}
 		System.exit(1);
+	}
+
+	public static void validateSettings(ClientSettings settings) {
+		if (!isSecretValid(settings.getClientSecret()))
+			MangaDexClient.dieWithError("Config Error: API Secret is invalid, must be 52 alphanumeric characters");
+
+		if (settings.getClientPort() == 0) {
+			MangaDexClient.dieWithError("Config Error: Invalid port number");
+		}
+
+		if (settings.getMaxCacheSizeMib() < 1024) {
+			MangaDexClient.dieWithError("Config Error: Invalid max cache size, must be >= 1024 MiB (1GiB)");
+		}
+
+		if (settings.getThreads() < 4) {
+			MangaDexClient.dieWithError("Config Error: Invalid number of threads, must be >= 8");
+		}
+
+		if (settings.getMaxBandwidthMibPerHour() < 0) {
+			MangaDexClient.dieWithError("Config Error: Max bandwidth must be >= 0");
+		}
+
+		if (settings.getMaxBurstRateKibPerSecond() < 0) {
+			MangaDexClient.dieWithError("Config Error: Max burst rate must be >= 0");
+		}
+
+		if (settings.getWebSettings() != null) {
+			if (settings.getWebSettings().getUiPort() == 0) {
+				MangaDexClient.dieWithError("Config Error: Invalid UI port number");
+			}
+
+			if (settings.getWebSettings().getUiWebsocketPort() == 0) {
+				MangaDexClient.dieWithError("Config Error: Invalid websocket port number");
+			}
+		}
+	}
+
+	public static boolean isSecretValid(String clientSecret) {
+		final int CLIENT_KEY_LENGTH = 52;
+		return Pattern.matches("^[a-zA-Z0-9]{" + CLIENT_KEY_LENGTH + "}$", clientSecret);
 	}
 }

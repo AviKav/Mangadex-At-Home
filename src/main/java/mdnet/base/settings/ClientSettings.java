@@ -3,7 +3,6 @@ package mdnet.base.settings;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 public final class ClientSettings {
 	@SerializedName("max_cache_size_mib")
@@ -32,7 +31,7 @@ public final class ClientSettings {
 	}
 
 	public ClientSettings(long maxCacheSizeMib, long maxBandwidthMibPerHour, long maxBurstRateKibPerSecond,
-						  int clientPort, String clientSecret, int threads, WebSettings webSettings) {
+			int clientPort, String clientSecret, int threads, WebSettings webSettings) {
 		this.maxCacheSizeMib = maxCacheSizeMib;
 		this.maxBandwidthMibPerHour = maxBandwidthMibPerHour;
 		this.maxBurstRateKibPerSecond = maxBurstRateKibPerSecond;
@@ -74,10 +73,5 @@ public final class ClientSettings {
 		return "ClientSettings{" + "maxCacheSizeMib=" + maxCacheSizeMib + ", maxBandwidthMibPerHour="
 				+ maxBandwidthMibPerHour + ", maxBurstRateKibPerSecond=" + maxBurstRateKibPerSecond + ", clientPort="
 				+ clientPort + ", clientSecret='" + "<hidden>" + '\'' + ", threads=" + getThreads() + '}';
-	}
-
-	public static boolean isSecretValid(String clientSecret) {
-		final int CLIENT_KEY_LENGTH = 52;
-		return Pattern.matches("^[a-zA-Z0-9]{" + CLIENT_KEY_LENGTH + "}$", clientSecret);
 	}
 }

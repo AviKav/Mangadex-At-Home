@@ -477,6 +477,7 @@ function updateWithMessage(m) {
                 updateConsole(result.data, 2);
                 break;
             case "stats":
+
                 updateValues();
                 break;
             default:
