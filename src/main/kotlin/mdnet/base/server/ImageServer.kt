@@ -68,8 +68,10 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
         val snapshot = cache.get(cacheId)
         if (snapshot != null) {
             request.handleCacheHit(sanitizedUri, getRc4(rc4Bytes), snapshot)
+                .header("X-Uri", sanitizedUri)
         } else {
             request.handleCacheMiss(sanitizedUri, getRc4(rc4Bytes), cacheId)
+                .header("X-Uri", sanitizedUri)
         }
     }
 

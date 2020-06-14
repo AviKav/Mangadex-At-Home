@@ -18,7 +18,8 @@ import java.util.concurrent.atomic.AtomicReference
 fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSettings: ClientSettings, statistics: AtomicReference<Statistics>): Http4kServer {
     val imageServer = ImageServer(cache, statistics, serverSettings.imageServer)
 
-    return catchAllHideDetails()
+    return Timer
+            .then(catchAllHideDetails())
             .then(ServerFilters.CatchLensFailure)
             .then(addCommonHeaders())
             .then(
