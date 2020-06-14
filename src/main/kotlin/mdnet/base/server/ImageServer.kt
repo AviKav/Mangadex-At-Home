@@ -192,7 +192,8 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 } else {
                     it
                 }
-            }.header("X-Cache", if (cached) "HIT" else "MISS")
+            }
+            .header("X-Cache", if (cached) "HIT" else "MISS")
 }
 
 private fun getRc4(key: ByteArray): Cipher {
