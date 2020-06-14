@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- [2020-06-14] Added response timings to trace logs and response headers by [@lflare].
 
 ### Changed
 
