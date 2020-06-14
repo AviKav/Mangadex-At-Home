@@ -102,7 +102,7 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
                     .option(ChannelOption.SO_BACKLOG, 1000)
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
 
-            val channel = bootstrap.bind(clientSettings.clientPort).sync().channel()
+            val channel = bootstrap.bind(InetSocketAddress(clientSettings.clientHostname, clientSettings.clientPort)).sync().channel()
             address = channel.localAddress() as InetSocketAddress
             closeFuture = channel.closeFuture()
         }

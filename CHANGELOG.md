@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- [2020-06-14] Added new `client_hostname` selector to allow for custom address binding for Netty by [@lflare].
+- [2020-06-14] Added new `ui_hostname` selector to allow for custom address binding for WebUiNetty by [@lflare].
 
 ### Changed
 
