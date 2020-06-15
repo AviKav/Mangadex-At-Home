@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2020-06-14] Migrated cache metadata over to a sqlite3 handler [@carbotaniuman].
 
 ### Deprecated
+- [2020-06-14] Removed old cache subdirectory migration system by [@carbotaniuman].
 
 ### Removed
 
