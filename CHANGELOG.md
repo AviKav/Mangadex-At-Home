@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [1.0.0-RC17] - 2020-06-15
+### Added
 - [2020-06-15] Added logging of backend assigned URL to logs by [@lflare].
 - [2020-06-15] Added logging of `compromised` softban to logs by [@lflare].
 
@@ -15,13 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 - [2020-06-14] Removed old cache subdirectory migration system by [@carbotaniuman].
 
-### Removed
-
 ### Fixed
 - [2020-06-15] Fixed tokenized data-saver parser not working by [@lflare].
 - [2020-06-14] Switched cache metadata over to a MySql instance [@carbotaniuman].
-
-### Security
 
 ## [1.0.0-RC16] - 2020-06-14
 ### Added
@@ -81,7 +90,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [2020-06-11] Tweaked logging configuration to reduce log file sizes by [@carbotaniuman].
 
-[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc16...HEAD
+[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc17...HEAD
+[1.0.0-rc17]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc16...1.0.0-rc17
 [1.0.0-rc16]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc15...1.0.0-rc16
 [1.0.0-rc15]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc14...1.0.0-rc15
 [1.0.0-rc14]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc13...1.0.0-rc14
