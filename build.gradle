@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.mangadex"
-version = "git describe --tags".execute().text.trim()
+version = "git describe --tags --dirty".execute().text.trim()
 mainClassName = "mdnet.base.MangaDexClient"
 
 repositories {

@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - [2020-06-14] Migrated cache metadata over to a sqlite3 handler [@carbotaniuman].
+- [2020-06-15] Properly describe dirty builds as dirty by [@lflare].
 
 ### Deprecated
 - [2020-06-14] Removed old cache subdirectory migration system by [@carbotaniuman].
