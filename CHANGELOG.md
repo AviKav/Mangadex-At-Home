@@ -4,19 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0-RC16] - 2020-06-14
 ### Added
 - [2020-06-14] Added new `client_hostname` selector to allow for custom address binding for Netty by [@lflare].
 - [2020-06-14] Added new `ui_hostname` selector to allow for custom address binding for WebUiNetty by [@lflare].
 - [2020-06-14] Added response timings to trace logs and response headers by [@lflare].
-
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
 
 ## [1.0.0-RC15] - 2020-06-13
 ### Added
