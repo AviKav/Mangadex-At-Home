@@ -34,11 +34,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -110,6 +105,7 @@ public final class DiskLruCache implements Closeable {
 	private static final long ANY_SEQUENCE_NUMBER = -1;
 
 	public static final Pattern LEGAL_KEY_PATTERN = Pattern.compile("[a-z0-9_-]{1,120}");
+	public static final Pattern UNSAFE_LEGAL_KEY_PATTERN = Pattern.compile("[a-z0-9_-][\\\\/a-z0-9_-]{0,119}");
 
 	private static final String CLEAN = "CLEAN";
 	private static final String DIRTY = "DIRTY";
@@ -411,6 +407,16 @@ public final class DiskLruCache implements Closeable {
 		return getImpl(key);
 	}
 
+	/**
+	 * Returns a snapshot of the entry named {@code key}, or null if it doesn't
+	 * exist is not currently readable. If a value is returned, it is moved to the
+	 * head of the LRU queue. Unsafe as it allows arbitrary directories to be accessed!
+	 */
+	public Snapshot getUnsafe(String key) throws IOException {
+		validateUnsafeKey(key);
+		return getImpl(key);
+	}
+
 	private synchronized Snapshot getImpl(String key) throws IOException {
 		checkNotClosed();
 		Entry entry = lruEntries.get(key);
@@ -460,6 +466,15 @@ public final class DiskLruCache implements Closeable {
 	 */
 	public Editor edit(String key) throws IOException {
 		validateKey(key);
+		return editImpl(key, ANY_SEQUENCE_NUMBER);
+	}
+
+	/**
+	 * Returns an editor for the entry named {@code key}, or null if another edit is
+	 * in progress. Unsafe as it allows arbitrary directories to be accessed!
+	 */
+	public Editor editUnsafe(String key) throws IOException {
+		validateUnsafeKey(key);
 		return editImpl(key, ANY_SEQUENCE_NUMBER);
 	}
 
@@ -594,6 +609,17 @@ public final class DiskLruCache implements Closeable {
 		return removeImpl(key);
 	}
 
+	/**
+	 * Drops the entry for {@code key} if it exists and can be removed. Entries
+	 * actively being edited cannot be removed. Unsafe as it allows arbitrary directories to be accessed!
+	 *
+	 * @return true if an entry was removed.
+	 */
+	public boolean removeUnsafe(String key) throws IOException {
+		validateUnsafeKey(key);
+		return removeImpl(key);
+	}
+
 	private synchronized boolean removeImpl(String key) throws IOException {
 		checkNotClosed();
 		Entry entry = lruEntries.get(key);
@@ -657,7 +683,7 @@ public final class DiskLruCache implements Closeable {
 	private void trimToSize() throws IOException {
 		while (size > maxSize) {
 			Map.Entry<String, Entry> toEvict = lruEntries.entrySet().iterator().next();
-			remove(toEvict.getKey());
+			removeImpl(toEvict.getKey());
 		}
 	}
 
@@ -674,7 +700,14 @@ public final class DiskLruCache implements Closeable {
 	private void validateKey(String key) {
 		Matcher matcher = LEGAL_KEY_PATTERN.matcher(key);
 		if (!matcher.matches()) {
-			throw new IllegalArgumentException("keys must match regex " + LEGAL_KEY_PATTERN + ": \"" + key + "\"");
+			throw new IllegalArgumentException("Keys must match regex " + LEGAL_KEY_PATTERN + ": \"" + key + "\"");
+		}
+	}
+
+	private void validateUnsafeKey(String key) {
+		Matcher matcher = UNSAFE_LEGAL_KEY_PATTERN.matcher(key);
+		if (!matcher.matches()) {
+			throw new IllegalArgumentException("Unsafe keys must match regex " + UNSAFE_LEGAL_KEY_PATTERN + ": \"" + key + "\"");
 		}
 	}
 
@@ -831,7 +864,7 @@ public final class DiskLruCache implements Closeable {
 		public void commit() throws IOException {
 			if (hasErrors) {
 				completeEdit(this, false);
-				remove(entry.key); // The previous entry is stale.
+				removeImpl(entry.key); // The previous entry is stale.
 			} else {
 				completeEdit(this, true);
 			}
@@ -912,9 +945,6 @@ public final class DiskLruCache implements Closeable {
 		/** Lengths of this entry's files. */
 		private final long[] lengths;
 
-		/** Subkey pathing for cache files. */
-		private final String subKeyPath;
-
 		/** True if this entry has ever been published. */
 		private boolean readable;
 
@@ -927,11 +957,6 @@ public final class DiskLruCache implements Closeable {
 		private Entry(String key) {
 			this.key = key;
 			this.lengths = new long[valueCount];
-
-			// Splits the keys into a list of two characters, and join it together to use it
-			// for sub-directorying
-			this.subKeyPath = File.separator
-					+ String.join(File.separator, key.substring(0, 8).replaceAll("..(?!$)", "$0 ").split(" "));
 		}
 
 		public String getLengths() {
@@ -962,40 +987,11 @@ public final class DiskLruCache implements Closeable {
 		}
 
 		public File getCleanFile(int i) {
-			// Move files to new caching tree if exists
-			Path oldCache = Paths.get(directory + File.separator + key + "." + i);
-			Path newCache = Paths.get(directory + subKeyPath + File.separator + key + "." + i);
-
-			migrateCacheFile(i, oldCache, newCache);
-
-			return new File(directory + subKeyPath, key + "." + i);
+			return new File(directory, key + "." + i);
 		}
 
 		public File getDirtyFile(int i) {
-			// Move files to new caching tree if exists
-			Path oldCache = Paths.get(directory + File.separator + key + "." + i + ".tmp");
-			Path newCache = Paths.get(directory + subKeyPath + File.separator + key + "." + i + ".tmp");
-
-			migrateCacheFile(i, oldCache, newCache);
-
-			return new File(directory + subKeyPath, key + "." + i + ".tmp");
-		}
-
-		private void migrateCacheFile(int i, Path oldCache, Path newCache) {
-			File newCacheDirectory = new File(directory + subKeyPath, key + "." + i + ".tmp");
-			newCacheDirectory.getParentFile().mkdirs();
-
-			if (Files.exists(oldCache)) {
-				try {
-					Files.move(oldCache, newCache, StandardCopyOption.ATOMIC_MOVE);
-				} catch (FileAlreadyExistsException faee) {
-					try {
-						Files.delete(oldCache);
-					} catch (IOException ignored) {
-					}
-				} catch (IOException ignored) {
-				}
-			}
+			return new File(directory, key + "." + i + ".tmp");
 		}
 	}
 }

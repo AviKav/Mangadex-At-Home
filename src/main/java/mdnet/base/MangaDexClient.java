@@ -55,13 +55,12 @@ public class MangaDexClient {
 		this.statistics = new AtomicReference<>();
 
 		try {
-			cache = DiskLruCache.open(new File("cache"), 3, 3,
+			cache = DiskLruCache.open(new File("cache"), 1, 1,
 					clientSettings.getMaxCacheSizeMib() * 1024 * 1024 /* MiB to bytes */);
 
 			DiskLruCache.Snapshot snapshot = cache.get("statistics");
 			if (snapshot != null) {
 				String json = snapshot.getString(0);
-				snapshot.close();
 				statistics.set(GSON.fromJson(json, Statistics.class));
 			} else {
 				statistics.set(new Statistics());
@@ -103,8 +102,6 @@ public class MangaDexClient {
 				if (editor != null) {
 					String json = GSON.toJson(statistics.get(), Statistics.class);
 					editor.setString(0, json);
-					editor.setString(1, "");
-					editor.setString(2, "");
 					editor.commit();
 				}
 			} catch (IOException ignored) {

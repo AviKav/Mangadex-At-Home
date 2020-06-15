@@ -13,10 +13,12 @@ import org.http4k.routing.bind
 import org.http4k.routing.routes
 import org.http4k.server.Http4kServer
 import org.http4k.server.asServer
+import org.jetbrains.exposed.sql.Database
 import java.util.concurrent.atomic.AtomicReference
 
 fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSettings: ClientSettings, statistics: AtomicReference<Statistics>): Http4kServer {
-    val imageServer = ImageServer(cache, statistics, serverSettings.imageServer)
+    val database = Database.connect("jdbc:sqlite:cache/data.db", "org.sqlite.JDBC")
+    val imageServer = ImageServer(cache, statistics, serverSettings.imageServer, database)
 
     return Timer
             .then(catchAllHideDetails())
