@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Fixed
+- [2020-06-15] Fixed tokenized data-saver parser not working by [@lflare].
 
 ## [1.0.0-RC16] - 2020-06-14
 ### Added

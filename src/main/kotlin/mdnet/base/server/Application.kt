@@ -31,7 +31,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                         tokenized = true
                     ),
                     "/{token}/data-saver/{chapterHash}/{fileName}" bind Method.GET to imageServer.handler(
-                        dataSaver = false,
+                        dataSaver = true,
                         tokenized = true
                     )
                 )
