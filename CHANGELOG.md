@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
 ## [1.0.0-RC16] - 2020-06-14
 ### Added
 - [2020-06-14] Added new `client_hostname` selector to allow for custom address binding for Netty by [@lflare].
@@ -62,7 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [2020-06-11] Tweaked logging configuration to reduce log file sizes by [@carbotaniuman].
 
-[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc15...HEAD
+[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc16...HEAD
+[1.0.0-rc16]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc15...1.0.0-rc16
 [1.0.0-rc15]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc14...1.0.0-rc15
 [1.0.0-rc14]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc13...1.0.0-rc14
 [1.0.0-rc13]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc12...1.0.0-rc13
