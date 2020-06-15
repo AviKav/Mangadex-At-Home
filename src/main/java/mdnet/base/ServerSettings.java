@@ -10,11 +10,15 @@ public final class ServerSettings {
 	private final TlsCert tls;
 	@SerializedName("latest_build")
 	private final int latestBuild;
+	private final String url;
+	private final boolean compromised;
 
-	public ServerSettings(String imageServer, TlsCert tls, int latestBuild) {
+	public ServerSettings(String imageServer, TlsCert tls, int latestBuild, String url, boolean compromised) {
 		this.imageServer = Objects.requireNonNull(imageServer);
 		this.tls = tls;
 		this.latestBuild = latestBuild;
+		this.url = url;
+		this.compromised = compromised;
 	}
 
 	public String getImageServer() {
@@ -32,7 +36,7 @@ public final class ServerSettings {
 	@Override
 	public String toString() {
 		return "ServerSettings{" + "imageServer='" + imageServer + '\'' + ", tls=" + tls + ", latestBuild="
-				+ latestBuild + '}';
+				+ latestBuild + ", url='" + url + "', compromised=" + compromised + '}';
 	}
 
 	@Override

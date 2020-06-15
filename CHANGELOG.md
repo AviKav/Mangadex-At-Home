@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- [2020-06-15] Added logging of backend assigned URL to logs by [@lflare].
+- [2020-06-15] Added logging of `compromised` softban to logs by [@lflare].
 
 ### Changed
 
