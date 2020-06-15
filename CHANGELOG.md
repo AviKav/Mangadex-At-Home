@@ -20,11 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2020-06-15] Fixed tokenized data-saver parser not working by [@lflare].
 - [2020-06-14] Switched cache metadata over to a MySql instance [@carbotaniuman].
 
-### Changed
-- [2020-06-14] Migrated cache metadata over to a sqlite3 handler [@carbotaniuman].
-
-### Fixed
-
 ### Security
 
 ## [1.0.0-RC16] - 2020-06-14
