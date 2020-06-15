@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2020-06-15] Added logging of `compromised` softban to logs by [@lflare].
 
 ### Changed
+- [2020-06-14] Migrated cache metadata over to a sqlite3 handler [@carbotaniuman].
 
 ### Deprecated
 
@@ -21,10 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - [2020-06-14] Migrated cache metadata over to a sqlite3 handler [@carbotaniuman].
-
-### Deprecated
-
-### Removed
 
 ### Fixed
 
