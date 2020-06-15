@@ -3,6 +3,8 @@ package mdnet.base.server
 
 import mdnet.base.Constants
 import mdnet.base.Statistics
+import mdnet.base.dao.ImageData
+import mdnet.base.dao.ImageDatum
 import mdnet.cache.CachingInputStream
 import mdnet.cache.DiskLruCache
 import org.apache.http.client.config.CookieSpecs
@@ -12,9 +14,13 @@ import org.http4k.client.ApacheClient
 import org.http4k.core.*
 import org.http4k.filter.MaxAgeTtl
 import org.http4k.lens.Path
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
+import java.io.File
 import java.io.InputStream
 import java.security.MessageDigest
 import java.util.concurrent.Executors
@@ -27,7 +33,12 @@ import javax.crypto.spec.SecretKeySpec
 private const val THREADS_TO_ALLOCATE = 262144 // 2**18 // Honestly, no reason to not just let 'er rip. Inactive connections will expire on their own :D
 private val LOGGER = LoggerFactory.getLogger(ImageServer::class.java)
 
-class ImageServer(private val cache: DiskLruCache, private val statistics: AtomicReference<Statistics>, private val upstreamUrl: String) {
+class ImageServer(private val cache: DiskLruCache, private val statistics: AtomicReference<Statistics>, private val upstreamUrl: String, private val database: Database) {
+    init {
+        transaction(database) {
+            SchemaUtils.create(ImageData)
+        }
+    }
     private val executor = Executors.newCachedThreadPool()
     private val client = ApacheClient(responseBodyMode = BodyMode.Stream, client = HttpClients.custom()
         .setDefaultRequestConfig(
@@ -63,19 +74,39 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
         } else {
             md5Bytes("$chapterHash.$fileName")
         }
-        val cacheId = printHexString(rc4Bytes)
+        val imageId = printHexString(rc4Bytes)
 
-        val snapshot = cache.get(cacheId)
-        if (snapshot != null) {
-            request.handleCacheHit(sanitizedUri, getRc4(rc4Bytes), snapshot)
+        val snapshot = cache.getUnsafe(imageId.toCacheId())
+        val imageDatum = transaction(database) {
+            ImageDatum.findById(imageId)
+        }
+
+        if (snapshot != null && imageDatum != null) {
+            request.handleCacheHit(sanitizedUri, getRc4(rc4Bytes), snapshot, imageDatum)
                 .header("X-Uri", sanitizedUri)
         } else {
-            request.handleCacheMiss(sanitizedUri, getRc4(rc4Bytes), cacheId)
+            if (snapshot != null) {
+                snapshot.close()
+                if (LOGGER.isWarnEnabled) {
+                    LOGGER.warn("Removing cache file for $sanitizedUri without corresponding DB entry")
+                }
+                cache.removeUnsafe(imageId.toCacheId())
+            }
+            if (imageDatum != null) {
+                if (LOGGER.isWarnEnabled) {
+                    LOGGER.warn("Deleting DB entry for $sanitizedUri without corresponding file")
+                }
+                transaction(database) {
+                    imageDatum.delete()
+                }
+            }
+
+            request.handleCacheMiss(sanitizedUri, getRc4(rc4Bytes), imageId)
                 .header("X-Uri", sanitizedUri)
         }
     }
 
-    private fun Request.handleCacheHit(sanitizedUri: String, cipher: Cipher, snapshot: DiskLruCache.Snapshot): Response {
+    private fun Request.handleCacheHit(sanitizedUri: String, cipher: Cipher, snapshot: DiskLruCache.Snapshot, imageDatum: ImageDatum): Response {
         // our files never change, so it's safe to use the browser cache
         return if (this.header("If-Modified-Since") != null) {
             statistics.getAndUpdate {
@@ -102,13 +133,13 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
 
             respondWithImage(
                 CipherInputStream(BufferedInputStream(snapshot.getInputStream(0)), cipher),
-                snapshot.getLength(0).toString(), snapshot.getString(1), snapshot.getString(2),
+                snapshot.getLength(0).toString(), imageDatum.contentType, imageDatum.lastModified,
                 true
             )
         }
     }
 
-    private fun Request.handleCacheMiss(sanitizedUri: String, cipher: Cipher, cacheId: String): Response {
+    private fun Request.handleCacheMiss(sanitizedUri: String, cipher: Cipher, imageId: String): Response {
         if (LOGGER.isInfoEnabled) {
             LOGGER.info("Request for $sanitizedUri missed cache")
         }
@@ -134,7 +165,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
         val contentLength = mdResponse.header("Content-Length")
         val lastModified = mdResponse.header("Last-Modified")
 
-        val editor = cache.edit(cacheId)
+        val editor = cache.editUnsafe(imageId.toCacheId())
 
         // A null editor means that this file is being written to
         // concurrently so we skip the cache process
@@ -142,23 +173,34 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
             if (LOGGER.isTraceEnabled) {
                 LOGGER.trace("Request for $sanitizedUri is being cached and served")
             }
-            editor.setString(1, contentType)
-            editor.setString(2, lastModified)
+
+            transaction(database) {
+                ImageDatum.new(imageId) {
+                    this.contentType = contentType
+                    this.lastModified = lastModified
+                }
+            }
 
             val tee = CachingInputStream(
                 mdResponse.body.stream,
                 executor, CipherOutputStream(BufferedOutputStream(editor.newOutputStream(0)), cipher)
             ) {
-                if (editor.getLength(0) == contentLength.toLong()) {
-                    if (LOGGER.isInfoEnabled) {
-                        LOGGER.info("Cache download for $sanitizedUri committed")
+                try {
+                    if (editor.getLength(0) == contentLength.toLong()) {
+                        if (LOGGER.isInfoEnabled) {
+                            LOGGER.info("Cache download for $sanitizedUri committed")
+                        }
+                        editor.commit()
+                    } else {
+                        if (LOGGER.isInfoEnabled) {
+                            LOGGER.info("Cache download for $sanitizedUri aborted")
+                        }
+                        editor.abort()
                     }
-                    editor.commit()
-                } else {
-                    if (LOGGER.isInfoEnabled) {
-                        LOGGER.info("Cache download for $sanitizedUri aborted")
+                } catch (e: Exception) {
+                    if (LOGGER.isWarnEnabled) {
+                        LOGGER.warn("Cache go/no go for $sanitizedUri failed", e)
                     }
-                    editor.abort()
                 }
             }
             respondWithImage(tee, contentLength, contentType, lastModified, false)
@@ -171,6 +213,10 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
             respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified, false)
         }
     }
+
+    private fun String.toCacheId() =
+        this.substring(0, 8).replace("..(?!$)".toRegex(), "$0 ").split(" ".toRegex())
+            .plus(this).joinToString(File.separator)
 
     private fun respondWithImage(input: InputStream, length: String?, type: String, lastModified: String?, cached: Boolean): Response =
         Response(Status.OK)
