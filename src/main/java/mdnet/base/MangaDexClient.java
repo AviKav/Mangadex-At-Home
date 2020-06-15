@@ -209,7 +209,9 @@ public class MangaDexClient {
 
 			logoutAndStopServer();
 		}
-		webUi.close();
+		if (webUi != null) {
+			webUi.close();
+		}
 		try {
 			cache.close();
 		} catch (IOException e) {
