@@ -233,6 +233,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 listOf("public", MaxAgeTtl(Constants.MAX_AGE_CACHE).toHeaderValue()).joinToString(", ")
             )
             .header("Access-Control-Allow-Origin", "https://mangadex.org")
+            .header("Access-Control-Expose-Headers", "*")
             .header("Timing-Allow-Origin", "https://mangadex.org")
             .let {
                 if (length != null) {
