@@ -410,7 +410,8 @@ public final class DiskLruCache implements Closeable {
 	/**
 	 * Returns a snapshot of the entry named {@code key}, or null if it doesn't
 	 * exist is not currently readable. If a value is returned, it is moved to the
-	 * head of the LRU queue. Unsafe as it allows arbitrary directories to be accessed!
+	 * head of the LRU queue. Unsafe as it allows arbitrary directories to be
+	 * accessed!
 	 */
 	public Snapshot getUnsafe(String key) throws IOException {
 		validateUnsafeKey(key);
@@ -611,7 +612,8 @@ public final class DiskLruCache implements Closeable {
 
 	/**
 	 * Drops the entry for {@code key} if it exists and can be removed. Entries
-	 * actively being edited cannot be removed. Unsafe as it allows arbitrary directories to be accessed!
+	 * actively being edited cannot be removed. Unsafe as it allows arbitrary
+	 * directories to be accessed!
 	 *
 	 * @return true if an entry was removed.
 	 */
@@ -707,7 +709,8 @@ public final class DiskLruCache implements Closeable {
 	private void validateUnsafeKey(String key) {
 		Matcher matcher = UNSAFE_LEGAL_KEY_PATTERN.matcher(key);
 		if (!matcher.matches()) {
-			throw new IllegalArgumentException("Unsafe keys must match regex " + UNSAFE_LEGAL_KEY_PATTERN + ": \"" + key + "\"");
+			throw new IllegalArgumentException(
+					"Unsafe keys must match regex " + UNSAFE_LEGAL_KEY_PATTERN + ": \"" + key + "\"");
 		}
 	}
 
