@@ -52,7 +52,9 @@ val Timer = Filter {
                 val sanitizedUri = response.header("X-Uri")
 
                 // Log in TRACE
-                LOGGER.trace("Request for $sanitizedUri completed in ${latency}ms")
+                if (LOGGER.isInfoEnabled) {
+                    LOGGER.info("Request for $sanitizedUri completed in ${latency}ms")
+                }
 
                 // Delete response header entirely
                 response.header("X-Uri", null)

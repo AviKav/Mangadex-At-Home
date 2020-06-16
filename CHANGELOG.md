@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- [2020-06-16] Changed log level of response timings to INFO by [@lflare].
 
 ### Deprecated
 
