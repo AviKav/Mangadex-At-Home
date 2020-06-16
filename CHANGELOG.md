@@ -30,8 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2020-06-14] Removed old cache subdirectory migration system by [@carbotaniuman].
 
 ### Fixed
-- [2020-06-15] Fixed tokenized data-saver parser not working by [@lflare].
 - [2020-06-14] Switched cache metadata over to a MySql instance [@carbotaniuman].
+- [2020-06-15] Fixed tokenized data-saver parser not working by [@lflare].
+- [2020-06-15] Properly synchronised sqlite3 handler across threads by [@lflare].
 
 ## [1.0.0-RC16] - 2020-06-14
 ### Added

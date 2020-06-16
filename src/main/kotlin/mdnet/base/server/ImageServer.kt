@@ -77,8 +77,10 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
         val imageId = printHexString(rc4Bytes)
 
         val snapshot = cache.getUnsafe(imageId.toCacheId())
-        val imageDatum = transaction(database) {
-            ImageDatum.findById(imageId)
+        val imageDatum = synchronized(database) {
+            transaction(database) {
+                ImageDatum.findById(imageId)
+            }
         }
 
         if (snapshot != null && imageDatum != null) {
@@ -96,8 +98,10 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 if (LOGGER.isWarnEnabled) {
                     LOGGER.warn("Deleting DB entry for $sanitizedUri without corresponding file")
                 }
-                transaction(database) {
-                    imageDatum.delete()
+                synchronized(database) {
+                    transaction(database) {
+                        imageDatum.delete()
+                    }
                 }
             }
 
@@ -174,10 +178,12 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 LOGGER.trace("Request for $sanitizedUri is being cached and served")
             }
 
-            transaction(database) {
-                ImageDatum.new(imageId) {
-                    this.contentType = contentType
-                    this.lastModified = lastModified
+            synchronized(database) {
+                transaction(database) {
+                    ImageDatum.new(imageId) {
+                        this.contentType = contentType
+                        this.lastModified = lastModified
+                    }
                 }
             }
 
