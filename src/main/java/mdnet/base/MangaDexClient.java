@@ -92,81 +92,86 @@ public class MangaDexClient {
 		}
 
 		executorService.scheduleWithFixedDelay(() -> {
-			statistics.updateAndGet(n -> n.copy(n.getRequestsServed(), n.getCacheHits(), n.getCacheMisses(),
-					n.getBrowserCached(), n.getBytesSent(), cache.size()));
-
-			statsMap.put(Instant.now(), statistics.get());
-
 			try {
+				statistics.updateAndGet(n -> n.copy(n.getRequestsServed(), n.getCacheHits(), n.getCacheMisses(),
+						n.getBrowserCached(), n.getBytesSent(), cache.size()));
+
+				statsMap.put(Instant.now(), statistics.get());
+
 				DiskLruCache.Editor editor = cache.edit("statistics");
 				if (editor != null) {
 					String json = GSON.toJson(statistics.get(), Statistics.class);
 					editor.setString(0, json);
 					editor.commit();
 				}
-			} catch (IOException ignored) {
+			} catch (Exception e) {
+				LOGGER.warn("statistics update failed", e);
 			}
 
 		}, 15, 15, TimeUnit.SECONDS);
 
 		executorService.scheduleAtFixedRate(() -> {
-			if (counter == 80) {
-				counter = 0;
-				lastBytesSent = statistics.get().getBytesSent();
+			try {
+				if (counter == 80) {
+					counter = 0;
+					lastBytesSent = statistics.get().getBytesSent();
 
+					if (engine == null) {
+						if (LOGGER.isInfoEnabled()) {
+							LOGGER.info("Restarting server stopped due to hourly bandwidth limit");
+						}
+
+						loginAndStartServer();
+					}
+				} else {
+					counter++;
+				}
+
+				// if the server is offline then don't try and refresh certs
 				if (engine == null) {
+					return;
+				}
+
+				long currentBytesSent = statistics.get().getBytesSent() - lastBytesSent;
+				if (clientSettings.getMaxBandwidthMibPerHour() != 0
+						&& clientSettings.getMaxBandwidthMibPerHour() * 1024 * 1024 /* MiB to bytes */ < currentBytesSent) {
 					if (LOGGER.isInfoEnabled()) {
-						LOGGER.info("Restarting server stopped due to hourly bandwidth limit");
-					}
-
-					loginAndStartServer();
-				}
-			} else {
-				counter++;
-			}
-
-			// if the server is offline then don't try and refresh certs
-			if (engine == null) {
-				return;
-			}
-
-			long currentBytesSent = statistics.get().getBytesSent() - lastBytesSent;
-			if (clientSettings.getMaxBandwidthMibPerHour() != 0
-					&& clientSettings.getMaxBandwidthMibPerHour() * 1024 * 1024 /* MiB to bytes */ < currentBytesSent) {
-				if (LOGGER.isInfoEnabled()) {
-					LOGGER.info("Shutting down server as hourly bandwidth limit reached");
-				}
-
-				synchronized (shutdownLock) {
-					logoutAndStopServer();
-				}
-			}
-
-			ServerSettings n = serverHandler.pingControl(serverSettings);
-
-			if (LOGGER.isInfoEnabled()) {
-				LOGGER.info("Server settings received: {}", n);
-			}
-
-			if (n != null) {
-				if (n.getLatestBuild() > Constants.CLIENT_BUILD) {
-					if (LOGGER.isWarnEnabled()) {
-						LOGGER.warn("Outdated build detected! Latest: {}, Current: {}", n.getLatestBuild(),
-								Constants.CLIENT_BUILD);
-					}
-				}
-
-				if (n.getTls() != null || !n.getImageServer().equals(serverSettings.getImageServer())) {
-					// certificates or upstream url must have changed, restart webserver
-					if (LOGGER.isInfoEnabled()) {
-						LOGGER.info("Doing internal restart of HTTP server to refresh certs/upstream URL");
+						LOGGER.info("Shutting down server as hourly bandwidth limit reached");
 					}
 
 					synchronized (shutdownLock) {
 						logoutAndStopServer();
-						loginAndStartServer();
 					}
 				}
+
+				ServerSettings n = serverHandler.pingControl(serverSettings);
+
+				if (LOGGER.isInfoEnabled()) {
+					LOGGER.info("Server settings received: {}", n);
+				}
+
+				if (n != null) {
+					if (n.getLatestBuild() > Constants.CLIENT_BUILD) {
+						if (LOGGER.isWarnEnabled()) {
+							LOGGER.warn("Outdated build detected! Latest: {}, Current: {}", n.getLatestBuild(),
+									Constants.CLIENT_BUILD);
+						}
+					}
+
+					if (n.getTls() != null || !n.getImageServer().equals(serverSettings.getImageServer())) {
+						// certificates or upstream url must have changed, restart webserver
+						if (LOGGER.isInfoEnabled()) {
+							LOGGER.info("Doing internal restart of HTTP server to refresh certs/upstream URL");
+						}
+
+						synchronized (shutdownLock) {
+							logoutAndStopServer();
+							loginAndStartServer();
+						}
+					}
+				}
+			} catch (Exception e) {
+				LOGGER.warn("Server ping failed", e);
 			}
 		}, 45, 45, TimeUnit.SECONDS);
 
