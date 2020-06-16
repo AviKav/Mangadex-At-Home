@@ -133,8 +133,8 @@ public class MangaDexClient {
 				}
 
 				long currentBytesSent = statistics.get().getBytesSent() - lastBytesSent;
-				if (clientSettings.getMaxBandwidthMibPerHour() != 0
-						&& clientSettings.getMaxBandwidthMibPerHour() * 1024 * 1024 /* MiB to bytes */ < currentBytesSent) {
+				if (clientSettings.getMaxBandwidthMibPerHour() != 0 && clientSettings.getMaxBandwidthMibPerHour() * 1024
+						* 1024 /* MiB to bytes */ < currentBytesSent) {
 					if (LOGGER.isInfoEnabled()) {
 						LOGGER.info("Shutting down server as hourly bandwidth limit reached");
 					}

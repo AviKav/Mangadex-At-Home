@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
-- [2020-06-16] Changed log level of response timings to INFO by [@lflare].
 
 ### Deprecated
 
@@ -17,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Security
+
+## [1.0.0-RC18] - 2020-06-16
+### Changed
+- [2020-06-16] Changed log level of response timings to INFO by [@lflare].
+- [2020-06-16] Added server ping logging [@carbotaniuman].
 
 ## [1.0.0-RC17] - 2020-06-15
 ### Added
@@ -93,7 +97,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [2020-06-11] Tweaked logging configuration to reduce log file sizes by [@carbotaniuman].
 
-[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc17...HEAD
+[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc18...HEAD
+[1.0.0-rc18]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc17...1.0.0-rc18
 [1.0.0-rc17]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc16...1.0.0-rc17
 [1.0.0-rc16]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc15...1.0.0-rc16
 [1.0.0-rc15]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc14...1.0.0-rc15

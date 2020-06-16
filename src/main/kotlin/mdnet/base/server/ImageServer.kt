@@ -121,7 +121,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 LOGGER.info("Request for $sanitizedUri cached by browser")
             }
 
-            val lastModified = snapshot.getString(2)
+            val lastModified = imageDatum.lastModified
             snapshot.close()
 
             Response(Status.NOT_MODIFIED)
