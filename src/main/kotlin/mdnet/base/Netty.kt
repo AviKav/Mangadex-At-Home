@@ -1,21 +1,17 @@
 package mdnet.base
 
 import io.netty.bootstrap.ServerBootstrap
-import io.netty.channel.ChannelFactory
-import io.netty.channel.ChannelFuture
-import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelInboundHandlerAdapter
-import io.netty.channel.ChannelInitializer
-import io.netty.channel.ChannelOption
-import io.netty.channel.ServerChannel
+import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.DecoderException
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
+import io.netty.handler.codec.http.HttpServerKeepAliveHandler
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.stream.ChunkedWriteHandler
+import io.netty.handler.timeout.IdleStateHandler
 import io.netty.handler.traffic.GlobalTrafficShapingHandler
 import io.netty.handler.traffic.TrafficCounter
 import mdnet.base.settings.ClientSettings
@@ -73,6 +69,7 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
                             ch.pipeline().addLast("ssl", sslContext.newHandler(ch.alloc()))
 
                             ch.pipeline().addLast("codec", HttpServerCodec())
+                            ch.pipeline().addLast("keepAlive", HttpServerKeepAliveHandler())
                             ch.pipeline().addLast("aggregator", HttpObjectAggregator(65536))
 
                             ch.pipeline().addLast("burstLimiter", burstLimiter)
