@@ -58,7 +58,7 @@ public class MangaDexClient {
 
 		try {
 			cache = DiskLruCache.open(new File("cache"), 1, 1,
-					clientSettings.getMaxCacheSizeMib() * 1024 * 1024 /* MiB to bytes */);
+					clientSettings.getMaxCacheSizeInMebibytes() * 1024 * 1024 /* MiB to bytes */);
 
 			DiskLruCache.Snapshot snapshot = cache.get("statistics");
 			if (snapshot != null) {
@@ -165,8 +165,8 @@ public class MangaDexClient {
 		}
 
 		long currentBytesSent = statistics.get().getBytesSent() - lastBytesSent;
-		if (clientSettings.getMaxBandwidthMibPerHour() != 0
-				&& clientSettings.getMaxBandwidthMibPerHour() * 1024 * 1024 /* MiB to bytes */ < currentBytesSent) {
+		if (clientSettings.getMaxMebibytesPerHour() != 0
+				&& clientSettings.getMaxMebibytesPerHour() * 1024 * 1024 /* MiB to bytes */ < currentBytesSent) {
 			if (LOGGER.isInfoEnabled()) {
 				LOGGER.info("Shutting down server as hourly bandwidth limit reached");
 			}
