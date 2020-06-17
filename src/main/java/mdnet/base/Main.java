@@ -74,7 +74,7 @@ public class Main {
 			dieWithError("Config Error: Invalid port number");
 		}
 
-		if (settings.getMaxCacheSizeMib() < 1024) {
+		if (settings.getMaxCacheSizeInMebibytes() < 1024) {
 			dieWithError("Config Error: Invalid max cache size, must be >= 1024 MiB (1GiB)");
 		}
 
@@ -82,11 +82,11 @@ public class Main {
 			dieWithError("Config Error: Invalid number of threads, must be >= 4");
 		}
 
-		if (settings.getMaxBandwidthMibPerHour() < 0) {
+		if (settings.getMaxMebibytesPerHour() < 0) {
 			dieWithError("Config Error: Max bandwidth must be >= 0");
 		}
 
-		if (settings.getMaxBurstRateKibPerSecond() < 0) {
+		if (settings.getMaxKilobitsPerSecond() < 0) {
 			dieWithError("Config Error: Max burst rate must be >= 0");
 		}
 
