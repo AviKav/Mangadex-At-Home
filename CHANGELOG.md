@@ -6,9 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- [2020-06-16] Added WebUI versions to constants by [@RedMatriz].
+- [2020-06-16] Added WebUI PWA support for mobile by [@RedMatriz].
+- [2020-06-16] Added WebUI local data caching [@RedMatriz].
+
 
 ### Changed
 - [2020-06-16] Reworked graceful shutdown [@carbotaniuman].
+- [2020-06-16] Changed log level of response timings to INFO by [@lflare].
+- [2020-06-16] api/pastStats no longer called on load of WebUI (this shouldn't affect hits/misses), will be reimplemented later [@RedMatriz].
 
 ### Deprecated
 
