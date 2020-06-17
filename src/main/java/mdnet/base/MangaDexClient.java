@@ -119,7 +119,7 @@ public class MangaDexClient {
 					}
 					gracefulCounter++;
 				} else if (gracefulCounter > 0) {
-					if (!isHandled.get() || gracefulCounter == 4) {
+					if (!isHandled.get() || gracefulCounter == 4 || engine == null) {
 						if (LOGGER.isInfoEnabled()) {
 							if (!isHandled.get()) {
 								LOGGER.info("No requests received, shutting down");
@@ -128,7 +128,9 @@ public class MangaDexClient {
 							}
 						}
 
-						stopServer();
+						if (engine != null) {
+							stopServer();
+						}
 						if (gracefulAction != null) {
 							gracefulAction.run();
 						}
