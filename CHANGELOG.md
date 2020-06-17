@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Fixed
+- [2020-06-17] Fixed minor typo with threads error logging by [@lflare].
 
 ### Security
 

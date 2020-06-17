@@ -285,7 +285,7 @@ public class MangaDexClient {
 		}
 
 		if (settings.getThreads() < 4) {
-			MangaDexClient.dieWithError("Config Error: Invalid number of threads, must be >= 8");
+			MangaDexClient.dieWithError("Config Error: Invalid number of threads, must be >= 4");
 		}
 
 		if (settings.getMaxBandwidthMibPerHour() < 0) {
