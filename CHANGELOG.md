@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- [2020-06-16] Reworked graceful shutdown [@carbotaniuman].
 
 ### Deprecated
 

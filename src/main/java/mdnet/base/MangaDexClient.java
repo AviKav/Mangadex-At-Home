@@ -1,7 +1,5 @@
 package mdnet.base;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import mdnet.base.settings.ClientSettings;
 import mdnet.base.server.ApplicationKt;
 import mdnet.base.server.WebUiKt;
@@ -18,15 +16,14 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Pattern;
+
+import static mdnet.base.Constants.GSON;
 
 public class MangaDexClient {
-	private final static Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private final static Logger LOGGER = LoggerFactory.getLogger(MangaDexClient.class);
 
-	// This lock protects the Http4kServer from concurrent restart attempts
-	private final Object shutdownLock = new Object();
 	private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 	private final ServerHandler serverHandler;
 	private final ClientSettings clientSettings;
@@ -39,6 +36,7 @@ public class MangaDexClient {
 				}
 			});
 	private final AtomicReference<Statistics> statistics;
+	private final AtomicBoolean isHandled;
 
 	private ServerSettings serverSettings;
 	private Http4kServer engine; // if this is null, then the server has shutdown
@@ -48,11 +46,15 @@ public class MangaDexClient {
 	// these variables are for runLoop();
 	private int counter = 0;
 	private long lastBytesSent = 0;
+	// a non-negative number here means we are shutting down
+	private int gracefulCounter = -1;
+	private Runnable gracefulAction;
 
 	public MangaDexClient(ClientSettings clientSettings) {
 		this.clientSettings = clientSettings;
 		this.serverHandler = new ServerHandler(clientSettings);
 		this.statistics = new AtomicReference<>();
+		this.isHandled = new AtomicBoolean();
 
 		try {
 			cache = DiskLruCache.open(new File("cache"), 1, 1,
@@ -66,7 +68,7 @@ public class MangaDexClient {
 				statistics.set(new Statistics());
 			}
 		} catch (IOException e) {
-			MangaDexClient.dieWithError(e);
+			Main.dieWithError(e);
 		}
 	}
 
@@ -93,26 +95,8 @@ public class MangaDexClient {
 
 		executorService.scheduleWithFixedDelay(() -> {
 			try {
-				statistics.updateAndGet(n -> n.copy(n.getRequestsServed(), n.getCacheHits(), n.getCacheMisses(),
-						n.getBrowserCached(), n.getBytesSent(), cache.size()));
-
-				statsMap.put(Instant.now(), statistics.get());
-
-				DiskLruCache.Editor editor = cache.edit("statistics");
-				if (editor != null) {
-					String json = GSON.toJson(statistics.get(), Statistics.class);
-					editor.setString(0, json);
-					editor.commit();
-				}
-			} catch (Exception e) {
-				LOGGER.warn("statistics update failed", e);
-			}
-
-		}, 15, 15, TimeUnit.SECONDS);
-
-		executorService.scheduleAtFixedRate(() -> {
-			try {
-				if (counter == 80) {
+				// Converting from 15 seconds loop to 45 second loop
+				if (counter / 3 == 80) {
 					counter = 0;
 					lastBytesSent = statistics.get().getBytesSent();
 
@@ -127,62 +111,120 @@ public class MangaDexClient {
 					counter++;
 				}
 
-				// if the server is offline then don't try and refresh certs
-				if (engine == null) {
-					return;
-				}
-
-				long currentBytesSent = statistics.get().getBytesSent() - lastBytesSent;
-				if (clientSettings.getMaxBandwidthMibPerHour() != 0 && clientSettings.getMaxBandwidthMibPerHour() * 1024
-						* 1024 /* MiB to bytes */ < currentBytesSent) {
+				if (gracefulCounter == 0) {
+					logout();
 					if (LOGGER.isInfoEnabled()) {
-						LOGGER.info("Shutting down server as hourly bandwidth limit reached");
+						LOGGER.info("Waiting another 15 seconds for graceful shutdown ({} out of {} tries)",
+								gracefulCounter + 1, 4);
 					}
-
-					synchronized (shutdownLock) {
-						logoutAndStopServer();
-					}
-				}
-
-				ServerSettings n = serverHandler.pingControl(serverSettings);
-
-				if (LOGGER.isInfoEnabled()) {
-					LOGGER.info("Server settings received: {}", n);
-				}
-
-				if (n != null) {
-					if (n.getLatestBuild() > Constants.CLIENT_BUILD) {
-						if (LOGGER.isWarnEnabled()) {
-							LOGGER.warn("Outdated build detected! Latest: {}, Current: {}", n.getLatestBuild(),
-									Constants.CLIENT_BUILD);
-						}
-					}
-
-					if (n.getTls() != null || !n.getImageServer().equals(serverSettings.getImageServer())) {
-						// certificates or upstream url must have changed, restart webserver
+					gracefulCounter++;
+				} else if (gracefulCounter > 0) {
+					if (!isHandled.get() || gracefulCounter == 4) {
 						if (LOGGER.isInfoEnabled()) {
-							LOGGER.info("Doing internal restart of HTTP server to refresh certs/upstream URL");
+							if (!isHandled.get()) {
+								LOGGER.info("No requests received, shutting down");
+							} else {
+								LOGGER.info("Max tries attempted, shutting down");
+							}
 						}
 
-						synchronized (shutdownLock) {
-							logoutAndStopServer();
-							loginAndStartServer();
+						stopServer();
+						if (gracefulAction != null) {
+							gracefulAction.run();
 						}
+
+						// reset variables
+						gracefulCounter = -1;
+						gracefulAction = null;
+					} else {
+						if (LOGGER.isInfoEnabled()) {
+							LOGGER.info("Waiting another 15 seconds for graceful shutdown ({} out of {} tries)",
+									gracefulCounter + 1, 4);
+						}
+						gracefulCounter++;
 					}
+					isHandled.set(false);
+				} else {
+					if (counter % 3 == 0) {
+						pingControl();
+					}
+					updateStats();
 				}
-			} catch (Exception e) {
-				LOGGER.warn("Server ping failed", e);
-			}
-		}, 45, 45, TimeUnit.SECONDS);
 
+			} catch (Exception e) {
+				LOGGER.warn("statistics update failed", e);
+			}
+
+		}, 15, 15, TimeUnit.SECONDS);
+	}
+
+	private void pingControl() {
+		// if the server is offline then don't try and refresh certs
+		if (engine == null) {
+			return;
+		}
+
+		long currentBytesSent = statistics.get().getBytesSent() - lastBytesSent;
+		if (clientSettings.getMaxBandwidthMibPerHour() != 0
+				&& clientSettings.getMaxBandwidthMibPerHour() * 1024 * 1024 /* MiB to bytes */ < currentBytesSent) {
+			if (LOGGER.isInfoEnabled()) {
+				LOGGER.info("Shutting down server as hourly bandwidth limit reached");
+			}
+
+			// Give enough time for graceful shutdown
+			if (240 - counter > 3) {
+				LOGGER.info("Graceful shutdown started");
+				gracefulCounter = 0;
+			}
+		}
+
+		ServerSettings n = serverHandler.pingControl(serverSettings);
+
+		if (LOGGER.isInfoEnabled()) {
+			LOGGER.info("Server settings received: {}", n);
+		}
+
+		if (n != null) {
+			if (n.getLatestBuild() > Constants.CLIENT_BUILD) {
+				if (LOGGER.isWarnEnabled()) {
+					LOGGER.warn("Outdated build detected! Latest: {}, Current: {}", n.getLatestBuild(),
+							Constants.CLIENT_BUILD);
+				}
+			}
+
+			if (n.getTls() != null || !n.getImageServer().equals(serverSettings.getImageServer())) {
+				// certificates or upstream url must have changed, restart webserver
+				if (LOGGER.isInfoEnabled()) {
+					LOGGER.info("Doing internal restart of HTTP server to refresh certs/upstream URL");
+				}
+
+				LOGGER.info("Graceful shutdown started");
+				gracefulCounter = 0;
+				gracefulAction = this::loginAndStartServer;
+			}
+		}
+	}
+
+	private void updateStats() throws IOException {
+		statistics.updateAndGet(n -> n.copy(n.getRequestsServed(), n.getCacheHits(), n.getCacheMisses(),
+				n.getBrowserCached(), n.getBytesSent(), cache.size()));
+
+		statsMap.put(Instant.now(), statistics.get());
+
+		DiskLruCache.Editor editor = cache.edit("statistics");
+		if (editor != null) {
+			String json = GSON.toJson(statistics.get(), Statistics.class);
+			editor.setString(0, json);
+			editor.commit();
+		}
 	}
 
 	private void loginAndStartServer() {
 		serverSettings = serverHandler.loginToControl();
 		if (serverSettings == null) {
-			MangaDexClient.dieWithError("Failed to get a login response from server - check API secret for validity");
+			Main.dieWithError("Failed to get a login response from server - check API secret for validity");
 		}
-		engine = ApplicationKt.getServer(cache, serverSettings, clientSettings, statistics);
+		engine = ApplicationKt.getServer(cache, serverSettings, clientSettings, statistics, isHandled);
 		engine.start();
 
 		if (LOGGER.isInfoEnabled()) {
@@ -190,11 +232,14 @@ public class MangaDexClient {
 		}
 	}
 
-	private void logoutAndStopServer() {
-		if (LOGGER.isInfoEnabled()) {
-			LOGGER.info("Gracefully shutting down HTTP server");
-		}
+	private void logout() {
 		serverHandler.logoutFromControl();
+	}
+
+	private void stopServer() {
+		if (LOGGER.isInfoEnabled()) {
+			LOGGER.info("Shutting down HTTP server");
+		}
 		engine.stop();
 		if (LOGGER.isInfoEnabled()) {
 			LOGGER.info("Internal HTTP server has gracefully shut down");
@@ -203,108 +248,22 @@ public class MangaDexClient {
 	}
 
 	public void shutdown() {
-		executorService.shutdown();
-		synchronized (shutdownLock) {
-			if (engine == null) {
-				return;
+		LOGGER.info("Graceful shutdown started");
+		gracefulCounter = 0;
+		AtomicBoolean readyToExit = new AtomicBoolean(false);
+		gracefulAction = () -> {
+			if (webUi != null) {
+				webUi.close();
 			}
-
-			logoutAndStopServer();
-		}
-		if (webUi != null) {
-			webUi.close();
-		}
-		try {
-			cache.close();
-		} catch (IOException e) {
-			LOGGER.error("Cache failed to close", e);
-		}
-	}
-
-	public static void main(String[] args) {
-		System.out.println("Mangadex@Home Client " + Constants.CLIENT_VERSION + " (Build " + Constants.CLIENT_BUILD
-				+ ") initializing\n");
-		System.out.println("Copyright (c) 2020, MangaDex Network");
-
-		String file = "settings.json";
-		if (args.length == 1) {
-			file = args[0];
-		} else if (args.length != 0) {
-			MangaDexClient.dieWithError("Expected one argument: path to config file, or nothing");
-		}
-
-		ClientSettings settings;
-
-		try {
-			settings = GSON.fromJson(new FileReader(file), ClientSettings.class);
-		} catch (FileNotFoundException ignored) {
-			settings = new ClientSettings();
-			LOGGER.warn("Settings file {} not found, generating file", file);
-			try (FileWriter writer = new FileWriter(file)) {
-				writer.write(GSON.toJson(settings));
+			try {
+				cache.close();
 			} catch (IOException e) {
-				MangaDexClient.dieWithError(e);
+				LOGGER.error("Cache failed to close", e);
 			}
+			executorService.shutdown();
+			readyToExit.set(true);
+		};
+		while (!readyToExit.get()) {
 		}
-
-		validateSettings(settings);
-
-		if (LOGGER.isInfoEnabled()) {
-			LOGGER.info("Client settings loaded: {}", settings);
-		}
-
-		MangaDexClient client = new MangaDexClient(settings);
-		Runtime.getRuntime().addShutdownHook(new Thread(client::shutdown));
-		client.runLoop();
-	}
-
-	public static void dieWithError(Throwable e) {
-		if (LOGGER.isErrorEnabled()) {
-			LOGGER.error("Critical Error", e);
-		}
-		System.exit(1);
-	}
-
-	public static void dieWithError(String error) {
-		if (LOGGER.isErrorEnabled()) {
-			LOGGER.error("Critical Error: {}", error);
-		}
-		System.exit(1);
-	}
-
-	public static void validateSettings(ClientSettings settings) {
-		if (!isSecretValid(settings.getClientSecret()))
-			MangaDexClient.dieWithError("Config Error: API Secret is invalid, must be 52 alphanumeric characters");
-
-		if (settings.getClientPort() == 0) {
-			MangaDexClient.dieWithError("Config Error: Invalid port number");
-		}
-
-		if (settings.getMaxCacheSizeMib() < 1024) {
-			MangaDexClient.dieWithError("Config Error: Invalid max cache size, must be >= 1024 MiB (1GiB)");
-		}
-
-		if (settings.getThreads() < 4) {
-			MangaDexClient.dieWithError("Config Error: Invalid number of threads, must be >= 4");
-		}
-
-		if (settings.getMaxBandwidthMibPerHour() < 0) {
-			MangaDexClient.dieWithError("Config Error: Max bandwidth must be >= 0");
-		}
-
-		if (settings.getMaxBurstRateKibPerSecond() < 0) {
-			MangaDexClient.dieWithError("Config Error: Max burst rate must be >= 0");
-		}
-
-		if (settings.getWebSettings() != null) {
-			if (settings.getWebSettings().getUiPort() == 0) {
-				MangaDexClient.dieWithError("Config Error: Invalid UI port number");
-			}
-		}
-	}
-
-	public static boolean isSecretValid(String clientSecret) {
-		final int CLIENT_KEY_LENGTH = 52;
-		return Pattern.matches("^[a-zA-Z0-9]{" + CLIENT_KEY_LENGTH + "}$", clientSecret);
 	}
 }
