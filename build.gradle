@@ -9,7 +9,7 @@ plugins {
 
 group = "com.mangadex"
 version = "git describe --tags --dirty".execute().text.trim()
-mainClassName = "mdnet.base.MangaDexClient"
+mainClassName = "mdnet.base.Main"
 
 repositories {
   mavenCentral()

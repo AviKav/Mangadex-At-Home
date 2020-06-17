@@ -24,6 +24,7 @@ import java.io.File
 import java.io.InputStream
 import java.security.MessageDigest
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
@@ -33,7 +34,7 @@ import javax.crypto.spec.SecretKeySpec
 private const val THREADS_TO_ALLOCATE = 262144 // 2**18 // Honestly, no reason to not just let 'er rip. Inactive connections will expire on their own :D
 private val LOGGER = LoggerFactory.getLogger(ImageServer::class.java)
 
-class ImageServer(private val cache: DiskLruCache, private val statistics: AtomicReference<Statistics>, private val upstreamUrl: String, private val database: Database) {
+class ImageServer(private val cache: DiskLruCache, private val statistics: AtomicReference<Statistics>, private val upstreamUrl: String, private val database: Database, private val handled: AtomicBoolean) {
     init {
         transaction(database) {
             SchemaUtils.create(ImageData)
@@ -83,6 +84,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
             }
         }
 
+        handled.set(true)
         if (snapshot != null && imageDatum != null) {
             request.handleCacheHit(sanitizedUri, getRc4(rc4Bytes), snapshot, imageDatum)
                 .header("X-Uri", sanitizedUri)
