@@ -42,7 +42,7 @@ public class ServerHandler {
 		params.put("secret", settings.getClientSecret());
 		params.put("port", settings.getClientPort());
 		params.put("disk_space", settings.getMaxCacheSizeInMebibytes() * 1024 * 1024 /* MiB to bytes */);
-		params.put("network_speed", settings.getMaxKilobitsPerSecond() * 1000 * 8 /* Kbps to bytes */);
+		params.put("network_speed", settings.getMaxKilobitsPerSecond() * 1000 / 8 /* Kbps to bytes */);
 		params.put("build_version", Constants.CLIENT_BUILD);
 
 		HttpResponse<ServerSettings> response = Unirest.post(SERVER_ADDRESS + "ping")
@@ -66,7 +66,7 @@ public class ServerHandler {
 		params.put("secret", settings.getClientSecret());
 		params.put("port", settings.getClientPort());
 		params.put("disk_space", settings.getMaxCacheSizeInMebibytes() * 1024 * 1024 /* MiB to bytes */);
-		params.put("network_speed", settings.getMaxKilobitsPerSecond() * 1000 * 8 /* Kbps to bytes */);
+		params.put("network_speed", settings.getMaxKilobitsPerSecond() * 1000 / 8 /* Kbps to bytes */);
 		params.put("build_version", Constants.CLIENT_BUILD);
 		params.put("tls_created_at", old.getTls().getCreatedAt());
 

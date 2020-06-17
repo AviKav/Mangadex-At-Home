@@ -46,7 +46,7 @@ class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings:
         private lateinit var address: InetSocketAddress
 
         private val burstLimiter = object : GlobalTrafficShapingHandler(
-                workerGroup, clientSettings.maxKilobitsPerSecond * 1000L, 0, 50) {
+                workerGroup, clientSettings.maxKilobitsPerSecond * 1000L / 8L, 0, 50) {
             override fun doAccounting(counter: TrafficCounter) {
                 statistics.getAndUpdate {
                     it.copy(bytesSent = it.bytesSent + counter.cumulativeWrittenBytes())
