@@ -6,24 +6,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- [2020-06-16] Added WebUI versions to constants by [@RedMatriz].
-- [2020-06-16] Added WebUI PWA support for mobile by [@RedMatriz].
-- [2020-06-16] Added WebUI local data caching [@RedMatriz].
-
 
 ### Changed
-- [2020-06-16] Reworked graceful shutdown [@carbotaniuman].
-- [2020-06-16] api/pastStats no longer called on load of WebUI (this shouldn't affect hits/misses), will be reimplemented later [@RedMatriz].
-- [2020-06-17] Revamped configuration & units by [@lflare].
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
-- [2020-06-17] Fixed minor typo with threads error logging by [@lflare].
 
 ### Security
+
+## [1.0.0-RC19] - 2020-06-18
+### Added
+- [2020-06-16] Added WebUI versions to constants by [@RedMatriz].
+- [2020-06-16] Added WebUI PWA support for mobile by [@RedMatriz].
+- [2020-06-16] Added WebUI local data caching [@RedMatriz].
+
+### Changed
+- [2020-06-16] Reworked graceful shutdown [@carbotaniuman].
+- [2020-06-16] api/pastStats no longer called on load of WebUI (this shouldn't affect hits/misses), will be reimplemented later [@RedMatriz].
+- [2020-06-17] Revamped configuration & units by [@lflare].
+
+### Fixed
+- [2020-06-17] Fixed minor typo with threads error logging by [@lflare].
 
 ## [1.0.0-RC18] - 2020-06-16
 ### Changed
@@ -105,7 +111,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [2020-06-11] Tweaked logging configuration to reduce log file sizes by [@carbotaniuman].
 
-[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc18...HEAD
+[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc19...HEAD
+[1.0.0-rc19]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc18...1.0.0-rc19
 [1.0.0-rc18]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc17...1.0.0-rc18
 [1.0.0-rc17]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc16...1.0.0-rc17
 [1.0.0-rc16]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc15...1.0.0-rc16
