@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Fixed
+- [2020-06-19] Make graceful shutdown work better [@carbotaniuman]
+- [2020-06-19] Actually shutdown logback [@carbotaniuman]
 
 ### Security
 
