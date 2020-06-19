@@ -10,7 +10,7 @@ data class ClientSettings(
     @field:SerializedName("client_hostname") val clientHostname: String = "0.0.0.0",
     @field:SerializedName("client_port") val clientPort: Int = 443,
     @field:Secret @field:SerializedName("client_secret") val clientSecret: String = "PASTE-YOUR-SECRET-HERE",
-    @field:SerializedName("threads") val threads: Int = 32,
+    @field:SerializedName("threads") val threads: Int = 4,
     @field:SerializedName("web_settings") val webSettings: WebSettings? = null
 )
 

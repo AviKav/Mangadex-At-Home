@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- [2020-06-19] Changed default CPU thread count to `4` by [@lflare].
 
 ### Deprecated
 
