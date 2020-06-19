@@ -1,0 +1,93 @@
+package mdnet.base
+
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import mdnet.base.settings.ClientSettings
+import mdnet.base.settings.ServerSettings
+import org.http4k.client.ApacheClient
+import org.http4k.core.Body
+import org.http4k.core.Method
+import org.http4k.core.Request
+import org.http4k.format.ConfigurableJackson
+import org.http4k.format.asConfigurable
+import org.http4k.format.withStandardMappings
+import org.slf4j.LoggerFactory
+
+import mdnet.base.ServerHandlerJackson.auto
+object ServerHandlerJackson : ConfigurableJackson(
+    KotlinModule()
+    .asConfigurable()
+    .withStandardMappings()
+    .done()
+    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+)
+
+class ServerHandler(private val settings: ClientSettings) {
+    private val client = ApacheClient()
+
+    fun logoutFromControl(): Boolean {
+        if (LOGGER.isInfoEnabled) {
+            LOGGER.info("Disconnecting from the control server")
+        }
+        val params = mapOf<String, Any>(
+            "secret" to settings.clientSecret
+        )
+
+        val request = STRING_ANY_MAP_LENS(params, Request(Method.POST, SERVER_ADDRESS + "stop"))
+        val response = client(request)
+
+        return response.status.successful
+    }
+
+    private fun getPingParams(tlsCreatedAt: String? = null): Map<String, Any> =
+        mapOf<String, Any>(
+            "secret" to settings.clientSecret,
+            "port" to settings.clientPort,
+            "disk_space" to settings.maxCacheSizeInMebibytes * 1024 * 1024,
+            "network_speed" to settings.maxKilobitsPerSecond * 1000 / 8,
+            "build_version" to Constants.CLIENT_BUILD
+        ).let {
+            if (tlsCreatedAt != null) {
+                it.plus("tls_created_at" to tlsCreatedAt)
+            } else {
+                it
+            }
+        }
+
+    fun loginToControl(): ServerSettings? {
+        if (LOGGER.isInfoEnabled) {
+            LOGGER.info("Connecting to the control server")
+        }
+
+        val request = STRING_ANY_MAP_LENS(getPingParams(), Request(Method.POST, SERVER_ADDRESS + "ping"))
+        val response = client(request)
+
+        return if (response.status.successful) {
+            SERVER_SETTINGS_LENS(response)
+        } else {
+            null
+        }
+    }
+
+    fun pingControl(old: ServerSettings): ServerSettings? {
+        if (LOGGER.isInfoEnabled) {
+            LOGGER.info("Pinging the control server")
+        }
+
+        val request = STRING_ANY_MAP_LENS(getPingParams(old.tls!!.createdAt), Request(Method.POST, SERVER_ADDRESS + "ping"))
+        val response = client(request)
+
+        return if (response.status.successful) {
+            SERVER_SETTINGS_LENS(response)
+        } else {
+            null
+        }
+    }
+
+    companion object {
+        private val LOGGER = LoggerFactory.getLogger(ServerHandler::class.java)
+        private val STRING_ANY_MAP_LENS = Body.auto<Map<String, Any>>().toLens()
+        private val SERVER_SETTINGS_LENS = Body.auto<ServerSettings>().toLens()
+        private const val SERVER_ADDRESS = "https://api.mangadex.network/"
+    }
+}

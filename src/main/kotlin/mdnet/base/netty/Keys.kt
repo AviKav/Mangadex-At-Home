@@ -19,7 +19,7 @@
 //LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
-package mdnet.base
+package mdnet.base.netty
 
 import java.io.ByteArrayOutputStream
 import java.security.KeyFactory
@@ -35,13 +35,23 @@ private const val PKCS_8_PEM_FOOTER = "-----END PRIVATE KEY-----"
 fun loadKey(keyDataString: String): PrivateKey? {
     if (keyDataString.contains(PKCS_1_PEM_HEADER)) {
         // OpenSSL / PKCS#1 Base64 PEM encoded file
-        val fixedString = keyDataString.replace(PKCS_1_PEM_HEADER, "").replace(PKCS_1_PEM_FOOTER, "")
-        return readPkcs1PrivateKey(base64Decode(fixedString))
+        val fixedString = keyDataString.replace(PKCS_1_PEM_HEADER, "").replace(
+            PKCS_1_PEM_FOOTER, "")
+        return readPkcs1PrivateKey(
+            base64Decode(
+                fixedString
+            )
+        )
     }
     if (keyDataString.contains(PKCS_8_PEM_HEADER)) {
         // PKCS#8 Base64 PEM encoded file
-        val fixedString = keyDataString.replace(PKCS_8_PEM_HEADER, "").replace(PKCS_8_PEM_FOOTER, "")
-        return readPkcs1PrivateKey(base64Decode(fixedString))
+        val fixedString = keyDataString.replace(PKCS_8_PEM_HEADER, "").replace(
+            PKCS_8_PEM_FOOTER, "")
+        return readPkcs1PrivateKey(
+            base64Decode(
+                fixedString
+            )
+        )
     }
 
     return null

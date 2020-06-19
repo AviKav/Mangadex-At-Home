@@ -1,4 +1,4 @@
-package mdnet.base
+package mdnet.base.netty
 
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelFactory
@@ -19,7 +19,9 @@ import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.stream.ChunkedWriteHandler
 import io.netty.handler.traffic.GlobalTrafficShapingHandler
 import io.netty.handler.traffic.TrafficCounter
+import mdnet.base.Statistics
 import mdnet.base.settings.ClientSettings
+import mdnet.base.settings.TlsCert
 import org.http4k.core.HttpHandler
 import org.http4k.server.Http4kChannelHandler
 import org.http4k.server.Http4kServer
@@ -38,7 +40,7 @@ import javax.net.ssl.SSLException
 
 private val LOGGER = LoggerFactory.getLogger("Application")
 
-class Netty(private val tls: ServerSettings.TlsCert, private val clientSettings: ClientSettings, private val statistics: AtomicReference<Statistics>) : ServerConfig {
+class Netty(private val tls: TlsCert, private val clientSettings: ClientSettings, private val statistics: AtomicReference<Statistics>) : ServerConfig {
     override fun toServer(httpHandler: HttpHandler): Http4kServer = object : Http4kServer {
         private val masterGroup = NioEventLoopGroup(clientSettings.threads)
         private val workerGroup = NioEventLoopGroup(clientSettings.threads)

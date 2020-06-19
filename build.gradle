@@ -20,15 +20,15 @@ dependencies {
   compileOnly group:"dev.afanasev", name: "sekret-annotation", version: "0.0.3"
 
   implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+  implementation "org.jetbrains.kotlin:kotlin-reflect"
+
   implementation group: "commons-io", name: "commons-io", version: "2.7"
-  implementation group: "com.konghq", name: "unirest-java", version: "3.7.02"
 
   implementation group: "org.http4k", name: "http4k-core", version: "$http_4k_version"
-  implementation group: "org.http4k", name: "http4k-format-gson", version: "$http_4k_version"
+  implementation group: "org.http4k", name: "http4k-format-jackson", version: "$http_4k_version"
   implementation group: "org.http4k", name: "http4k-client-apache", version: "$http_4k_version"
   implementation group: "org.http4k", name: "http4k-server-netty", version: "$http_4k_version"
   runtimeOnly group:"io.netty", name: "netty-tcnative-boringssl-static", version: "2.0.30.Final"
-
 
   implementation group:"ch.qos.logback", name: "logback-classic", version: "1.2.1"
 

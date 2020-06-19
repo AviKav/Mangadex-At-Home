@@ -4,7 +4,7 @@ package mdnet.base.server
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
 import mdnet.base.Statistics
-import mdnet.base.WebUiNetty
+import mdnet.base.netty.WebUiNetty
 import mdnet.base.settings.WebSettings
 import org.http4k.core.Body
 import org.http4k.core.Method
@@ -12,7 +12,7 @@ import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.core.then
 import org.http4k.filter.ServerFilters
-import org.http4k.format.Gson.auto
+import org.http4k.format.Jackson.auto
 import org.http4k.routing.ResourceLoader
 import org.http4k.routing.bind
 import org.http4k.routing.routes

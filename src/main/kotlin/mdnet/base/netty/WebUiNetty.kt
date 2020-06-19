@@ -1,4 +1,4 @@
-package mdnet.base
+package mdnet.base.netty
 
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelFactory

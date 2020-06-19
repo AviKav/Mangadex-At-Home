@@ -1,8 +1,8 @@
 /* ktlint-disable no-wildcard-imports */
 package mdnet.base.server
 
-import mdnet.base.Netty
-import mdnet.base.ServerSettings
+import mdnet.base.netty.Netty
+import mdnet.base.settings.ServerSettings
 import mdnet.base.Statistics
 import mdnet.base.settings.ClientSettings
 import mdnet.cache.DiskLruCache
@@ -21,7 +21,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
     val database = Database.connect("jdbc:sqlite:cache/data.db", "org.sqlite.JDBC")
     val imageServer = ImageServer(cache, statistics, serverSettings.imageServer, database, isHandled)
 
-    return Timer
+    return timeRequest()
             .then(catchAllHideDetails())
             .then(ServerFilters.CatchLensFailure)
             .then(addCommonHeaders())
@@ -39,5 +39,5 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                     )
                 )
             )
-            .asServer(Netty(serverSettings.tls, clientSettings, statistics))
+            .asServer(Netty(serverSettings.tls!!, clientSettings, statistics))
 }
