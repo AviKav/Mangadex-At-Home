@@ -112,8 +112,8 @@ class Netty(private val tls: TlsCert, private val clientSettings: ClientSettings
         }
 
         override fun stop() = apply {
-            masterGroup.shutdownGracefully(5, 15, TimeUnit.SECONDS).sync()
-            workerGroup.shutdownGracefully(5, 15, TimeUnit.SECONDS).sync()
+            masterGroup.shutdownGracefully(1, 15, TimeUnit.SECONDS).sync()
+            workerGroup.shutdownGracefully(1, 15, TimeUnit.SECONDS).sync()
             closeFuture.sync()
         }
 
