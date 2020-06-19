@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - [2020-06-16] Changed log level of response timings to INFO by [@lflare].
 - [2020-06-16] Added server ping logging [@carbotaniuman].
+- [2020-06-16] Added access control headers by [@Fugi].
 
 ## [1.0.0-RC17] - 2020-06-15
 ### Added
