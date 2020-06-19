@@ -216,7 +216,7 @@ public class MangaDexClient {
 
 		DiskLruCache.Editor editor = cache.edit("statistics");
 		if (editor != null) {
-			JACKSON.writeValue(editor.newOutputStream(0), Statistics.class);
+			JACKSON.writeValue(editor.newOutputStream(0), statistics.get());
 			editor.commit();
 		}
 	}
