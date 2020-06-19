@@ -1,6 +1,4 @@
 <configuration>
-    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
-
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <immediateFlush>false</immediateFlush>
 

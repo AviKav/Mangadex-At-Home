@@ -1,5 +1,6 @@
 package mdnet.base;
 
+import ch.qos.logback.classic.LoggerContext;
 import mdnet.base.settings.ClientSettings;
 import mdnet.base.server.ApplicationKt;
 import mdnet.base.server.WebUiKt;
@@ -262,10 +263,12 @@ public class MangaDexClient {
 			} catch (IOException e) {
 				LOGGER.error("Cache failed to close", e);
 			}
-			executorService.shutdown();
 			readyToExit.set(true);
 		};
 		while (!readyToExit.get()) {
 		}
+		executorService.shutdown();
+		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+		loggerContext.stop();
 	}
 }
