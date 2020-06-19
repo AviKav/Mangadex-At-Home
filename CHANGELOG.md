@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- [2020-06-19] Errored out on invalid settings.json tokens [@carbotaniuman]
 
 ### Changed
 - [2020-06-19] Changed default CPU thread count to `4` by [@lflare].

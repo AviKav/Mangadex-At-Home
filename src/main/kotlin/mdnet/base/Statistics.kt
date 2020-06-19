@@ -1,12 +1,14 @@
 package mdnet.base
 
-import com.google.gson.annotations.SerializedName
+import com.fasterxml.jackson.databind.PropertyNamingStrategy
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 
+@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy::class)
 data class Statistics(
-    @field:SerializedName("requests_served") val requestsServed: Int = 0,
-    @field:SerializedName("cache_hits") val cacheHits: Int = 0,
-    @field:SerializedName("cache_misses") val cacheMisses: Int = 0,
-    @field:SerializedName("browser_cached") val browserCached: Int = 0,
-    @field:SerializedName("bytes_sent") val bytesSent: Long = 0,
-    @field:SerializedName("bytes_on_disk") val bytesOnDisk: Long = 0
+    val requestsServed: Int = 0,
+    val cacheHits: Int = 0,
+    val cacheMisses: Int = 0,
+    val browserCached: Int = 0,
+    val bytesSent: Long = 0,
+    val bytesOnDisk: Long = 0
 )

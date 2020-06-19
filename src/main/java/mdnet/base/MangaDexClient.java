@@ -3,6 +3,7 @@ package mdnet.base;
 import mdnet.base.settings.ClientSettings;
 import mdnet.base.server.ApplicationKt;
 import mdnet.base.server.WebUiKt;
+import mdnet.base.settings.ServerSettings;
 import mdnet.cache.DiskLruCache;
 import org.http4k.server.Http4kServer;
 import org.slf4j.Logger;
@@ -19,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static mdnet.base.Constants.GSON;
+import static mdnet.base.Constants.JACKSON;
 
 public class MangaDexClient {
 	private final static Logger LOGGER = LoggerFactory.getLogger(MangaDexClient.class);
@@ -62,8 +63,8 @@ public class MangaDexClient {
 
 			DiskLruCache.Snapshot snapshot = cache.get("statistics");
 			if (snapshot != null) {
-				String json = snapshot.getString(0);
-				statistics.set(GSON.fromJson(json, Statistics.class));
+				statistics.set(JACKSON.readValue(snapshot.getInputStream(0), Statistics.class));
+				snapshot.close();
 			} else {
 				statistics.set(new Statistics());
 			}
@@ -215,8 +216,7 @@ public class MangaDexClient {
 
 		DiskLruCache.Editor editor = cache.edit("statistics");
 		if (editor != null) {
-			String json = GSON.toJson(statistics.get(), Statistics.class);
-			editor.setString(0, json);
+			JACKSON.writeValue(editor.newOutputStream(0), Statistics.class);
 			editor.commit();
 		}
 	}

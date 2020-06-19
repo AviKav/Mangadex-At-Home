@@ -200,8 +200,8 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                         }
                         editor.commit()
                     } else {
-                        if (LOGGER.isInfoEnabled) {
-                            LOGGER.info("Cache download for $sanitizedUri aborted")
+                        if (LOGGER.isWarnEnabled) {
+                            LOGGER.warn("Cache download for $sanitizedUri aborted")
                         }
                         editor.abort()
                     }
