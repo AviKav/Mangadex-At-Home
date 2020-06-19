@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - [2020-06-19] Changed default CPU thread count to `4` by [@lflare].
+- [2020-06-19] Removed ability to set log files but increased throughput [@carbotaniuman]
 
 ### Deprecated
 
