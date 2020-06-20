@@ -6,21 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- [2020-06-19] Errored out on invalid settings.json tokens [@carbotaniuman]
 
 ### Changed
-- [2020-06-19] Changed default CPU thread count to `4` by [@lflare].
-- [2020-06-19] Removed ability to set log files but increased throughput [@carbotaniuman]
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
-- [2020-06-19] Make graceful shutdown work better [@carbotaniuman]
-- [2020-06-19] Actually shutdown logback [@carbotaniuman]
 
 ### Security
+
+## [1.0.0-RC20] - 2020-06-18
+### Added
+- [2020-06-19] Errored out on invalid settings.json tokens [@carbotaniuman]
+
+### Changed
+- [2020-06-19] Changed default CPU thread count to `4` by [@lflare].
+- [2020-06-19] Removed ability to set log files but increased throughput [@carbotaniuman]
+
+### Fixed
+- [2020-06-19] Make graceful shutdown work better [@carbotaniuman]
+- [2020-06-19] Actually shutdown logback [@carbotaniuman]
 
 ## [1.0.0-RC19] - 2020-06-18
 ### Added
@@ -116,7 +123,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [2020-06-11] Tweaked logging configuration to reduce log file sizes by [@carbotaniuman].
 
-[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc19...HEAD
+[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc20...HEAD
+[1.0.0-rc19]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc19...1.0.0-rc20
 [1.0.0-rc19]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc18...1.0.0-rc19
 [1.0.0-rc18]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc17...1.0.0-rc18
 [1.0.0-rc17]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc16...1.0.0-rc17
