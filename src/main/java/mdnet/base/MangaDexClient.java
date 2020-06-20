@@ -6,6 +6,7 @@ import mdnet.base.server.ApplicationKt;
 import mdnet.base.server.WebUiKt;
 import mdnet.base.settings.ServerSettings;
 import mdnet.cache.DiskLruCache;
+import mdnet.cache.HeaderMismatchException;
 import org.http4k.server.Http4kServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +70,11 @@ public class MangaDexClient {
 			} else {
 				statistics.set(new Statistics());
 			}
+		} catch (HeaderMismatchException e) {
+			LOGGER.warn("Cache version may be outdated - remove if necessary");
+			Main.dieWithError(e);
 		} catch (IOException e) {
+			LOGGER.warn("Cache version may be corrupt - remove if necessary");
 			Main.dieWithError(e);
 		}
 	}

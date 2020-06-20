@@ -17,7 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-## [1.0.0-RC20] - 2020-06-18
+## [1.0.0-RC21] - 2020-06-20
+### Changed
+- [2020-06-20] Fixed logging for DiskLruCache [@carbotaniuman]
+- [2020-06-20] Don't automatically delete on corruption [@carbotaniuman]
+
+## [1.0.0-RC20] - 2020-06-19
 ### Added
 - [2020-06-19] Errored out on invalid settings.json tokens [@carbotaniuman]
 
@@ -123,7 +128,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [2020-06-11] Tweaked logging configuration to reduce log file sizes by [@carbotaniuman].
 
-[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc20...HEAD
+[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc21...HEAD
+[1.0.0-rc20]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc20...1.0.0-rc21
 [1.0.0-rc20]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc19...1.0.0-rc20
 [1.0.0-rc19]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc18...1.0.0-rc19
 [1.0.0-rc18]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc17...1.0.0-rc18

@@ -1,8 +1,7 @@
 package mdnet.base
 
-import com.fasterxml.jackson.core.JsonParseException
+import ch.qos.logback.classic.LoggerContext
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import com.fasterxml.jackson.module.kotlin.readValue
 import mdnet.base.Constants.JACKSON
@@ -61,6 +60,7 @@ object Main {
         if (LOGGER.isErrorEnabled) {
             LOGGER.error("Critical Error", e)
         }
+        (LoggerFactory.getILoggerFactory() as LoggerContext).stop()
         exitProcess(1)
     }
 
@@ -69,6 +69,7 @@ object Main {
         if (LOGGER.isErrorEnabled) {
             LOGGER.error("Critical Error: {}", error)
         }
+        (LoggerFactory.getILoggerFactory() as LoggerContext).stop()
         exitProcess(1)
     }
 

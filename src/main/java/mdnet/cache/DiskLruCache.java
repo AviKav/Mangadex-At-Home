@@ -226,16 +226,9 @@ public final class DiskLruCache implements Closeable {
 		// Prefer to pick up where we left off.
 		DiskLruCache cache = new DiskLruCache(directory, appVersion, valueCount, maxSize);
 		if (cache.journalFile.exists()) {
-			try {
-				cache.readJournal();
-				cache.processJournal();
-				return cache;
-			} catch (IOException e) {
-				if (LOGGER.isWarnEnabled()) {
-					LOGGER.warn("DiskLruCache " + directory + " is corrupt/outdated - removing");
-				}
-				cache.delete();
-			}
+			cache.readJournal();
+			cache.processJournal();
+			return cache;
 		}
 
 		// Create a new empty cache.
@@ -255,8 +248,10 @@ public final class DiskLruCache implements Closeable {
 			if (!MAGIC.equals(magic) || !VERSION_1.equals(version)
 					|| !Integer.toString(appVersion).equals(appVersionString)
 					|| !Integer.toString(valueCount).equals(valueCountString) || !"".equals(blank)) {
-				throw new IOException("unexpected journal header: [" + magic + ", " + version + ", " + valueCountString
-						+ ", " + blank + "]");
+				throw new HeaderMismatchException(
+						new String[]{magic, version, appVersionString, valueCountString, blank},
+						new String[]{MAGIC, VERSION_1, Integer.toString(appVersion), Integer.toString(valueCount), ""}
+					);
 			}
 
 			int lineCount = 0;
