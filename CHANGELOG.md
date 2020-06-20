@@ -124,7 +124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2020-06-11] Tweaked logging configuration to reduce log file sizes by [@carbotaniuman].
 
 [Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc20...HEAD
-[1.0.0-rc19]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc19...1.0.0-rc20
+[1.0.0-rc20]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc19...1.0.0-rc20
 [1.0.0-rc19]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc18...1.0.0-rc19
 [1.0.0-rc18]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc17...1.0.0-rc18
 [1.0.0-rc17]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc16...1.0.0-rc17
