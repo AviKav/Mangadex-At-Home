@@ -250,8 +250,7 @@ public final class DiskLruCache implements Closeable {
 					|| !Integer.toString(valueCount).equals(valueCountString) || !"".equals(blank)) {
 				throw new HeaderMismatchException(
 						new String[]{magic, version, appVersionString, valueCountString, blank},
-						new String[]{MAGIC, VERSION_1, Integer.toString(appVersion), Integer.toString(valueCount), ""}
-					);
+						new String[]{MAGIC, VERSION_1, Integer.toString(appVersion), Integer.toString(valueCount), ""});
 			}
 
 			int lineCount = 0;

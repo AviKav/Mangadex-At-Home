@@ -31,8 +31,7 @@ import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
 import javax.crypto.spec.SecretKeySpec
 
-private const val THREADS_TO_ALLOCATE = 262144 // 2**18 // Honestly, no reason to not just let 'er rip. Inactive connections will expire on their own :D
-private val LOGGER = LoggerFactory.getLogger(ImageServer::class.java)
+private const val THREADS_TO_ALLOCATE = 262144 // 2**18
 
 class ImageServer(private val cache: DiskLruCache, private val statistics: AtomicReference<Statistics>, private val upstreamUrl: String, private val database: Database, private val handled: AtomicBoolean) {
     init {
@@ -252,6 +251,10 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 }
             }
             .header("X-Cache", if (cached) "HIT" else "MISS")
+
+    companion object {
+        private val LOGGER = LoggerFactory.getLogger(ImageServer::class.java)
+    }
 }
 
 private fun getRc4(key: ByteArray): Cipher {

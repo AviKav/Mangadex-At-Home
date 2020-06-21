@@ -13,6 +13,7 @@ data class ClientSettings(
     val clientPort: Int = 443,
     @field:Secret val clientSecret: String = "PASTE-YOUR-SECRET-HERE",
     val threads: Int = 4,
+    val gracefulShutdownWaitSeconds: Int = 60,
     val webSettings: WebSettings? = null
 )
 
