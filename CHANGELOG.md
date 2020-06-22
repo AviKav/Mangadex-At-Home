@@ -6,9 +6,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- [2020-06-20] Added `graceful_shutdown_wait_seconds` client setting
-- [2020-06-22] Added UI graph resizing and dragging
-- [2020-06-22] Added client setting generator in UI
 
 ### Changed
 
@@ -24,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - [2020-06-22] Repository clean-up by [@carbotaniuman]
 - [2020-06-22] Comments added to JSON configuration file by [@carbotaniuman]
+- [2020-06-22] Added UI graph resizing and dragging by [@RedMatriz].
+- [2020-06-22] Added client setting generator in UI by [@RedMatriz].
 
 ### Changed
 - [2020-06-22] Fix incorrect `config.sample.json` naming to `settings.sample.json` by [@lflare]
@@ -146,7 +145,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [2020-06-11] Tweaked logging configuration to reduce log file sizes by [@carbotaniuman].
 
-[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc22...HEAD
+[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0...HEAD
+[1.0.0]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc22...1.0.0
 [1.0.0-rc22]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc21...1.0.0-rc22
 [1.0.0-rc21]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc20...1.0.0-rc21
 [1.0.0-rc20]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc19...1.0.0-rc20
