@@ -3,8 +3,7 @@
         <immediateFlush>false</immediateFlush>
 
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-<!--            <level>${file-level:-TRACE}</level>-->
-            <level>TRACE</level>
+            <level>${file-level:-TRACE}</level>
         </filter>
 
         <file>log/latest.log</file>

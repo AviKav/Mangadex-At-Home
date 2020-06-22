@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - [2020-06-20] Added `graceful_shutdown_wait_seconds` client setting by [@carbotaniuman]
 - [2020-06-20] Added `config.sample.json` sample client configuration file by [@lflare]
+- [2020-06-19] Readded ability to set log files level [@carbotaniuman]
 
 ## [1.0.0-RC21] - 2020-06-20
 ### Changed
