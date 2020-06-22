@@ -88,6 +88,9 @@ object Main {
         if (settings.maxKilobitsPerSecond < 0) {
             dieWithError("Config Error: Max burst rate must be >= 0")
         }
+        if (settings.gracefulShutdownWaitSeconds < 15) {
+            dieWithError("Config Error: Graceful shutdown wait be >= 15")
+        }
         if (settings.webSettings != null) {
             if (settings.webSettings.uiPort == 0) {
                 dieWithError("Config Error: Invalid UI port number")

@@ -1,14 +1,15 @@
 {
   "client_secret": "nosenpaithisisoursecret",
-  "client_hostname": "0.0.0.0",
-  "client_port": 44300,
+  "client_hostname": "0.0.0.0", // "0.0.0.0" is the default and binds to everything
+  "client_port": 443, // 443 is recommended if possible
   "threads": 16,
-  "graceful_shutdown_wait_seconds": 60,
+  "graceful_shutdown_wait_seconds": 60, // Time from graceful shutdown start to force quit
+                                        // This rounds down to 15-second increments
   "max_cache_size_in_mebibytes": 80000,
-  "max_kilobits_per_second": 0,
-  "max_mebibytes_per_hour": 0,
+  "max_kilobits_per_second": 0, // 0 disables max brust limiting
+  "max_mebibytes_per_hour": 0, // 0 disables hourly bandwidth limiting
   "web_settings": {
-    "ui_hostname": "127.0.0.1",
+    "ui_hostname": "127.0.0.1", // "0.0.0.0" is the default and binds to localhost only
     "ui_port": 8080
   }
 }
