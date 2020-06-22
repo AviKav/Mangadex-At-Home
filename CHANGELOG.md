@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
-- [2020-06-22] Fix incorrect `config.sample.json` naming to `settings.sample.json` by [@lflare]
 
 ### Deprecated
 
@@ -17,6 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Security
+
+## [1.0.0] - 2020-06-22
+### Added
+- [2020-06-22] Repository clean-up by [@carbotaniuman]
+- [2020-06-22] Comments added to JSON configuration file by [@carbotaniuman]
+
+### Changed
+- [2020-06-22] Fix incorrect `config.sample.json` naming to `settings.sample.json` by [@lflare]
+- [2020-06-22] Logging statements improved by [@carbotaniuman]
 
 ## [1.0.0-RC22] - 2020-06-22
 ### Added
