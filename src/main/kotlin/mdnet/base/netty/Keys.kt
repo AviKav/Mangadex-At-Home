@@ -34,7 +34,6 @@ private const val PKCS_8_PEM_FOOTER = "-----END PRIVATE KEY-----"
 
 fun loadKey(keyDataString: String): PrivateKey? {
     if (keyDataString.contains(PKCS_1_PEM_HEADER)) {
-        // OpenSSL / PKCS#1 Base64 PEM encoded file
         val fixedString = keyDataString.replace(PKCS_1_PEM_HEADER, "").replace(
             PKCS_1_PEM_FOOTER, "")
         return readPkcs1PrivateKey(
@@ -44,7 +43,6 @@ fun loadKey(keyDataString: String): PrivateKey? {
         )
     }
     if (keyDataString.contains(PKCS_8_PEM_HEADER)) {
-        // PKCS#8 Base64 PEM encoded file
         val fixedString = keyDataString.replace(PKCS_8_PEM_HEADER, "").replace(
             PKCS_8_PEM_FOOTER, "")
         return readPkcs1PrivateKey(
@@ -68,14 +66,13 @@ private fun readPkcs8PrivateKey(pkcs8Bytes: ByteArray): PrivateKey? {
 }
 
 private fun readPkcs1PrivateKey(pkcs1Bytes: ByteArray): PrivateKey? {
-    // We can't use Java internal APIs to parse ASN.1 structures, so we build a PKCS#8 key Java can understand
     val pkcs1Length = pkcs1Bytes.size
     val totalLength = pkcs1Length + 22
     val pkcs8Header = byteArrayOf(
-            0x30, 0x82.toByte(), (totalLength shr 8 and 0xff).toByte(), (totalLength and 0xff).toByte(), // Sequence + total length
+            0x30, 0x82.toByte(), (totalLength shr 8 and 0xff).toByte(), (totalLength and 0xff).toByte(),
             0x2, 0x1, 0x0, // Integer (0)
-            0x30, 0xD, 0x6, 0x9, 0x2A, 0x86.toByte(), 0x48, 0x86.toByte(), 0xF7.toByte(), 0xD, 0x1, 0x1, 0x1, 0x5, 0x0, // Sequence: 1.2.840.113549.1.1.1, NULL
-            0x4, 0x82.toByte(), (pkcs1Length shr 8 and 0xff).toByte(), (pkcs1Length and 0xff).toByte() // Octet string + length
+            0x30, 0xD, 0x6, 0x9, 0x2A, 0x86.toByte(), 0x48, 0x86.toByte(), 0xF7.toByte(), 0xD, 0x1, 0x1, 0x1, 0x5, 0x0,
+            0x4, 0x82.toByte(), (pkcs1Length shr 8 and 0xff).toByte(), (pkcs1Length and 0xff).toByte()
     )
     val pkcs8bytes = join(pkcs8Header, pkcs1Bytes)
     return readPkcs8PrivateKey(pkcs8bytes)
