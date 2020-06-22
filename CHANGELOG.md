@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- [2020-06-20] Added `graceful_shutdown_wait_seconds` client setting
 
 ### Changed
 

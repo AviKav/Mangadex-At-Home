@@ -30,7 +30,7 @@ object Main {
             dieWithError("Expected one argument: path to config file, or nothing")
         }
 
-        val settings: ClientSettings = try {
+        val settings = try {
             JACKSON.readValue<ClientSettings>(FileReader(file))
         } catch (e: UnrecognizedPropertyException) {
             dieWithError("'${e.propertyName}' is not a valid setting")
@@ -55,7 +55,6 @@ object Main {
         client.runLoop()
     }
 
-    @JvmStatic
     fun dieWithError(e: Throwable): Nothing {
         if (LOGGER.isErrorEnabled) {
             LOGGER.error("Critical Error", e)
@@ -64,7 +63,6 @@ object Main {
         exitProcess(1)
     }
 
-    @JvmStatic
     fun dieWithError(error: String): Nothing {
         if (LOGGER.isErrorEnabled) {
             LOGGER.error("Critical Error: {}", error)
