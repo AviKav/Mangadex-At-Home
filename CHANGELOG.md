@@ -6,7 +6,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- [2020-06-20] Added `graceful_shutdown_wait_seconds` client setting
 
 ### Changed
 
@@ -17,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Security
+
+## [1.0.0-RC22] - 2020-06-22
+### Added
+- [2020-06-20] Added `graceful_shutdown_wait_seconds` client setting by [@carbotaniuman]
 
 ## [1.0.0-RC21] - 2020-06-20
 ### Changed
@@ -129,8 +132,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [2020-06-11] Tweaked logging configuration to reduce log file sizes by [@carbotaniuman].
 
-[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc21...HEAD
-[1.0.0-rc20]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc20...1.0.0-rc21
+[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc22...HEAD
+[1.0.0-rc22]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc21...1.0.0-rc22
+[1.0.0-rc21]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc20...1.0.0-rc21
 [1.0.0-rc20]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc19...1.0.0-rc20
 [1.0.0-rc19]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc18...1.0.0-rc19
 [1.0.0-rc18]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc17...1.0.0-rc18
