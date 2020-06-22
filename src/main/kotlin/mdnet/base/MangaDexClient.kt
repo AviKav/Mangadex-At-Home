@@ -268,7 +268,6 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
                 this.state = GracefulShutdown(state, nextState = Shutdown) {
                     latch.countDown()
                 }
-                latch.await()
             } else if (state is GracefulShutdown) {
                 this.state = state.copy(nextState = Shutdown) {
                     latch.countDown()
