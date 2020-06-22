@@ -82,7 +82,7 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
             LOGGER.warn("Cache version may be outdated - remove if necessary")
             dieWithError(e)
         } catch (e: IOException) {
-            LOGGER.warn("Cache version may be corrupt - remove if necessary")
+            LOGGER.warn("Cache may be corrupt - remove if necessary")
             dieWithError(e)
         }
     }
@@ -204,15 +204,15 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
         val state = this.state as Running
 
         val newSettings = serverHandler.pingControl(state.settings)
-        if (LOGGER.isInfoEnabled) {
-            LOGGER.info("Server settings received: {}", newSettings)
-        }
         if (newSettings != null) {
+            if (LOGGER.isInfoEnabled) {
+                LOGGER.info("Server settings received: $newSettings")
+            }
+
             if (newSettings.latestBuild > Constants.CLIENT_BUILD) {
                 if (LOGGER.isWarnEnabled) {
                     LOGGER.warn(
-                        "Outdated build detected! Latest: {}, Current: {}", newSettings.latestBuild,
-                        Constants.CLIENT_BUILD
+                        "Outdated build detected! Latest: ${newSettings.latestBuild}, Current: ${Constants.CLIENT_BUILD}"
                     )
                 }
             }
@@ -224,6 +224,10 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
                 this.state = GracefulShutdown(lastRunning = state) {
                     loginAndStartServer()
                 }
+            }
+        } else {
+            if (LOGGER.isInfoEnabled) {
+                LOGGER.info("Server ping failed - ignoring")
             }
         }
     }
@@ -238,8 +242,7 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
         if (serverSettings.latestBuild > Constants.CLIENT_BUILD) {
             if (LOGGER.isWarnEnabled) {
                 LOGGER.warn(
-                    "Outdated build detected! Latest: {}, Current: {}", serverSettings.latestBuild,
-                    Constants.CLIENT_BUILD
+                    "Outdated build detected! Latest: ${serverSettings.latestBuild}, Current: ${Constants.CLIENT_BUILD}"
                 )
             }
         }

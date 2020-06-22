@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import dev.afanasev.sekret.Secret
 
+// client settings are verified correct in Main.kt
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy::class)
 data class ClientSettings(
     val maxCacheSizeInMebibytes: Long = 20480,

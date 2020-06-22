@@ -24,6 +24,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 
 object ImageData : IdTable<String>() {
+    // md5 hex strings are 32 characters long
     override val id = varchar("id", 32).entityId()
     override val primaryKey = PrimaryKey(id)
 

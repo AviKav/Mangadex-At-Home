@@ -49,6 +49,7 @@ import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.net.InetSocketAddress
+import java.net.SocketException
 import java.security.PrivateKey
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
@@ -107,12 +108,12 @@ class Netty(private val tls: TlsCert, private val clientSettings: ClientSettings
                                         if (LOGGER.isTraceEnabled) {
                                             LOGGER.trace("Ignored invalid SSL connection")
                                         }
-                                    } else if (cause is IOException) {
+                                    } else if (cause is IOException || cause is SocketException) {
                                         if (LOGGER.isInfoEnabled) {
                                             LOGGER.info("User (downloader) abruptly closed the connection")
                                         }
                                         if (LOGGER.isTraceEnabled) {
-                                            LOGGER.trace("IOException in pipeline", cause)
+                                            LOGGER.trace("Exception in pipeline", cause)
                                         }
                                     } else {
                                         ctx.fireExceptionCaught(cause)
