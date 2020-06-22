@@ -36,6 +36,7 @@ data class Running(val server: Http4kServer, val settings: ServerSettings) : Sta
 class MangaDexClient(private val clientSettings: ClientSettings) {
     // this must remain singlethreaded because of how the state mechanism works
     private val executorService = Executors.newSingleThreadScheduledExecutor()
+    // state must only be accessed from the thread on the executorService
     private var state: State = Uninitialized
 
     private val serverHandler: ServerHandler = ServerHandler(clientSettings)
@@ -260,21 +261,32 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
     fun shutdown() {
         LOGGER.info("Mangadex@Home Client stopping")
 
-        val state = this.state
-        if (state is Running) {
-            val latch = CountDownLatch(1)
-
-            this.state = GracefulShutdown(state, nextState = Shutdown) {
-                webUi?.close()
-                try {
-                    cache.close()
-                } catch (e: IOException) {
-                    LOGGER.error("Cache failed to close", e)
+        val latch = CountDownLatch(1)
+        executorService.schedule({
+            val state = this.state
+            if (state is Running) {
+                this.state = GracefulShutdown(state, nextState = Shutdown) {
+                    latch.countDown()
                 }
+                latch.await()
+            } else if (state is GracefulShutdown) {
+                this.state = state.copy(nextState = Shutdown) {
+                    latch.countDown()
+                }
+            } else if (state is Uninitialized || state is Shutdown) {
+                this.state = Shutdown
                 latch.countDown()
             }
-            latch.await()
+        }, 0, TimeUnit.SECONDS)
+        latch.await()
+
+        webUi?.close()
+        try {
+            cache.close()
+        } catch (e: IOException) {
+            LOGGER.error("Cache failed to close", e)
         }
+
         executorService.shutdown()
         LOGGER.info("Mangadex@Home Client stopped")
 
