@@ -190,12 +190,12 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
                             LOGGER.info("Shutting down server as hourly bandwidth limit reached")
                         }
                         this.state = GracefulShutdown(lastRunning = state)
+                    } else {
+                        pingControl()
                     }
-
-                    pingControl()
                 }
             } catch (e: Exception) {
-                LOGGER.warn("Main loop failed", e)
+                LOGGER.warn("Graceful shutdown checker failed", e)
             }
         }, 45, 45, TimeUnit.SECONDS)
     }
