@@ -51,6 +51,7 @@ import java.io.InputStream
 import java.net.InetSocketAddress
 import java.net.SocketException
 import java.security.PrivateKey
+import java.security.cert.Certificate
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
@@ -81,9 +82,9 @@ class Netty(private val tls: TlsCert, private val clientSettings: ClientSettings
                 LOGGER.info("Starting Netty with {} threads", clientSettings.threads)
             }
 
-            val (mainCert, chainCert) = getX509Certs(tls.certificate)
+            val certs = getX509Certs(tls.certificate)
             val sslContext = SslContextBuilder
-                    .forServer(getPrivateKey(tls.privateKey), mainCert, chainCert)
+                    .forServer(getPrivateKey(tls.privateKey), certs)
                     .protocols("TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1")
                     .build()
 
@@ -140,9 +141,10 @@ class Netty(private val tls: TlsCert, private val clientSettings: ClientSettings
     }
 }
 
-fun getX509Certs(certificates: String): Pair<X509Certificate, X509Certificate> {
+fun getX509Certs(certificates: String): Collection<X509Certificate> {
     val targetStream: InputStream = ByteArrayInputStream(certificates.toByteArray())
-    return (CertificateFactory.getInstance("X509").generateCertificate(targetStream) as X509Certificate) to (CertificateFactory.getInstance("X509").generateCertificate(targetStream) as X509Certificate)
+    @Suppress("unchecked_cast")
+    return CertificateFactory.getInstance("X509").generateCertificates(targetStream) as Collection<X509Certificate>
 }
 
 fun getPrivateKey(privateKey: String): PrivateKey {
