@@ -30,6 +30,7 @@ data class ClientSettings(
     val maxKilobitsPerSecond: Long = 0,
     val clientHostname: String = "0.0.0.0",
     val clientPort: Int = 443,
+    val clientExternalPort: Int = 0,
     @field:Secret val clientSecret: String = "PASTE-YOUR-SECRET-HERE",
     val threads: Int = 4,
     val gracefulShutdownWaitSeconds: Int = 60,
