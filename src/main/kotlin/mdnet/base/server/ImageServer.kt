@@ -101,8 +101,12 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
             }
         }
 
+        val referer = request.header("Referer")
+
         handled.set(true)
-        if (snapshot != null && imageDatum != null) {
+        if (referer != null && !referer.contains("mangadex.org")) {
+            Response(Status.FORBIDDEN)
+        } else if (snapshot != null && imageDatum != null) {
             request.handleCacheHit(sanitizedUri, getRc4(rc4Bytes), snapshot, imageDatum)
                 .header("X-Uri", sanitizedUri)
         } else {
