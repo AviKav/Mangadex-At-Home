@@ -101,14 +101,16 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
 
         executorService.scheduleAtFixedRate({
             try {
-                statistics.updateAndGet {
-                    it.copy(bytesOnDisk = cache.size())
-                }
-                statsMap[Instant.now()] = statistics.get()
-                val editor = cache.edit("statistics")
-                if (editor != null) {
-                    JACKSON.writeValue(editor.newOutputStream(0), statistics.get())
-                    editor.commit()
+                if (state is Running || state is GracefulShutdown || state is Uninitialized) {
+                    statistics.updateAndGet {
+                        it.copy(bytesOnDisk = cache.size())
+                    }
+                    statsMap[Instant.now()] = statistics.get()
+                    val editor = cache.edit("statistics")
+                    if (editor != null) {
+                        JACKSON.writeValue(editor.newOutputStream(0), statistics.get())
+                        editor.commit()
+                    }
                 }
             } catch (e: Exception) {
                 LOGGER.warn("Statistics update failed", e)
