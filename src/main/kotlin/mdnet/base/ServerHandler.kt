@@ -60,7 +60,13 @@ class ServerHandler(private val settings: ClientSettings) {
     private fun getPingParams(tlsCreatedAt: String? = null): Map<String, Any> =
         mapOf<String, Any>(
             "secret" to settings.clientSecret,
-            "port" to settings.clientPort,
+            "port" to let {
+                if (settings.clientExternalPort != 0) {
+                    settings.clientExternalPort
+                } else {
+                    settings.clientPort
+                }
+            },
             "disk_space" to settings.maxCacheSizeInMebibytes * 1024 * 1024,
             "network_speed" to settings.maxKilobitsPerSecond * 1000 / 8,
             "build_version" to Constants.CLIENT_BUILD
@@ -107,5 +113,6 @@ class ServerHandler(private val settings: ClientSettings) {
         private val STRING_ANY_MAP_LENS = Body.auto<Map<String, Any>>().toLens()
         private val SERVER_SETTINGS_LENS = Body.auto<ServerSettings>().toLens()
         private const val SERVER_ADDRESS = "https://api.mangadex.network/"
+        //private const val SERVER_ADDRESS = "https://mangadex-test.net/"
     }
 }

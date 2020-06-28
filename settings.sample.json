@@ -2,6 +2,8 @@
   "client_secret": "nosenpaithisisoursecret",
   "client_hostname": "0.0.0.0", // "0.0.0.0" is the default and binds to everything
   "client_port": 443, // 443 is recommended if possible
+  "client_external_port": 0,   //443 is recommended; This port will be send to mdah-backend.
+                               //You need to forward this to the client_port in your router; This is optional
   "threads": 16,
   "graceful_shutdown_wait_seconds": 60, // Time from graceful shutdown start to force quit
                                         // This rounds down to 15-second increments
