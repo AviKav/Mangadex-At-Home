@@ -51,7 +51,6 @@ import java.io.InputStream
 import java.net.InetSocketAddress
 import java.net.SocketException
 import java.security.PrivateKey
-import java.security.cert.Certificate
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - [2020-06-23] Added Gitlab CI integration by [@lflare].
+- [2020-06-28] Added `client_external_port setting` [@wedge1001].
 
 ### Changed
 
@@ -15,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Fixed
+- [2020-06-28] Fixed various state transition bugs by [@carbotaniuman].
 
 ### Security
 

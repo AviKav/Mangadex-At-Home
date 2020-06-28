@@ -113,6 +113,6 @@ class ServerHandler(private val settings: ClientSettings) {
         private val STRING_ANY_MAP_LENS = Body.auto<Map<String, Any>>().toLens()
         private val SERVER_SETTINGS_LENS = Body.auto<ServerSettings>().toLens()
         private const val SERVER_ADDRESS = "https://api.mangadex.network/"
-        //private const val SERVER_ADDRESS = "https://mangadex-test.net/"
+//        private const val SERVER_ADDRESS = "https://mangadex-test.net/"
     }
 }
