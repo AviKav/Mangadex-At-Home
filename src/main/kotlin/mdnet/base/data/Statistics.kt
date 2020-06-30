@@ -16,7 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this MangaDex@Home.  If not, see <http://www.gnu.org/licenses/>.
  */
-package mdnet.base
+package mdnet.base.data
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.databind.annotation.JsonNaming

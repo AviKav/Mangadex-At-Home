@@ -21,19 +21,21 @@ package mdnet.base.server
 
 import mdnet.base.netty.Netty
 import mdnet.base.settings.ServerSettings
-import mdnet.base.Statistics
+import mdnet.base.data.Statistics
 import mdnet.base.settings.ClientSettings
 import mdnet.cache.DiskLruCache
-import org.http4k.core.Method
-import org.http4k.core.then
+import org.http4k.core.*
 import org.http4k.filter.ServerFilters
 import org.http4k.routing.bind
 import org.http4k.routing.routes
 import org.http4k.server.Http4kServer
 import org.http4k.server.asServer
 import org.jetbrains.exposed.sql.Database
+import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+
+private val LOGGER = LoggerFactory.getLogger("Application")
 
 fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSettings: ClientSettings, statistics: AtomicReference<Statistics>, isHandled: AtomicBoolean): Http4kServer {
     val database = Database.connect("jdbc:sqlite:cache/data.db", "org.sqlite.JDBC")
@@ -58,4 +60,22 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
                 )
             )
             .asServer(Netty(serverSettings.tls!!, clientSettings, statistics))
+}
+
+fun timeRequest(): Filter {
+    return Filter { next: HttpHandler ->
+        { request: Request ->
+            val start = System.currentTimeMillis()
+            val response = next(request)
+            val latency = System.currentTimeMillis() - start
+
+            if (LOGGER.isTraceEnabled && response.header("X-Uri") != null) {
+                val sanitizedUri = response.header("X-Uri")
+                if (LOGGER.isInfoEnabled) {
+                    LOGGER.info("Request for $sanitizedUri completed in ${latency}ms")
+                }
+            }
+            response.header("X-Time-Taken", latency.toString())
+        }
+    }
 }

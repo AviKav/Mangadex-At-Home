@@ -29,4 +29,7 @@ object Constants {
     const val WEBUI_VERSION = "0.1.1"
     val MAX_AGE_CACHE: Duration = Duration.ofDays(14)
     val JACKSON: ObjectMapper = jacksonObjectMapper().configure(JsonParser.Feature.ALLOW_COMMENTS, true)
+
+    const val MAX_READ_TIME_SECONDS = 300
+    const val MAX_WRITE_TIME_SECONDS = 60
 }

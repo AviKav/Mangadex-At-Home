@@ -58,25 +58,3 @@ fun catchAllHideDetails(): Filter {
         }
     }
 }
-
-fun timeRequest(): Filter {
-    return Filter { next: HttpHandler ->
-        { request: Request ->
-            val start = System.currentTimeMillis()
-            val response = next(request)
-            val latency = System.currentTimeMillis() - start
-            if (LOGGER.isTraceEnabled && response.header("X-Uri") != null) {
-                // Dirty hack to get sanitizedUri from ImageServer
-                val sanitizedUri = response.header("X-Uri")
-                // Log in TRACE
-                if (LOGGER.isInfoEnabled) {
-                    LOGGER.info("Request for $sanitizedUri completed in ${latency}ms")
-                }
-                // Delete response header entirely
-                response.header("X-Uri", null)
-            }
-            // Set response header with processing times
-            response.header("X-Time-Taken", latency.toString())
-        }
-    }
-}

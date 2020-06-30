@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2020-06-23] Added Gitlab CI integration by [@lflare].
 - [2020-06-28] Added `client_external_port setting` [@wedge1001].
 - [2020-06-29] Added rudimentary support of Referer checking to mitigate hotlinking by [@lflare].
+- [2020-06-30] Added read and write timeouts to protect against some attacks [@carbotaniuman].
 
 ### Changed
 

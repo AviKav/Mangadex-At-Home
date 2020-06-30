@@ -16,28 +16,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this MangaDex@Home.  If not, see <http://www.gnu.org/licenses/>.
  */
+/* ktlint-disable no-wildcard-imports */
 package mdnet.base.netty
 
 import io.netty.bootstrap.ServerBootstrap
-import io.netty.channel.ChannelFactory
-import io.netty.channel.ChannelFuture
-import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelInboundHandlerAdapter
-import io.netty.channel.ChannelInitializer
-import io.netty.channel.ChannelOption
-import io.netty.channel.ServerChannel
+import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.DecoderException
-import io.netty.handler.codec.http.HttpObjectAggregator
-import io.netty.handler.codec.http.HttpServerCodec
-import io.netty.handler.codec.http.HttpServerKeepAliveHandler
+import io.netty.handler.codec.http.*
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.stream.ChunkedWriteHandler
+import io.netty.handler.timeout.ReadTimeoutHandler
+import io.netty.handler.timeout.WriteTimeoutHandler
 import io.netty.handler.traffic.GlobalTrafficShapingHandler
 import io.netty.handler.traffic.TrafficCounter
-import mdnet.base.Statistics
+import mdnet.base.Constants
+import mdnet.base.data.Statistics
 import mdnet.base.settings.ClientSettings
 import mdnet.base.settings.TlsCert
 import org.http4k.core.HttpHandler
@@ -99,6 +95,10 @@ class Netty(private val tls: TlsCert, private val clientSettings: ClientSettings
                             ch.pipeline().addLast("aggregator", HttpObjectAggregator(65536))
 
                             ch.pipeline().addLast("burstLimiter", burstLimiter)
+
+                            ch.pipeline().addLast("readTimeoutHandler", ReadTimeoutHandler(Constants.MAX_READ_TIME_SECONDS))
+                            ch.pipeline().addLast("writeTimeoutHandler", WriteTimeoutHandler(Constants.MAX_WRITE_TIME_SECONDS))
+
                             ch.pipeline().addLast("streamer", ChunkedWriteHandler())
                             ch.pipeline().addLast("handler", Http4kChannelHandler(httpHandler))
 

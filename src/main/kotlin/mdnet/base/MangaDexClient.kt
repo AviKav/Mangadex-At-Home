@@ -23,6 +23,7 @@ import ch.qos.logback.classic.LoggerContext
 import com.fasterxml.jackson.module.kotlin.readValue
 import mdnet.base.Constants.JACKSON
 import mdnet.base.Main.dieWithError
+import mdnet.base.data.Statistics
 import mdnet.base.server.getServer
 import mdnet.base.server.getUiServer
 import mdnet.base.settings.ClientSettings
@@ -64,7 +65,9 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
                 return this.size > 240
             }
         })
-    private val statistics: AtomicReference<Statistics> = AtomicReference(Statistics())
+    private val statistics: AtomicReference<Statistics> = AtomicReference(
+        Statistics()
+    )
     private val isHandled: AtomicBoolean = AtomicBoolean(false)
     private var webUi: Http4kServer? = null
     private val cache: DiskLruCache

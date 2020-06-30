@@ -30,12 +30,15 @@ dependencies {
   implementation group: "org.http4k", name: "http4k-server-netty", version: "$http_4k_version"
   runtimeOnly group:"io.netty", name: "netty-tcnative-boringssl-static", version: "2.0.30.Final"
 
-  implementation group:"ch.qos.logback", name: "logback-classic", version: "1.2.1"
+  implementation group:"ch.qos.logback", name: "logback-classic", version: "1.3.0-alpha5"
 
   implementation group: "org.jetbrains.exposed", name: "exposed-core",  version: "$exposed_version"
   implementation group: "org.jetbrains.exposed", name: "exposed-dao",  version: "$exposed_version"
   implementation group: "org.jetbrains.exposed", name: "exposed-jdbc",  version: "$exposed_version"
   implementation group: "org.xerial", name: "sqlite-jdbc", version: "3.30.1"
+
+  implementation "com.goterl.lazycode:lazysodium-java:4.2.6"
+  implementation "net.java.dev.jna:jna:5.5.0"
 }
 
 java {

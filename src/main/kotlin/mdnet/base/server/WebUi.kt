@@ -21,7 +21,7 @@ package mdnet.base.server
 
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
-import mdnet.base.Statistics
+import mdnet.base.data.Statistics
 import mdnet.base.netty.WebUiNetty
 import mdnet.base.settings.WebSettings
 import org.http4k.core.Body

@@ -20,9 +20,9 @@ along with this MangaDex@Home.  If not, see <http://www.gnu.org/licenses/>.
 package mdnet.base.server
 
 import mdnet.base.Constants
-import mdnet.base.Statistics
-import mdnet.base.dao.ImageData
-import mdnet.base.dao.ImageDatum
+import mdnet.base.data.Statistics
+import mdnet.base.data.ImageData
+import mdnet.base.data.ImageDatum
 import mdnet.cache.CachingInputStream
 import mdnet.cache.DiskLruCache
 import org.apache.http.client.config.CookieSpecs
@@ -30,7 +30,9 @@ import org.apache.http.client.config.RequestConfig
 import org.apache.http.impl.client.HttpClients
 import org.http4k.client.ApacheClient
 import org.http4k.core.*
-import org.http4k.filter.MaxAgeTtl
+import org.http4k.filter.CachingFilters
+import org.http4k.filter.CorsPolicy
+import org.http4k.filter.ServerFilters
 import org.http4k.lens.Path
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -41,6 +43,7 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.InputStream
 import java.security.MessageDigest
+import java.time.Clock
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -70,7 +73,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
         .setMaxConnPerRoute(THREADS_TO_ALLOCATE)
         .build())
 
-    fun handler(dataSaver: Boolean, tokenized: Boolean = false): HttpHandler = { request ->
+    fun handler(dataSaver: Boolean, tokenized: Boolean = false): HttpHandler = baseHandler().then { request ->
         val chapterHash = Path.of("chapterHash")(request)
         val fileName = Path.of("fileName")(request)
 
@@ -105,10 +108,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
 
         handled.set(true)
         if (referer != null && !referer.startsWith("https://mangadex.org")) {
-            if (snapshot != null) {
-                snapshot.close()
-            }
-
+            snapshot?.close()
             Response(Status.FORBIDDEN)
         } else if (snapshot != null && imageDatum != null) {
             request.handleCacheHit(sanitizedUri, getRc4(rc4Bytes), snapshot, imageDatum)
@@ -255,13 +255,6 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
         Response(Status.OK)
             .header("Content-Type", type)
             .header("X-Content-Type-Options", "nosniff")
-            .header(
-                "Cache-Control",
-                listOf("public", MaxAgeTtl(Constants.MAX_AGE_CACHE).toHeaderValue()).joinToString(", ")
-            )
-            .header("Access-Control-Allow-Origin", "https://mangadex.org")
-            .header("Access-Control-Expose-Headers", "*")
-            .header("Timing-Allow-Origin", "https://mangadex.org")
             .let {
                 if (length != null) {
                     it.body(input, length.toLong()).header("Content-Length", length)
@@ -280,6 +273,23 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
 
     companion object {
         private val LOGGER = LoggerFactory.getLogger(ImageServer::class.java)
+
+        private fun baseHandler(): Filter =
+            CachingFilters.Response.MaxAge(Clock.systemUTC(), Constants.MAX_AGE_CACHE)
+                .then(ServerFilters.Cors(
+                        CorsPolicy(
+                            origins = listOf("https://mangadex.org"),
+                            headers = listOf("*"),
+                            methods = Method.values().toList()
+                        )
+                    )
+                )
+                .then(Filter { next: HttpHandler ->
+                    { request: Request ->
+                        val response = next(request)
+                        response.header("timing-allow-origin", "https://mangadex.org")
+                    }
+                })
     }
 }
 

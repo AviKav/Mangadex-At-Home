@@ -37,9 +37,6 @@ import org.http4k.core.HttpHandler
 import org.http4k.server.Http4kChannelHandler
 import org.http4k.server.Http4kServer
 import org.http4k.server.ServerConfig
-import org.slf4j.LoggerFactory
-
-private val LOGGER = LoggerFactory.getLogger(WebUiNetty::class.java)
 
 class WebUiNetty(private val hostname: String, private val port: Int) : ServerConfig {
     override fun toServer(httpHandler: HttpHandler): Http4kServer = object : Http4kServer {
