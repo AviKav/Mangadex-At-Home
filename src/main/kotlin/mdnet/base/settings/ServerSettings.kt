@@ -28,6 +28,7 @@ data class ServerSettings (
     val latestBuild: Int,
     val url: String,
     val compromised: Boolean,
+    val paused: Boolean,
     val tls: TlsCert?
 )
 
