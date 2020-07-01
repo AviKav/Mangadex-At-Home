@@ -62,6 +62,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
     }
     private val executor = Executors.newCachedThreadPool()
     private val client = ApacheClient(responseBodyMode = BodyMode.Stream, client = HttpClients.custom()
+        .disableConnectionState()
         .setDefaultRequestConfig(
             RequestConfig.custom()
             .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
