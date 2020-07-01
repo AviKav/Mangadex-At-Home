@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - [2020-06-28] Added `pasued` field in ServerSettings [@carbotaniuman].
+- [2020-06-28] Hopefully fixed connection leaks [@carbotaniuman].
 
 ### Deprecated
 
