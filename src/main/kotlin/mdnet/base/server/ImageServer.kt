@@ -85,7 +85,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
         } + "/$chapterHash/$fileName"
 
         if (LOGGER.isInfoEnabled) {
-            LOGGER.info("Request for $sanitizedUri received")
+            LOGGER.info("Request for $sanitizedUri received from ${request.source?.address}")
         }
         statistics.getAndUpdate {
             it.copy(requestsServed = it.requestsServed + 1)
@@ -105,10 +105,8 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
             }
         }
 
-        val referer = request.header("Referer")
-
         handled.set(true)
-        if (referer != null && !referer.startsWith("https://mangadex.org")) {
+        if (request.header("Referer")?.startsWith("https://mangadex.org") == true) {
             snapshot?.close()
             Response(Status.FORBIDDEN)
         } else if (snapshot != null && imageDatum != null) {
