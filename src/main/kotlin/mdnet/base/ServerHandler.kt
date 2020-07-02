@@ -51,7 +51,7 @@ class ServerHandler(private val settings: ClientSettings) {
             "secret" to settings.clientSecret
         )
 
-        val request = STRING_ANY_MAP_LENS(params, Request(Method.POST, SERVER_ADDRESS + "stop"))
+        val request = STRING_ANY_MAP_LENS(params, Request(Method.POST, getServerAddress() + "stop"))
         val response = client(request)
 
         return response.status.successful
@@ -83,7 +83,7 @@ class ServerHandler(private val settings: ClientSettings) {
             LOGGER.info("Connecting to the control server")
         }
 
-        val request = STRING_ANY_MAP_LENS(getPingParams(), Request(Method.POST, SERVER_ADDRESS + "ping"))
+        val request = STRING_ANY_MAP_LENS(getPingParams(), Request(Method.POST, getServerAddress() + "ping"))
         val response = client(request)
 
         return if (response.status.successful) {
@@ -98,7 +98,7 @@ class ServerHandler(private val settings: ClientSettings) {
             LOGGER.info("Pinging the control server")
         }
 
-        val request = STRING_ANY_MAP_LENS(getPingParams(old.tls!!.createdAt), Request(Method.POST, SERVER_ADDRESS + "ping"))
+        val request = STRING_ANY_MAP_LENS(getPingParams(old.tls!!.createdAt), Request(Method.POST, getServerAddress() + "ping"))
         val response = client(request)
 
         return if (response.status.successful) {
@@ -108,11 +108,18 @@ class ServerHandler(private val settings: ClientSettings) {
         }
     }
 
+    private fun getServerAddress(): String {
+        return if (settings.devSettings == null || !settings.devSettings.isDev)
+            SERVER_ADDRESS
+        else
+            SERVER_ADDRESS_DEV
+    }
+
     companion object {
         private val LOGGER = LoggerFactory.getLogger(ServerHandler::class.java)
         private val STRING_ANY_MAP_LENS = Body.auto<Map<String, Any>>().toLens()
         private val SERVER_SETTINGS_LENS = Body.auto<ServerSettings>().toLens()
         private const val SERVER_ADDRESS = "https://api.mangadex.network/"
-//        private const val SERVER_ADDRESS = "https://mangadex-test.net/"
+        private const val SERVER_ADDRESS_DEV = "https://mangadex-test.net/"
     }
 }

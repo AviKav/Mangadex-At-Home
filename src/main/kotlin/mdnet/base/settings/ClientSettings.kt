@@ -34,11 +34,17 @@ data class ClientSettings(
     @field:Secret val clientSecret: String = "PASTE-YOUR-SECRET-HERE",
     val threads: Int = 4,
     val gracefulShutdownWaitSeconds: Int = 60,
-    val webSettings: WebSettings? = null
+    val webSettings: WebSettings? = null,
+    val devSettings: DevSettings? = null
 )
 
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy::class)
 data class WebSettings(
     val uiHostname: String = "127.0.0.1",
     val uiPort: Int = 8080
+)
+
+@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy::class)
+data class DevSettings(
+    val isDev: Boolean = false
 )
