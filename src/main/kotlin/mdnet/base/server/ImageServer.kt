@@ -106,7 +106,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
         }
 
         handled.set(true)
-        if (request.header("Referer")?.startsWith("https://mangadex.org") == true) {
+        if (request.header("Referer")?.startsWith("https://mangadex.org") == false) {
             snapshot?.close()
             Response(Status.FORBIDDEN)
         } else if (snapshot != null && imageDatum != null) {
