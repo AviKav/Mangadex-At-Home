@@ -20,6 +20,7 @@ package mdnet.base
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import mdnet.base.ServerHandlerJackson.auto
 import mdnet.base.settings.ClientSettings
 import mdnet.base.settings.ServerSettings
 import org.http4k.client.ApacheClient
@@ -30,8 +31,6 @@ import org.http4k.format.ConfigurableJackson
 import org.http4k.format.asConfigurable
 import org.http4k.format.withStandardMappings
 import org.slf4j.LoggerFactory
-
-import mdnet.base.ServerHandlerJackson.auto
 object ServerHandlerJackson : ConfigurableJackson(
     KotlinModule()
     .asConfigurable()

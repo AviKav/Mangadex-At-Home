@@ -22,14 +22,14 @@ import ch.qos.logback.classic.LoggerContext
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import com.fasterxml.jackson.module.kotlin.readValue
-import mdnet.base.Constants.JACKSON
-import mdnet.base.settings.ClientSettings
-import org.slf4j.LoggerFactory
 import java.io.FileReader
 import java.io.FileWriter
 import java.io.IOException
 import java.util.regex.Pattern
 import kotlin.system.exitProcess
+import mdnet.base.Constants.JACKSON
+import mdnet.base.settings.ClientSettings
+import org.slf4j.LoggerFactory
 
 object Main {
     private val LOGGER = LoggerFactory.getLogger(Main::class.java)

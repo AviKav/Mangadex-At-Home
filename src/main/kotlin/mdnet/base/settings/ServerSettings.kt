@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
 import dev.afanasev.sekret.Secret
 
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy::class)
-data class ServerSettings (
+data class ServerSettings(
     val imageServer: String,
     val latestBuild: Int,
     val url: String,
@@ -33,7 +33,7 @@ data class ServerSettings (
 )
 
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy::class)
-data class TlsCert (
+data class TlsCert(
     val createdAt: String,
     @field:Secret val privateKey: String,
     @field:Secret val certificate: String

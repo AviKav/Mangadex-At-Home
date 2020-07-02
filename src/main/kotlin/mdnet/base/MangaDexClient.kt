@@ -21,6 +21,15 @@ package mdnet.base
 
 import ch.qos.logback.classic.LoggerContext
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.io.File
+import java.io.IOException
+import java.time.Instant
+import java.util.*
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import mdnet.base.Constants.JACKSON
 import mdnet.base.Main.dieWithError
 import mdnet.base.data.Statistics
@@ -32,15 +41,6 @@ import mdnet.cache.DiskLruCache
 import mdnet.cache.HeaderMismatchException
 import org.http4k.server.Http4kServer
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.io.IOException
-import java.time.Instant
-import java.util.*
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
 
 sealed class State
 // server is not running

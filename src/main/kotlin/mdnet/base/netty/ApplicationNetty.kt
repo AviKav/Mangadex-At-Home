@@ -32,15 +32,6 @@ import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
 import io.netty.handler.traffic.GlobalTrafficShapingHandler
 import io.netty.handler.traffic.TrafficCounter
-import mdnet.base.Constants
-import mdnet.base.data.Statistics
-import mdnet.base.settings.ClientSettings
-import mdnet.base.settings.TlsCert
-import org.http4k.core.HttpHandler
-import org.http4k.server.Http4kChannelHandler
-import org.http4k.server.Http4kServer
-import org.http4k.server.ServerConfig
-import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -52,6 +43,15 @@ import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.net.ssl.SSLException
+import mdnet.base.Constants
+import mdnet.base.data.Statistics
+import mdnet.base.settings.ClientSettings
+import mdnet.base.settings.TlsCert
+import org.http4k.core.HttpHandler
+import org.http4k.server.Http4kChannelHandler
+import org.http4k.server.Http4kServer
+import org.http4k.server.ServerConfig
+import org.slf4j.LoggerFactory
 
 private val LOGGER = LoggerFactory.getLogger("Application")
 

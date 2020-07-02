@@ -19,10 +19,12 @@ along with this MangaDex@Home.  If not, see <http://www.gnu.org/licenses/>.
 /* ktlint-disable no-wildcard-imports */
 package mdnet.base.server
 
-import mdnet.base.netty.Netty
-import mdnet.base.settings.ServerSettings
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import mdnet.base.data.Statistics
+import mdnet.base.netty.Netty
 import mdnet.base.settings.ClientSettings
+import mdnet.base.settings.ServerSettings
 import mdnet.cache.DiskLruCache
 import org.http4k.core.*
 import org.http4k.filter.ServerFilters
@@ -32,8 +34,6 @@ import org.http4k.server.Http4kServer
 import org.http4k.server.asServer
 import org.jetbrains.exposed.sql.Database
 import org.slf4j.LoggerFactory
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
 
 private val LOGGER = LoggerFactory.getLogger("Application")
 

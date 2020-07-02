@@ -19,10 +19,23 @@ along with this MangaDex@Home.  If not, see <http://www.gnu.org/licenses/>.
 /* ktlint-disable no-wildcard-imports */
 package mdnet.base.server
 
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.InputStream
+import java.security.MessageDigest
+import java.time.Clock
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
+import javax.crypto.Cipher
+import javax.crypto.CipherInputStream
+import javax.crypto.CipherOutputStream
+import javax.crypto.spec.SecretKeySpec
 import mdnet.base.Constants
-import mdnet.base.data.Statistics
 import mdnet.base.data.ImageData
 import mdnet.base.data.ImageDatum
+import mdnet.base.data.Statistics
 import mdnet.cache.CachingInputStream
 import mdnet.cache.DiskLruCache
 import org.apache.http.client.config.CookieSpecs
@@ -38,19 +51,6 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.io.File
-import java.io.InputStream
-import java.security.MessageDigest
-import java.time.Clock
-import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
-import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
-import javax.crypto.CipherOutputStream
-import javax.crypto.spec.SecretKeySpec
 
 private const val THREADS_TO_ALLOCATE = 262144 // 2**18
 
