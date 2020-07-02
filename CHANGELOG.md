@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2020-06-28] Fixed various state transition bugs by [@carbotaniuman].
 
 ### Security
+- [2020-07-02] Added option to enforce strict checks on tokens to prevent hotlinking [@carbotaniuman].
 
 ## [1.0.0] - 2020-06-22
 ### Added

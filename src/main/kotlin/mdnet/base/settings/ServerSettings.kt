@@ -27,10 +27,10 @@ data class ServerSettings(
     val imageServer: String,
     val latestBuild: Int,
     val url: String,
-    val sharedKey: ByteArray,
+    val tokenKey: ByteArray,
     val compromised: Boolean,
     val paused: Boolean,
-    val forceToken: Boolean = false,
+    val forceTokens: Boolean = false,
     val tls: TlsCert?
 ) {
     override fun equals(other: Any?): Boolean {
@@ -42,7 +42,7 @@ data class ServerSettings(
         if (imageServer != other.imageServer) return false
         if (latestBuild != other.latestBuild) return false
         if (url != other.url) return false
-        if (!sharedKey.contentEquals(other.sharedKey)) return false
+        if (!tokenKey.contentEquals(other.tokenKey)) return false
         if (compromised != other.compromised) return false
         if (paused != other.paused) return false
         if (tls != other.tls) return false
@@ -54,7 +54,7 @@ data class ServerSettings(
         var result = imageServer.hashCode()
         result = 31 * result + latestBuild
         result = 31 * result + url.hashCode()
-        result = 31 * result + sharedKey.contentHashCode()
+        result = 31 * result + tokenKey.contentHashCode()
         result = 31 * result + compromised.hashCode()
         result = 31 * result + paused.hashCode()
         result = 31 * result + (tls?.hashCode() ?: 0)

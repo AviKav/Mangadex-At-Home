@@ -99,12 +99,12 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 "/data"
             } + "/$chapterHash/$fileName"
 
-            if (tokenized || serverSettings.forceToken) {
+            if (tokenized || serverSettings.forceTokens) {
                 val tokenArr = Base64.getUrlDecoder().decode(Path.of("token")(request))
                 val token = JACKSON.readValue<Token>(
                     try {
                         sodium.cryptoBoxOpenEasyAfterNm(
-                            tokenArr.sliceArray(24 until tokenArr.size), tokenArr.sliceArray(0 until 24), serverSettings.sharedKey
+                            tokenArr.sliceArray(24 until tokenArr.size), tokenArr.sliceArray(0 until 24), serverSettings.tokenKey
                         )
                     } catch (_: SodiumException) {
                         if (LOGGER.isInfoEnabled) {
