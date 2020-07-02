@@ -18,9 +18,6 @@ along with this MangaDex@Home.  If not, see <http://www.gnu.org/licenses/>.
  */
 package mdnet.base
 
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.time.Duration
 
 object Constants {
@@ -28,7 +25,6 @@ object Constants {
     const val CLIENT_VERSION = "1.0.0"
     const val WEBUI_VERSION = "0.1.1"
     val MAX_AGE_CACHE: Duration = Duration.ofDays(14)
-    val JACKSON: ObjectMapper = jacksonObjectMapper().configure(JsonParser.Feature.ALLOW_COMMENTS, true)
 
     const val MAX_READ_TIME_SECONDS = 300
     const val MAX_WRITE_TIME_SECONDS = 60

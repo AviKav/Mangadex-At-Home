@@ -19,20 +19,24 @@ along with this MangaDex@Home.  If not, see <http://www.gnu.org/licenses/>.
 package mdnet.base
 
 import ch.qos.logback.classic.LoggerContext
+import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.io.FileReader
 import java.io.FileWriter
 import java.io.IOException
 import java.util.regex.Pattern
 import kotlin.system.exitProcess
-import mdnet.base.Constants.JACKSON
 import mdnet.base.settings.ClientSettings
 import org.slf4j.LoggerFactory
 
 object Main {
     private val LOGGER = LoggerFactory.getLogger(Main::class.java)
+    private val JACKSON: ObjectMapper = jacksonObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).configure(JsonParser.Feature.ALLOW_COMMENTS, true)
 
     @JvmStatic
     fun main(args: Array<String>) {

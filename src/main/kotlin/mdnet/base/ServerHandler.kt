@@ -31,6 +31,7 @@ import org.http4k.format.ConfigurableJackson
 import org.http4k.format.asConfigurable
 import org.http4k.format.withStandardMappings
 import org.slf4j.LoggerFactory
+
 object ServerHandlerJackson : ConfigurableJackson(
     KotlinModule()
     .asConfigurable()
@@ -86,7 +87,7 @@ class ServerHandler(private val settings: ClientSettings) {
         val response = client(request)
 
         return if (response.status.successful) {
-            SERVER_SETTINGS_LENS(response)
+            SERVER_SETTINGS_LENS(response).also { println(it) }
         } else {
             null
         }
@@ -108,7 +109,7 @@ class ServerHandler(private val settings: ClientSettings) {
     }
 
     private fun getServerAddress(): String {
-        return if (settings.devSettings == null || !settings.devSettings.isDev)
+        return if (settings.devSettings?.isDev != true)
             SERVER_ADDRESS
         else
             SERVER_ADDRESS_DEV
@@ -119,6 +120,6 @@ class ServerHandler(private val settings: ClientSettings) {
         private val STRING_ANY_MAP_LENS = Body.auto<Map<String, Any>>().toLens()
         private val SERVER_SETTINGS_LENS = Body.auto<ServerSettings>().toLens()
         private const val SERVER_ADDRESS = "https://api.mangadex.network/"
-        private const val SERVER_ADDRESS_DEV = "https://mangadex-test.net/"
+        private const val SERVER_ADDRESS_DEV = "http://localhost:28080/"
     }
 }

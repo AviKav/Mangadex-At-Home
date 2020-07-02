@@ -20,6 +20,8 @@ along with this MangaDex@Home.  If not, see <http://www.gnu.org/licenses/>.
 package mdnet.base
 
 import ch.qos.logback.classic.LoggerContext
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.io.File
 import java.io.IOException
@@ -30,7 +32,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
-import mdnet.base.Constants.JACKSON
 import mdnet.base.Main.dieWithError
 import mdnet.base.data.Statistics
 import mdnet.base.server.getServer
@@ -320,5 +321,6 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
 
     companion object {
         private val LOGGER = LoggerFactory.getLogger(MangaDexClient::class.java)
+        private val JACKSON: ObjectMapper = jacksonObjectMapper()
     }
 }

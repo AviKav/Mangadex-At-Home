@@ -39,7 +39,7 @@ private val LOGGER = LoggerFactory.getLogger("Application")
 
 fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSettings: ClientSettings, statistics: AtomicReference<Statistics>, isHandled: AtomicBoolean): Http4kServer {
     val database = Database.connect("jdbc:sqlite:cache/data.db", "org.sqlite.JDBC")
-    val imageServer = ImageServer(cache, statistics, serverSettings.imageServer, database, isHandled)
+    val imageServer = ImageServer(cache, statistics, serverSettings, database, isHandled)
 
     return timeRequest()
             .then(catchAllHideDetails())
@@ -65,15 +65,24 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
 fun timeRequest(): Filter {
     return Filter { next: HttpHandler ->
         { request: Request ->
+            val cleanedUri = request.uri.path.let {
+                if (it.startsWith("/data")) {
+                    it
+                } else {
+                    it.replaceBefore("/data", "/{token}")
+                }
+            }
+
+            if (LOGGER.isInfoEnabled) {
+                LOGGER.info("Request for $cleanedUri received from ${request.source?.address}")
+            }
+
             val start = System.currentTimeMillis()
             val response = next(request)
             val latency = System.currentTimeMillis() - start
 
-            if (LOGGER.isTraceEnabled && response.header("X-Uri") != null) {
-                val sanitizedUri = response.header("X-Uri")
-                if (LOGGER.isInfoEnabled) {
-                    LOGGER.info("Request for $sanitizedUri completed in ${latency}ms")
-                }
+            if (LOGGER.isInfoEnabled) {
+                LOGGER.info("Request for $cleanedUri completed (TTFB) in ${latency}ms")
             }
             response.header("X-Time-Taken", latency.toString())
         }

@@ -31,6 +31,7 @@ dependencies {
 
   implementation group: "org.http4k", name: "http4k-core", version: "$http_4k_version"
   implementation group: "org.http4k", name: "http4k-format-jackson", version: "$http_4k_version"
+  implementation group: "com.fasterxml.jackson.datatype", name: "jackson-datatype-jsr310", version: "2.11.1"
   implementation group: "org.http4k", name: "http4k-client-apache", version: "$http_4k_version"
   implementation group: "org.http4k", name: "http4k-server-netty", version: "$http_4k_version"
   runtimeOnly group: "io.netty", name: "netty-tcnative-boringssl-static", version: "2.0.30.Final"
@@ -42,8 +43,8 @@ dependencies {
 
   implementation group: "org.xerial", name: "sqlite-jdbc", version: "3.30.1"
 
-//  implementation "com.goterl.lazycode:lazysodium-java:4.2.6"
-//  implementation "net.java.dev.jna:jna:5.5.0"
+  implementation "com.goterl.lazycode:lazysodium-java:4.2.6"
+  implementation "net.java.dev.jna:jna:5.5.0"
 }
 
 java {

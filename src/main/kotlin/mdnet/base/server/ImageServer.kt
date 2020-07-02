@@ -19,12 +19,22 @@ along with this MangaDex@Home.  If not, see <http://www.gnu.org/licenses/>.
 /* ktlint-disable no-wildcard-imports */
 package mdnet.base.server
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.goterl.lazycode.lazysodium.LazySodiumJava
+import com.goterl.lazycode.lazysodium.SodiumJava
+import com.goterl.lazycode.lazysodium.exceptions.SodiumException
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.InputStream
 import java.security.MessageDigest
 import java.time.Clock
+import java.time.OffsetDateTime
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -36,6 +46,8 @@ import mdnet.base.Constants
 import mdnet.base.data.ImageData
 import mdnet.base.data.ImageDatum
 import mdnet.base.data.Statistics
+import mdnet.base.data.Token
+import mdnet.base.settings.ServerSettings
 import mdnet.cache.CachingInputStream
 import mdnet.cache.DiskLruCache
 import org.apache.http.client.config.CookieSpecs
@@ -54,7 +66,7 @@ import org.slf4j.LoggerFactory
 
 private const val THREADS_TO_ALLOCATE = 262144 // 2**18
 
-class ImageServer(private val cache: DiskLruCache, private val statistics: AtomicReference<Statistics>, private val upstreamUrl: String, private val database: Database, private val handled: AtomicBoolean) {
+class ImageServer(private val cache: DiskLruCache, private val statistics: AtomicReference<Statistics>, private val serverSettings: ServerSettings, private val database: Database, private val handled: AtomicBoolean) {
     init {
         transaction(database) {
             SchemaUtils.create(ImageData)
@@ -65,74 +77,102 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
         .disableConnectionState()
         .setDefaultRequestConfig(
             RequestConfig.custom()
-            .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-            .setConnectTimeout(3000)
-            .setSocketTimeout(3000)
-            .setConnectionRequestTimeout(3000)
-            .build())
+                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
+                .setConnectTimeout(3000)
+                .setSocketTimeout(3000)
+                .setConnectionRequestTimeout(3000)
+                .build())
         .setMaxConnTotal(THREADS_TO_ALLOCATE)
         .setMaxConnPerRoute(THREADS_TO_ALLOCATE)
         .build())
 
-    fun handler(dataSaver: Boolean, tokenized: Boolean = false): HttpHandler = baseHandler().then { request ->
-        val chapterHash = Path.of("chapterHash")(request)
-        val fileName = Path.of("fileName")(request)
+    fun handler(dataSaver: Boolean, tokenized: Boolean = false): HttpHandler {
+        val sodium = LazySodiumJava(SodiumJava())
 
-        val sanitizedUri = if (dataSaver) {
-            "/data-saver"
-        } else {
-            "/data"
-        } + "/$chapterHash/$fileName"
+        return baseHandler().then { request ->
+            val chapterHash = Path.of("chapterHash")(request)
+            val fileName = Path.of("fileName")(request)
 
-        if (LOGGER.isInfoEnabled) {
-            LOGGER.info("Request for $sanitizedUri received from ${request.source?.address}")
-        }
-        statistics.getAndUpdate {
-            it.copy(requestsServed = it.requestsServed + 1)
-        }
+            val sanitizedUri = if (dataSaver) {
+                "/data-saver"
+            } else {
+                "/data"
+            } + "/$chapterHash/$fileName"
 
-        val rc4Bytes = if (dataSaver) {
-            md5Bytes("saver$chapterHash.$fileName")
-        } else {
-            md5Bytes("$chapterHash.$fileName")
-        }
-        val imageId = printHexString(rc4Bytes)
-
-        val snapshot = cache.getUnsafe(imageId.toCacheId())
-        val imageDatum = synchronized(database) {
-            transaction(database) {
-                ImageDatum.findById(imageId)
-            }
-        }
-
-        handled.set(true)
-        if (request.header("Referer")?.startsWith("https://mangadex.org") == false) {
-            snapshot?.close()
-            Response(Status.FORBIDDEN)
-        } else if (snapshot != null && imageDatum != null) {
-            request.handleCacheHit(sanitizedUri, getRc4(rc4Bytes), snapshot, imageDatum)
-                .header("X-Uri", sanitizedUri)
-        } else {
-            if (snapshot != null) {
-                snapshot.close()
-                if (LOGGER.isWarnEnabled) {
-                    LOGGER.warn("Removing cache file for $sanitizedUri without corresponding DB entry")
+            if (tokenized || serverSettings.forceToken) {
+                val tokenArr = Base64.getUrlDecoder().decode(Path.of("token")(request))
+                val token = JACKSON.readValue<Token>(
+                    try {
+                        sodium.cryptoBoxOpenEasyAfterNm(
+                            tokenArr.sliceArray(24 until tokenArr.size), tokenArr.sliceArray(0 until 24), serverSettings.sharedKey
+                        )
+                    } catch (_: SodiumException) {
+                        if (LOGGER.isInfoEnabled) {
+                            LOGGER.info("Request for $sanitizedUri rejected for invalid token")
+                        }
+                        return@then Response(Status.FORBIDDEN)
+                    }
+                )
+                if (OffsetDateTime.now().isAfter(token.expires)) {
+                    if (LOGGER.isInfoEnabled) {
+                        LOGGER.info("Request for $sanitizedUri rejected for expired token")
+                    }
+                    return@then Response(Status.GONE)
                 }
-                cache.removeUnsafe(imageId.toCacheId())
-            }
-            if (imageDatum != null) {
-                if (LOGGER.isWarnEnabled) {
-                    LOGGER.warn("Deleting DB entry for $sanitizedUri without corresponding file")
+
+                if (token.hash != chapterHash) {
+                    if (LOGGER.isInfoEnabled) {
+                        LOGGER.info("Request for $sanitizedUri rejected for inapplicable token")
+                    }
+                    return@then Response(Status.FORBIDDEN)
                 }
-                synchronized(database) {
-                    transaction(database) {
-                        imageDatum.delete()
+            }
+
+            statistics.getAndUpdate {
+                it.copy(requestsServed = it.requestsServed + 1)
+            }
+
+            val rc4Bytes = if (dataSaver) {
+                md5Bytes("saver$chapterHash.$fileName")
+            } else {
+                md5Bytes("$chapterHash.$fileName")
+            }
+            val imageId = printHexString(rc4Bytes)
+
+            val snapshot = cache.getUnsafe(imageId.toCacheId())
+            val imageDatum = synchronized(database) {
+                transaction(database) {
+                    ImageDatum.findById(imageId)
+                }
+            }
+
+            handled.set(true)
+            if (request.header("Referer")?.startsWith("https://mangadex.org") == false) {
+                snapshot?.close()
+                Response(Status.FORBIDDEN)
+            } else if (snapshot != null && imageDatum != null) {
+                request.handleCacheHit(sanitizedUri, getRc4(rc4Bytes), snapshot, imageDatum)
+            } else {
+                if (snapshot != null) {
+                    snapshot.close()
+                    if (LOGGER.isWarnEnabled) {
+                        LOGGER.warn("Removing cache file for $sanitizedUri without corresponding DB entry")
+                    }
+                    cache.removeUnsafe(imageId.toCacheId())
+                }
+                if (imageDatum != null) {
+                    if (LOGGER.isWarnEnabled) {
+                        LOGGER.warn("Deleting DB entry for $sanitizedUri without corresponding file")
+                    }
+                    synchronized(database) {
+                        transaction(database) {
+                            imageDatum.delete()
+                        }
                     }
                 }
-            }
 
-            request.handleCacheMiss(sanitizedUri, getRc4(rc4Bytes), imageId)
-                .header("X-Uri", sanitizedUri)
+                request.handleCacheMiss(sanitizedUri, getRc4(rc4Bytes), imageId)
+            }
         }
     }
 
@@ -177,7 +217,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
             it.copy(cacheMisses = it.cacheMisses + 1)
         }
 
-        val mdResponse = client(Request(Method.GET, "$upstreamUrl$sanitizedUri"))
+        val mdResponse = client(Request(Method.GET, "${serverSettings.imageServer}$sanitizedUri"))
 
         if (mdResponse.status != Status.OK) {
             if (LOGGER.isTraceEnabled) {
@@ -272,16 +312,19 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
 
     companion object {
         private val LOGGER = LoggerFactory.getLogger(ImageServer::class.java)
+        private val JACKSON: ObjectMapper = jacksonObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .registerModule(JavaTimeModule())
 
         private fun baseHandler(): Filter =
             CachingFilters.Response.MaxAge(Clock.systemUTC(), Constants.MAX_AGE_CACHE)
                 .then(ServerFilters.Cors(
-                        CorsPolicy(
-                            origins = listOf("https://mangadex.org"),
-                            headers = listOf("*"),
-                            methods = Method.values().toList()
-                        )
+                    CorsPolicy(
+                        origins = listOf("https://mangadex.org"),
+                        headers = listOf("*"),
+                        methods = Method.values().toList()
                     )
+                )
                 )
                 .then(Filter { next: HttpHandler ->
                     { request: Request ->
