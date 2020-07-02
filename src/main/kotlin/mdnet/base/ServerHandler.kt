@@ -87,7 +87,7 @@ class ServerHandler(private val settings: ClientSettings) {
         val response = client(request)
 
         return if (response.status.successful) {
-            SERVER_SETTINGS_LENS(response).also { println(it) }
+            SERVER_SETTINGS_LENS(response)
         } else {
             null
         }
