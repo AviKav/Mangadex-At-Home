@@ -60,6 +60,10 @@ data class ServerSettings(
         result = 31 * result + (tls?.hashCode() ?: 0)
         return result
     }
+
+    override fun toString(): String {
+        return "ServerSettings(imageServer='$imageServer', latestBuild=$latestBuild, url='$url', tokenKey=$tokenKey, compromised=$compromised, paused=$paused, forceTokens=$forceTokens, tls=$tls)"
+    }
 }
 
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy::class)
