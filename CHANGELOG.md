@@ -11,10 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2020-06-29] Added rudimentary support of Referer checking to mitigate hotlinking by [@lflare].
 - [2020-06-30] Added read and write timeouts to protect against some attacks [@carbotaniuman].
 - [2020-06-30] Added `dev_settings` to allow for easier development [@wedge1001].
+- [2020-07-02] Added stand-ins for future client control in web interface [@RedMatriz].
 
 ### Changed
 - [2020-06-28] Added `pasued` field in ServerSettings [@carbotaniuman].
 - [2020-06-28] Hopefully fixed connection leaks [@carbotaniuman].
+- [2020-07-02] Minor fixes and changes to data handling in web interface [@RedMatriz].
+- [2020-07-02] Renamed loaclstorage keys in web interface [@RedMatriz].
 
 ### Deprecated
 
