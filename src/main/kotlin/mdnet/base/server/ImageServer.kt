@@ -31,6 +31,7 @@ import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.InputStream
+import java.net.InetAddress
 import java.security.MessageDigest
 import java.time.Clock
 import java.time.OffsetDateTime
@@ -66,7 +67,7 @@ import org.slf4j.LoggerFactory
 
 private const val THREADS_TO_ALLOCATE = 262144 // 2**18
 
-class ImageServer(private val cache: DiskLruCache, private val statistics: AtomicReference<Statistics>, private val serverSettings: ServerSettings, private val database: Database, private val handled: AtomicBoolean) {
+class ImageServer(private val cache: DiskLruCache, private val statistics: AtomicReference<Statistics>, private val serverSettings: ServerSettings, private val database: Database, private val clientHostname: String, private val handled: AtomicBoolean) {
     init {
         transaction(database) {
             SchemaUtils.create(ImageData)
@@ -81,6 +82,13 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 .setConnectTimeout(3000)
                 .setSocketTimeout(3000)
                 .setConnectionRequestTimeout(3000)
+                .setLocalAddress(
+                    if (clientHostname != "0.0.0.0") {
+                        InetAddress.getByName(clientHostname)
+                    } else {
+                        InetAddress.getLocalHost()
+                    }
+                )
                 .build())
         .setMaxConnTotal(THREADS_TO_ALLOCATE)
         .setMaxConnPerRoute(THREADS_TO_ALLOCATE)

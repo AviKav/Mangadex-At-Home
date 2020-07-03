@@ -39,27 +39,27 @@ private val LOGGER = LoggerFactory.getLogger("Application")
 
 fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSettings: ClientSettings, statistics: AtomicReference<Statistics>, isHandled: AtomicBoolean): Http4kServer {
     val database = Database.connect("jdbc:sqlite:cache/data.db", "org.sqlite.JDBC")
-    val imageServer = ImageServer(cache, statistics, serverSettings, database, isHandled)
+    val imageServer = ImageServer(cache, statistics, serverSettings, database, clientSettings.clientHostname, isHandled)
 
     return timeRequest()
-            .then(catchAllHideDetails())
-            .then(ServerFilters.CatchLensFailure)
-            .then(addCommonHeaders())
-            .then(
-                routes(
-                    "/data/{chapterHash}/{fileName}" bind Method.GET to imageServer.handler(dataSaver = false),
-                    "/data-saver/{chapterHash}/{fileName}" bind Method.GET to imageServer.handler(dataSaver = true),
-                    "/{token}/data/{chapterHash}/{fileName}" bind Method.GET to imageServer.handler(
-                        dataSaver = false,
-                        tokenized = true
-                    ),
-                    "/{token}/data-saver/{chapterHash}/{fileName}" bind Method.GET to imageServer.handler(
-                        dataSaver = true,
-                        tokenized = true
-                    )
+        .then(catchAllHideDetails())
+        .then(ServerFilters.CatchLensFailure)
+        .then(addCommonHeaders())
+        .then(
+            routes(
+                "/data/{chapterHash}/{fileName}" bind Method.GET to imageServer.handler(dataSaver = false),
+                "/data-saver/{chapterHash}/{fileName}" bind Method.GET to imageServer.handler(dataSaver = true),
+                "/{token}/data/{chapterHash}/{fileName}" bind Method.GET to imageServer.handler(
+                    dataSaver = false,
+                    tokenized = true
+                ),
+                "/{token}/data-saver/{chapterHash}/{fileName}" bind Method.GET to imageServer.handler(
+                    dataSaver = true,
+                    tokenized = true
                 )
             )
-            .asServer(Netty(serverSettings.tls!!, clientSettings, statistics))
+        )
+        .asServer(Netty(serverSettings.tls!!, clientSettings, statistics))
 }
 
 fun timeRequest(): Filter {

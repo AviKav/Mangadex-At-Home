@@ -17,7 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2020-06-28] Added `pasued` field in ServerSettings [@carbotaniuman].
 - [2020-06-28] Hopefully fixed connection leaks [@carbotaniuman].
 - [2020-07-02] Minor fixes and changes to data handling in web interface [@RedMatriz].
-- [2020-07-02] Renamed loaclstorage keys in web interface [@RedMatriz].
+- [2020-07-02] Renamed localstorage keys in web interface [@RedMatriz].
+- [2020-06-28] Actually report custom `client_hostname` [@carbotaniuman].
 
 ### Deprecated
 
