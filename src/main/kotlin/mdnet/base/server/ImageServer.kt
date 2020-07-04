@@ -243,7 +243,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 LOGGER.trace("Request for $sanitizedUri is being cached and served")
             }
 
-            if(imageDatum == null) {
+            if (imageDatum == null) {
                 synchronized(database) {
                     transaction(database) {
                         ImageDatum.new(imageId) {
