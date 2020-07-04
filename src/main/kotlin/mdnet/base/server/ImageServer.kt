@@ -19,6 +19,7 @@ along with this MangaDex@Home.  If not, see <http://www.gnu.org/licenses/>.
 /* ktlint-disable no-wildcard-imports */
 package mdnet.base.server
 
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -107,18 +108,26 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
 
             if (tokenized || serverSettings.forceTokens) {
                 val tokenArr = Base64.getUrlDecoder().decode(Path.of("token")(request))
-                val token = JACKSON.readValue<Token>(
-                    try {
-                        sodium.cryptoBoxOpenEasyAfterNm(
-                            tokenArr.sliceArray(24 until tokenArr.size), tokenArr.sliceArray(0 until 24), serverSettings.tokenKey
-                        )
-                    } catch (_: SodiumException) {
-                        if (LOGGER.isInfoEnabled) {
-                            LOGGER.info("Request for $sanitizedUri rejected for invalid token")
+                val token = try {
+                    JACKSON.readValue<Token>(
+                        try {
+                            sodium.cryptoBoxOpenEasyAfterNm(
+                                tokenArr.sliceArray(24 until tokenArr.size), tokenArr.sliceArray(0 until 24), serverSettings.tokenKey
+                            )
+                        } catch (_: SodiumException) {
+                            if (LOGGER.isInfoEnabled) {
+                                LOGGER.info("Request for $sanitizedUri rejected for invalid token")
+                            }
+                            return@then Response(Status.FORBIDDEN)
                         }
-                        return@then Response(Status.FORBIDDEN)
+                    )
+                } catch (e: JsonProcessingException) {
+                    if (LOGGER.isInfoEnabled) {
+                        LOGGER.info("Request for $sanitizedUri rejected for invalid token")
                     }
-                )
+                    return@then Response(Status.FORBIDDEN)
+                }
+
                 if (OffsetDateTime.now().isAfter(token.expires)) {
                     if (LOGGER.isInfoEnabled) {
                         LOGGER.info("Request for $sanitizedUri rejected for expired token")

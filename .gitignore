@@ -106,4 +106,4 @@ nbproject/**
 log/**
 cache/**
 
-dev
+settings.json

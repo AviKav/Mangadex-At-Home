@@ -31,6 +31,7 @@ import java.io.FileWriter
 import java.io.IOException
 import java.util.regex.Pattern
 import kotlin.system.exitProcess
+import mdnet.BuildInfo
 import mdnet.base.settings.ClientSettings
 import org.slf4j.LoggerFactory
 
@@ -41,7 +42,7 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         println(
-            "Mangadex@Home Client Version ${Constants.CLIENT_VERSION} (Build ${Constants.CLIENT_BUILD}) initializing"
+            "Mangadex@Home Client Version ${BuildInfo.VERSION} (Build ${Constants.CLIENT_BUILD}) initializing"
         )
         println()
         println("Copyright (c) 2020, MangaDex Network")

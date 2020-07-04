@@ -23,6 +23,7 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import mdnet.BuildInfo
 import mdnet.base.Constants
 import org.http4k.core.Filter
 import org.http4k.core.HttpHandler
@@ -39,7 +40,7 @@ fun addCommonHeaders(): Filter {
         { request: Request ->
             val response = next(request)
             response.header("Date", HTTP_TIME_FORMATTER.format(ZonedDateTime.now(ZoneOffset.UTC)))
-                .header("Server", "Mangadex@Home Node ${Constants.CLIENT_VERSION} (${Constants.CLIENT_BUILD})")
+                .header("Server", "Mangadex@Home Node ${BuildInfo.VERSION} (${Constants.CLIENT_BUILD})")
         }
     }
 }
