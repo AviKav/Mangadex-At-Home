@@ -282,7 +282,7 @@ class ImageServer(
                         val response = next(request)
                         response.header("access-control-allow-origin", "https://mangadex.org")
                         .header("access-control-allow-headers", "*")
-                        .header("access-control-allow-headers", "GET")
+                        .header("access-control-allow-methods", "GET")
                         .header("timing-allow-origin", "https://mangadex.org")
                     }
                 })
