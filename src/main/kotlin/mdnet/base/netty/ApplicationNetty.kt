@@ -28,7 +28,9 @@ import io.netty.handler.codec.DecoderException
 import io.netty.handler.codec.http.*
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.stream.ChunkedWriteHandler
+import io.netty.handler.timeout.ReadTimeoutException
 import io.netty.handler.timeout.ReadTimeoutHandler
+import io.netty.handler.timeout.WriteTimeoutException
 import io.netty.handler.timeout.WriteTimeoutHandler
 import io.netty.handler.traffic.GlobalTrafficShapingHandler
 import io.netty.handler.traffic.TrafficCounter
@@ -115,7 +117,7 @@ class Netty(private val tls: TlsCert, private val clientSettings: ClientSettings
                                         if (LOGGER.isTraceEnabled) {
                                             LOGGER.trace("Exception in pipeline", cause)
                                         }
-                                    } else {
+                                    } else if (cause !is ReadTimeoutException && cause !is WriteTimeoutException) {
                                         ctx.fireExceptionCaught(cause)
                                     }
                                 }
