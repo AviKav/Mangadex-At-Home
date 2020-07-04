@@ -82,13 +82,11 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 .setConnectTimeout(3000)
                 .setSocketTimeout(3000)
                 .setConnectionRequestTimeout(3000)
-                .setLocalAddress(
+                .apply {
                     if (clientHostname != "0.0.0.0") {
-                        InetAddress.getByName(clientHostname)
-                    } else {
-                        InetAddress.getLocalHost()
+                        setLocalAddress(InetAddress.getByName(clientHostname))
                     }
-                )
+                }
                 .build())
         .setMaxConnTotal(THREADS_TO_ALLOCATE)
         .setMaxConnPerRoute(THREADS_TO_ALLOCATE)
