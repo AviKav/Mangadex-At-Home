@@ -17,8 +17,6 @@ package mdnet.cache;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.Closeable;
@@ -94,8 +92,6 @@ import java.util.regex.Pattern;
  * responding appropriately.
  */
 public final class DiskLruCache implements Closeable {
-	private final static Logger LOGGER = LoggerFactory.getLogger(DiskLruCache.class);
-
 	private static final String JOURNAL_FILE = "journal";
 	private static final String JOURNAL_FILE_TEMP = "journal.tmp";
 	private static final String JOURNAL_FILE_BACKUP = "journal.bkp";
@@ -827,7 +823,6 @@ public final class DiskLruCache implements Closeable {
 						outputStream = new FileOutputStream(dirtyFile);
 					} catch (FileNotFoundException e2) {
 						// We are unable to recover. Silently eat the writes.
-						LOGGER.warn("Returning NULL_OUTPUT_STREAM", e2);
 						return NULL_OUTPUT_STREAM;
 					}
 				}
@@ -899,7 +894,6 @@ public final class DiskLruCache implements Closeable {
 				try {
 					out.write(oneByte);
 				} catch (IOException e) {
-					LOGGER.warn("FaultHidingOutputStream exception in write()", e);
 					hasErrors = true;
 				}
 			}
@@ -909,7 +903,6 @@ public final class DiskLruCache implements Closeable {
 				try {
 					out.write(buffer, offset, length);
 				} catch (IOException e) {
-					LOGGER.warn("FaultHidingOutputStream exception in write()", e);
 					hasErrors = true;
 				}
 			}
@@ -919,7 +912,6 @@ public final class DiskLruCache implements Closeable {
 				try {
 					out.close();
 				} catch (IOException e) {
-					LOGGER.warn("FaultHidingOutputStream exception in close()", e);
 					hasErrors = true;
 				}
 			}
@@ -929,7 +921,6 @@ public final class DiskLruCache implements Closeable {
 				try {
 					out.flush();
 				} catch (IOException e) {
-					LOGGER.warn("FaultHidingOutputStream exception in flush()", e);
 					hasErrors = true;
 				}
 			}

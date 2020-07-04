@@ -32,13 +32,11 @@ import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.InputStream
-import java.net.InetAddress
 import java.security.MessageDigest
 import java.time.Clock
 import java.time.OffsetDateTime
 import java.util.*
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
@@ -49,13 +47,12 @@ import mdnet.base.data.ImageData
 import mdnet.base.data.ImageDatum
 import mdnet.base.data.Statistics
 import mdnet.base.data.Token
+import mdnet.base.info
 import mdnet.base.settings.ServerSettings
+import mdnet.base.trace
+import mdnet.base.warn
 import mdnet.cache.CachingInputStream
 import mdnet.cache.DiskLruCache
-import org.apache.http.client.config.CookieSpecs
-import org.apache.http.client.config.RequestConfig
-import org.apache.http.impl.client.HttpClients
-import org.http4k.client.ApacheClient
 import org.http4k.core.*
 import org.http4k.filter.CachingFilters
 import org.http4k.filter.CorsPolicy
@@ -66,32 +63,19 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 
-private const val THREADS_TO_ALLOCATE = 262144 // 2**18
-
-class ImageServer(private val cache: DiskLruCache, private val statistics: AtomicReference<Statistics>, private val serverSettings: ServerSettings, private val database: Database, private val clientHostname: String, private val handled: AtomicBoolean) {
+class ImageServer(
+    private val cache: DiskLruCache,
+    private val database: Database,
+    private val statistics: AtomicReference<Statistics>,
+    private val serverSettings: ServerSettings,
+    private val client: HttpHandler
+) {
     init {
         transaction(database) {
             SchemaUtils.create(ImageData)
         }
     }
     private val executor = Executors.newCachedThreadPool()
-    private val client = ApacheClient(responseBodyMode = BodyMode.Stream, client = HttpClients.custom()
-        .disableConnectionState()
-        .setDefaultRequestConfig(
-            RequestConfig.custom()
-                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-                .setConnectTimeout(3000)
-                .setSocketTimeout(3000)
-                .setConnectionRequestTimeout(3000)
-                .apply {
-                    if (clientHostname != "0.0.0.0") {
-                        setLocalAddress(InetAddress.getByName(clientHostname))
-                    }
-                }
-                .build())
-        .setMaxConnTotal(THREADS_TO_ALLOCATE)
-        .setMaxConnPerRoute(THREADS_TO_ALLOCATE)
-        .build())
 
     fun handler(dataSaver: Boolean, tokenized: Boolean = false): HttpHandler {
         val sodium = LazySodiumJava(SodiumJava())
@@ -115,30 +99,22 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                                 tokenArr.sliceArray(24 until tokenArr.size), tokenArr.sliceArray(0 until 24), serverSettings.tokenKey
                             )
                         } catch (_: SodiumException) {
-                            if (LOGGER.isInfoEnabled) {
-                                LOGGER.info("Request for $sanitizedUri rejected for invalid token")
-                            }
+                            LOGGER.info { "Request for $sanitizedUri rejected for invalid token" }
                             return@then Response(Status.FORBIDDEN)
                         }
                     )
                 } catch (e: JsonProcessingException) {
-                    if (LOGGER.isInfoEnabled) {
-                        LOGGER.info("Request for $sanitizedUri rejected for invalid token")
-                    }
+                    LOGGER.info { "Request for $sanitizedUri rejected for invalid token" }
                     return@then Response(Status.FORBIDDEN)
                 }
 
                 if (OffsetDateTime.now().isAfter(token.expires)) {
-                    if (LOGGER.isInfoEnabled) {
-                        LOGGER.info("Request for $sanitizedUri rejected for expired token")
-                    }
+                    LOGGER.info { "Request for $sanitizedUri rejected for expired token" }
                     return@then Response(Status.GONE)
                 }
 
                 if (token.hash != chapterHash) {
-                    if (LOGGER.isInfoEnabled) {
-                        LOGGER.info("Request for $sanitizedUri rejected for inapplicable token")
-                    }
+                    LOGGER.info { "Request for $sanitizedUri rejected for inapplicable token" }
                     return@then Response(Status.FORBIDDEN)
                 }
             }
@@ -161,7 +137,6 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 }
             }
 
-            handled.set(true)
             if (request.header("Referer")?.startsWith("https://mangadex.org") == false) {
                 snapshot?.close()
                 Response(Status.FORBIDDEN)
@@ -170,10 +145,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
             } else {
                 if (snapshot != null) {
                     snapshot.close()
-
-                    if (LOGGER.isWarnEnabled) {
-                        LOGGER.warn("Removing cache file for $sanitizedUri without corresponding DB entry")
-                    }
+                    LOGGER.warn { "Removing cache file for $sanitizedUri without corresponding DB entry" }
                     cache.removeUnsafe(imageId.toCacheId())
                 }
 
@@ -189,9 +161,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 it.copy(browserCached = it.browserCached + 1)
             }
 
-            if (LOGGER.isInfoEnabled) {
-                LOGGER.info("Request for $sanitizedUri cached by browser")
-            }
+            LOGGER.info { "Request for $sanitizedUri cached by browser" }
 
             val lastModified = imageDatum.lastModified
             snapshot.close()
@@ -203,9 +173,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 it.copy(cacheHits = it.cacheHits + 1)
             }
 
-            if (LOGGER.isInfoEnabled) {
-                LOGGER.info("Request for $sanitizedUri hit cache")
-            }
+            LOGGER.info { "Request for $sanitizedUri hit cache" }
 
             respondWithImage(
                 CipherInputStream(BufferedInputStream(snapshot.getInputStream(0)), cipher),
@@ -216,9 +184,8 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
     }
 
     private fun Request.handleCacheMiss(sanitizedUri: String, cipher: Cipher, imageId: String, imageDatum: ImageDatum?): Response {
-        if (LOGGER.isInfoEnabled) {
-            LOGGER.info("Request for $sanitizedUri missed cache")
-        }
+        LOGGER.info { "Request for $sanitizedUri missed cache" }
+
         statistics.getAndUpdate {
             it.copy(cacheMisses = it.cacheMisses + 1)
         }
@@ -226,16 +193,13 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
         val mdResponse = client(Request(Method.GET, "${serverSettings.imageServer}$sanitizedUri"))
 
         if (mdResponse.status != Status.OK) {
-            if (LOGGER.isTraceEnabled) {
-                LOGGER.trace("Upstream query for $sanitizedUri errored with status {}", mdResponse.status)
-            }
+            LOGGER.trace { "Upstream query for $sanitizedUri errored with status ${mdResponse.status}" }
+
             mdResponse.close()
             return Response(mdResponse.status)
         }
 
-        if (LOGGER.isTraceEnabled) {
-            LOGGER.trace("Upstream query for $sanitizedUri succeeded")
-        }
+        LOGGER.trace { "Upstream query for $sanitizedUri succeeded" }
 
         val contentType = mdResponse.header("Content-Type")!!
         val contentLength = mdResponse.header("Content-Length")
@@ -246,9 +210,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
         // A null editor means that this file is being written to
         // concurrently so we skip the cache process
         return if (editor != null && contentLength != null && lastModified != null) {
-            if (LOGGER.isTraceEnabled) {
-                LOGGER.trace("Request for $sanitizedUri is being cached and served")
-            }
+            LOGGER.trace { "Request for $sanitizedUri is being cached and served" }
 
             if (imageDatum == null) {
                 synchronized(database) {
@@ -267,29 +229,20 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
             ) {
                 try {
                     if (editor.getLength(0) == contentLength.toLong()) {
-                        if (LOGGER.isInfoEnabled) {
-                            LOGGER.info("Cache download for $sanitizedUri committed")
-                        }
+                        LOGGER.info { "Cache download for $sanitizedUri committed" }
                         editor.commit()
                     } else {
-                        if (LOGGER.isWarnEnabled) {
-                            LOGGER.warn("Cache download for $sanitizedUri aborted")
-                        }
+                        LOGGER.warn { "Cache download for $sanitizedUri aborted" }
                         editor.abort()
                     }
                 } catch (e: Exception) {
-                    if (LOGGER.isWarnEnabled) {
-                        LOGGER.warn("Cache go/no go for $sanitizedUri failed", e)
-                    }
+                    LOGGER.warn(e) { "Cache go/no go for $sanitizedUri failed" }
                 }
             }
             respondWithImage(tee, contentLength, contentType, lastModified, false)
         } else {
             editor?.abort()
-
-            if (LOGGER.isTraceEnabled) {
-                LOGGER.trace("Request for $sanitizedUri is being served")
-            }
+            LOGGER.trace { "Request for $sanitizedUri is being served" }
             respondWithImage(mdResponse.body.stream, contentLength, contentType, lastModified, false)
         }
     }
@@ -327,12 +280,12 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
         private fun baseHandler(): Filter =
             CachingFilters.Response.MaxAge(Clock.systemUTC(), Constants.MAX_AGE_CACHE)
                 .then(ServerFilters.Cors(
-                    CorsPolicy(
-                        origins = listOf("https://mangadex.org"),
-                        headers = listOf("*"),
-                        methods = Method.values().toList()
+                        CorsPolicy(
+                            origins = listOf("https://mangadex.org"),
+                            headers = listOf("*"),
+                            methods = Method.values().toList()
+                        )
                     )
-                )
                 )
                 .then(Filter { next: HttpHandler ->
                     { request: Request ->

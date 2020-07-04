@@ -19,13 +19,19 @@ along with this MangaDex@Home.  If not, see <http://www.gnu.org/licenses/>.
 /* ktlint-disable no-wildcard-imports */
 package mdnet.base.server
 
+import java.net.InetAddress
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import mdnet.base.data.Statistics
+import mdnet.base.info
 import mdnet.base.netty.Netty
 import mdnet.base.settings.ClientSettings
 import mdnet.base.settings.ServerSettings
 import mdnet.cache.DiskLruCache
+import org.apache.http.client.config.CookieSpecs
+import org.apache.http.client.config.RequestConfig
+import org.apache.http.impl.client.HttpClients
+import org.http4k.client.ApacheClient
 import org.http4k.core.*
 import org.http4k.filter.ServerFilters
 import org.http4k.routing.bind
@@ -39,11 +45,30 @@ private val LOGGER = LoggerFactory.getLogger("Application")
 
 fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSettings: ClientSettings, statistics: AtomicReference<Statistics>, isHandled: AtomicBoolean): Http4kServer {
     val database = Database.connect("jdbc:sqlite:cache/data.db", "org.sqlite.JDBC")
-    val imageServer = ImageServer(cache, statistics, serverSettings, database, clientSettings.clientHostname, isHandled)
+    val client = ApacheClient(responseBodyMode = BodyMode.Stream, client = HttpClients.custom()
+        .disableConnectionState()
+        .setDefaultRequestConfig(
+            RequestConfig.custom()
+                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
+                .setConnectTimeout(3000)
+                .setSocketTimeout(3000)
+                .setConnectionRequestTimeout(3000)
+                .apply {
+                    if (clientSettings.clientHostname != "0.0.0.0") {
+                        setLocalAddress(InetAddress.getByName(clientSettings.clientHostname))
+                    }
+                }
+                .build())
+        .setMaxConnTotal(3000)
+        .setMaxConnPerRoute(3000)
+        .build())
+
+    val imageServer = ImageServer(cache, database, statistics, serverSettings, client)
 
     return timeRequest()
         .then(catchAllHideDetails())
         .then(ServerFilters.CatchLensFailure)
+        .then(setHandled(isHandled))
         .then(addCommonHeaders())
         .then(
             routes(
@@ -62,6 +87,15 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
         .asServer(Netty(serverSettings.tls!!, clientSettings, statistics))
 }
 
+fun setHandled(isHandled: AtomicBoolean): Filter {
+    return Filter { next: HttpHandler ->
+        {
+            isHandled.set(true)
+            next(it)
+        }
+    }
+}
+
 fun timeRequest(): Filter {
     return Filter { next: HttpHandler ->
         { request: Request ->
@@ -73,17 +107,14 @@ fun timeRequest(): Filter {
                 }
             }
 
-            if (LOGGER.isInfoEnabled) {
-                LOGGER.info("Request for $cleanedUri received from ${request.source?.address}")
-            }
+            LOGGER.info { "Request for $cleanedUri received from ${request.source?.address}" }
 
             val start = System.currentTimeMillis()
             val response = next(request)
             val latency = System.currentTimeMillis() - start
 
-            if (LOGGER.isInfoEnabled) {
-                LOGGER.info("Request for $cleanedUri completed (TTFB) in ${latency}ms")
-            }
+            LOGGER.info { "Request for $cleanedUri completed (TTFB) in ${latency}ms" }
+
             response.header("X-Time-Taken", latency.toString())
         }
     }

@@ -44,9 +44,7 @@ class ServerHandler(private val settings: ClientSettings) {
     private val client = ApacheClient()
 
     fun logoutFromControl(): Boolean {
-        if (LOGGER.isInfoEnabled) {
-            LOGGER.info("Disconnecting from the control server")
-        }
+        LOGGER.info { "Disconnecting from the control server" }
         val params = mapOf<String, Any>(
             "secret" to settings.clientSecret
         )
@@ -79,9 +77,7 @@ class ServerHandler(private val settings: ClientSettings) {
         }
 
     fun loginToControl(): ServerSettings? {
-        if (LOGGER.isInfoEnabled) {
-            LOGGER.info("Connecting to the control server")
-        }
+        LOGGER.info { "Connecting to the control server" }
 
         val request = STRING_ANY_MAP_LENS(getPingParams(), Request(Method.POST, getServerAddress() + "ping"))
         val response = client(request)
@@ -94,9 +90,7 @@ class ServerHandler(private val settings: ClientSettings) {
     }
 
     fun pingControl(old: ServerSettings): ServerSettings? {
-        if (LOGGER.isInfoEnabled) {
-            LOGGER.info("Pinging the control server")
-        }
+        LOGGER.info { "Pinging the control server" }
 
         val request = STRING_ANY_MAP_LENS(getPingParams(old.tls!!.createdAt), Request(Method.POST, getServerAddress() + "ping"))
         val response = client(request)

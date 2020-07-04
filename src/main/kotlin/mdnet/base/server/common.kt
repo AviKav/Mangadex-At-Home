@@ -25,6 +25,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import mdnet.BuildInfo
 import mdnet.base.Constants
+import mdnet.base.warn
 import org.http4k.core.Filter
 import org.http4k.core.HttpHandler
 import org.http4k.core.Request
@@ -51,9 +52,8 @@ fun catchAllHideDetails(): Filter {
             try {
                 next(request)
             } catch (e: Exception) {
-                if (LOGGER.isWarnEnabled) {
-                    LOGGER.warn("Request error detected", e)
-                }
+                LOGGER.warn(e) { "Request error detected" }
+
                 Response(Status.INTERNAL_SERVER_ERROR)
             }
         }

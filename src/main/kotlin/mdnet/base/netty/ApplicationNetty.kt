@@ -47,8 +47,10 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.net.ssl.SSLException
 import mdnet.base.Constants
 import mdnet.base.data.Statistics
+import mdnet.base.info
 import mdnet.base.settings.ClientSettings
 import mdnet.base.settings.TlsCert
+import mdnet.base.trace
 import org.http4k.core.HttpHandler
 import org.http4k.server.Http4kChannelHandler
 import org.http4k.server.Http4kServer
@@ -75,9 +77,7 @@ class Netty(private val tls: TlsCert, private val clientSettings: ClientSettings
         }
 
         override fun start(): Http4kServer = apply {
-            if (LOGGER.isInfoEnabled) {
-                LOGGER.info("Starting Netty with {} threads", clientSettings.threads)
-            }
+            LOGGER.info { "Starting Netty with ${clientSettings.threads} threads" }
 
             val certs = getX509Certs(tls.certificate)
             val sslContext = SslContextBuilder
@@ -107,16 +107,10 @@ class Netty(private val tls: TlsCert, private val clientSettings: ClientSettings
                             ch.pipeline().addLast("handle_ssl", object : ChannelInboundHandlerAdapter() {
                                 override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
                                     if (cause is SSLException || (cause is DecoderException && cause.cause is SSLException)) {
-                                        if (LOGGER.isTraceEnabled) {
-                                            LOGGER.trace("Ignored invalid SSL connection")
-                                        }
+                                        LOGGER.trace { "Ignored invalid SSL connection" }
                                     } else if (cause is IOException || cause is SocketException) {
-                                        if (LOGGER.isInfoEnabled) {
-                                            LOGGER.info("User (downloader) abruptly closed the connection")
-                                        }
-                                        if (LOGGER.isTraceEnabled) {
-                                            LOGGER.trace("Exception in pipeline", cause)
-                                        }
+                                        LOGGER.info { "User (downloader) abruptly closed the connection" }
+                                        LOGGER.trace(cause) { "Exception in pipeline" }
                                     } else if (cause !is ReadTimeoutException && cause !is WriteTimeoutException) {
                                         ctx.fireExceptionCaught(cause)
                                     }

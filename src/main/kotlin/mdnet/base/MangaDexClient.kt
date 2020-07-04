@@ -83,10 +83,10 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
                 statistics.set(JACKSON.readValue<Statistics>(it.getInputStream(0)))
             }
         } catch (e: HeaderMismatchException) {
-            LOGGER.warn("Cache version may be outdated - remove if necessary")
+            LOGGER.warn { "Cache version may be outdated - remove if necessary" }
             dieWithError(e)
         } catch (e: IOException) {
-            LOGGER.warn("Cache may be corrupt - remove if necessary")
+            LOGGER.warn { "Cache may be corrupt - remove if necessary" }
             dieWithError(e)
         }
     }
@@ -99,9 +99,7 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
             webUi = getUiServer(clientSettings.webSettings, statistics, statsMap)
             webUi!!.start()
         }
-        if (LOGGER.isInfoEnabled) {
-            LOGGER.info("Mangadex@Home Client initialized. Starting normal operation.")
-        }
+        LOGGER.info { "Mangadex@Home Client initialized. Starting normal operation." }
 
         executorService.scheduleAtFixedRate({
             try {
@@ -117,7 +115,7 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
                     }
                 }
             } catch (e: Exception) {
-                LOGGER.warn("Statistics update failed", e)
+                LOGGER.warn(e) { "Statistics update failed" }
             }
         }, 15, 15, TimeUnit.SECONDS)
 
@@ -128,19 +126,17 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
 
                 val state = this.state
                 if (state is GracefulShutdown) {
-                    if (LOGGER.isInfoEnabled) {
-                        LOGGER.info("Aborting graceful shutdown started due to hourly bandwidth limit")
-                    }
+                    LOGGER.info { "Aborting graceful shutdown started due to hourly bandwidth limit" }
+
                     this.state = state.lastRunning
                 }
                 if (state is Uninitialized) {
-                    if (LOGGER.isInfoEnabled) {
-                        LOGGER.info("Restarting server stopped due to hourly bandwidth limit")
-                    }
+                    LOGGER.info { "Restarting server stopped due to hourly bandwidth limit" }
+
                     loginAndStartServer()
                 }
             } catch (e: Exception) {
-                LOGGER.warn("Hourly bandwidth check failed", e)
+                LOGGER.warn(e) { "Hourly bandwidth check failed" }
             }
         }, 1, 1, TimeUnit.HOURS)
 
@@ -151,31 +147,27 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
                 if (state is GracefulShutdown) {
                     when {
                         state.counts == 0 -> {
-                            if (LOGGER.isInfoEnabled) {
-                                LOGGER.info("Starting graceful shutdown")
-                            }
+                            LOGGER.info { "Starting graceful shutdown" }
+
                             logout()
                             isHandled.set(false)
                             this.state = state.copy(counts = state.counts + 1)
                         }
                         state.counts == timesToWait || !isHandled.get() -> {
-                            if (LOGGER.isInfoEnabled) {
-                                if (!isHandled.get()) {
-                                    LOGGER.info("No requests received, shutting down")
-                                } else {
-                                    LOGGER.info("Max tries attempted (${state.counts} out of $timesToWait), shutting down")
-                                }
+                            if (!isHandled.get()) {
+                                LOGGER.info { "No requests received, shutting down" }
+                            } else {
+                                LOGGER.info { "Max tries attempted (${state.counts} out of $timesToWait), shutting down" }
                             }
 
                             stopServer(state.nextState)
                             state.action()
                         }
                         else -> {
-                            if (LOGGER.isInfoEnabled) {
-                                LOGGER.info(
-                                    "Waiting another 15 seconds for graceful shutdown (${state.counts} out of $timesToWait)"
-                                )
+                            LOGGER.info {
+                                "Waiting another 15 seconds for graceful shutdown (${state.counts} out of $timesToWait)"
                             }
+
                             isHandled.set(false)
                             this.state = state.copy(counts = state.counts + 1)
                         }
@@ -192,16 +184,15 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
                 if (state is Running) {
                     val currentBytesSent = statistics.get().bytesSent - lastBytesSent
                     if (clientSettings.maxMebibytesPerHour != 0L && clientSettings.maxMebibytesPerHour * 1024 * 1024 /* MiB to bytes */ < currentBytesSent) {
-                        if (LOGGER.isInfoEnabled) {
-                            LOGGER.info("Shutting down server as hourly bandwidth limit reached")
-                        }
+                        LOGGER.info { "Shutting down server as hourly bandwidth limit reached" }
+
                         this.state = GracefulShutdown(lastRunning = state)
                     } else {
                         pingControl()
                     }
                 }
             } catch (e: Exception) {
-                LOGGER.warn("Graceful shutdown checker failed", e)
+                LOGGER.warn(e) { "Graceful shutdown checker failed" }
             }
         }, 45, 45, TimeUnit.SECONDS)
     }
@@ -211,30 +202,23 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
 
         val newSettings = serverHandler.pingControl(state.settings)
         if (newSettings != null) {
-            if (LOGGER.isInfoEnabled) {
-                LOGGER.info("Server settings received: $newSettings")
-            }
+            LOGGER.info { "Server settings received: $newSettings" }
 
             if (newSettings.latestBuild > Constants.CLIENT_BUILD) {
-                if (LOGGER.isWarnEnabled) {
-                    LOGGER.warn(
-                        "Outdated build detected! Latest: ${newSettings.latestBuild}, Current: ${Constants.CLIENT_BUILD}"
-                    )
+                LOGGER.warn {
+                    "Outdated build detected! Latest: ${newSettings.latestBuild}, Current: ${Constants.CLIENT_BUILD}"
                 }
             }
             if (newSettings.tls != null || newSettings.imageServer != state.settings.imageServer) {
                 // certificates or upstream url must have changed, restart webserver
-                if (LOGGER.isInfoEnabled) {
-                    LOGGER.info("Doing internal restart of HTTP server to refresh certs/upstream URL")
-                }
+                LOGGER.info { "Doing internal restart of HTTP server to refresh certs/upstream URL" }
+
                 this.state = GracefulShutdown(lastRunning = state) {
                     loginAndStartServer()
                 }
             }
         } else {
-            if (LOGGER.isInfoEnabled) {
-                LOGGER.info("Server ping failed - ignoring")
-            }
+            LOGGER.info { "Server ping failed - ignoring" }
         }
     }
 
@@ -246,17 +230,13 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
         val server = getServer(cache, serverSettings, clientSettings, statistics, isHandled).start()
 
         if (serverSettings.latestBuild > Constants.CLIENT_BUILD) {
-            if (LOGGER.isWarnEnabled) {
-                LOGGER.warn(
-                    "Outdated build detected! Latest: ${serverSettings.latestBuild}, Current: ${Constants.CLIENT_BUILD}"
-                )
+            LOGGER.warn {
+                "Outdated build detected! Latest: ${serverSettings.latestBuild}, Current: ${Constants.CLIENT_BUILD}"
             }
         }
 
         state = Running(server, serverSettings)
-        if (LOGGER.isInfoEnabled) {
-            LOGGER.info("Internal HTTP server was successfully started")
-        }
+        LOGGER.info { "Internal HTTP server was successfully started" }
     }
 
     private fun logout() {
@@ -275,18 +255,15 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
             }
         }
 
-        if (LOGGER.isInfoEnabled) {
-            LOGGER.info("Shutting down HTTP server")
-        }
+        LOGGER.info { "Shutting down HTTP server" }
         state.server.stop()
-        if (LOGGER.isInfoEnabled) {
-            LOGGER.info("Internal HTTP server has shut down")
-        }
+        LOGGER.info { "Internal HTTP server has shut down" }
+
         this.state = nextState
     }
 
     fun shutdown() {
-        LOGGER.info("Mangadex@Home Client stopping")
+        LOGGER.info { "Mangadex@Home Client stopping" }
 
         val latch = CountDownLatch(1)
         executorService.schedule({
@@ -310,11 +287,11 @@ class MangaDexClient(private val clientSettings: ClientSettings) {
         try {
             cache.close()
         } catch (e: IOException) {
-            LOGGER.error("Cache failed to close", e)
+            LOGGER.error(e) { "Cache failed to close" }
         }
 
         executorService.shutdown()
-        LOGGER.info("Mangadex@Home Client stopped")
+        LOGGER.info { "Mangadex@Home Client stopped" }
 
         (LoggerFactory.getILoggerFactory() as LoggerContext).stop()
     }

@@ -22,7 +22,6 @@ import java.time.Duration
 
 object Constants {
     const val CLIENT_BUILD = 14
-    const val WEBUI_VERSION = "0.1.1"
     val MAX_AGE_CACHE: Duration = Duration.ofDays(14)
 
     const val MAX_READ_TIME_SECONDS = 300

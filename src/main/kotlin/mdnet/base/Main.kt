@@ -85,26 +85,21 @@ object Main {
             }
         }.apply(::validateSettings)
 
-        if (LOGGER.isInfoEnabled) {
-            LOGGER.info("Client settings loaded: {}", settings)
-        }
+            LOGGER.info { "Client settings loaded: $settings" }
         val client = MangaDexClient(settings)
         Runtime.getRuntime().addShutdownHook(Thread { client.shutdown() })
         client.runLoop()
     }
 
     fun dieWithError(e: Throwable): Nothing {
-        if (LOGGER.isErrorEnabled) {
-            LOGGER.error("Critical Error", e)
-        }
+            LOGGER.error(e) { "Critical Error" }
         (LoggerFactory.getILoggerFactory() as LoggerContext).stop()
         exitProcess(1)
     }
 
     fun dieWithError(error: String): Nothing {
-        if (LOGGER.isErrorEnabled) {
-            LOGGER.error("Critical Error: {}", error)
-        }
+        LOGGER.error { "Critical Error: $error" }
+
         (LoggerFactory.getILoggerFactory() as LoggerContext).stop()
         exitProcess(1)
     }
