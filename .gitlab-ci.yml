@@ -16,8 +16,6 @@ build:
 publish:
   image: alpine
   stage: publish
-  only:
-    - tags
   before_script:
     - apk update && apk add git zip
     - export VERSION=`git describe --tags --dirty`
