@@ -1,7 +1,5 @@
 <configuration>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <immediateFlush>false</immediateFlush>
-
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>${file-level:-TRACE}</level>
         </filter>

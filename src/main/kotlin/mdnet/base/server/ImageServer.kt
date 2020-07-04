@@ -55,8 +55,6 @@ import mdnet.cache.CachingInputStream
 import mdnet.cache.DiskLruCache
 import org.http4k.core.*
 import org.http4k.filter.CachingFilters
-import org.http4k.filter.CorsPolicy
-import org.http4k.filter.ServerFilters
 import org.http4k.lens.Path
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -279,17 +277,12 @@ class ImageServer(
 
         private fun baseHandler(): Filter =
             CachingFilters.Response.MaxAge(Clock.systemUTC(), Constants.MAX_AGE_CACHE)
-                .then(ServerFilters.Cors(
-                        CorsPolicy(
-                            origins = listOf("https://mangadex.org"),
-                            headers = listOf("*"),
-                            methods = Method.values().toList()
-                        )
-                    )
-                )
                 .then(Filter { next: HttpHandler ->
                     { request: Request ->
                         val response = next(request)
+                        response.header("access-control-allow-origin", "https://mangadex.org")
+                        response.header("access-control-allow-headers", "*")
+                        response.header("access-control-allow-headers", "GET")
                         response.header("timing-allow-origin", "https://mangadex.org")
                     }
                 })
