@@ -163,23 +163,14 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
             } else {
                 if (snapshot != null) {
                     snapshot.close()
+
                     if (LOGGER.isWarnEnabled) {
                         LOGGER.warn("Removing cache file for $sanitizedUri without corresponding DB entry")
                     }
                     cache.removeUnsafe(imageId.toCacheId())
                 }
-                if (imageDatum != null) {
-                    if (LOGGER.isWarnEnabled) {
-                        LOGGER.warn("Deleting DB entry for $sanitizedUri without corresponding file")
-                    }
-                    synchronized(database) {
-                        transaction(database) {
-                            imageDatum.delete()
-                        }
-                    }
-                }
 
-                request.handleCacheMiss(sanitizedUri, getRc4(rc4Bytes), imageId)
+                request.handleCacheMiss(sanitizedUri, getRc4(rc4Bytes), imageId, imageDatum)
             }
         }
     }
@@ -217,7 +208,7 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
         }
     }
 
-    private fun Request.handleCacheMiss(sanitizedUri: String, cipher: Cipher, imageId: String): Response {
+    private fun Request.handleCacheMiss(sanitizedUri: String, cipher: Cipher, imageId: String, imageDatum: ImageDatum?): Response {
         if (LOGGER.isInfoEnabled) {
             LOGGER.info("Request for $sanitizedUri missed cache")
         }
@@ -252,11 +243,13 @@ class ImageServer(private val cache: DiskLruCache, private val statistics: Atomi
                 LOGGER.trace("Request for $sanitizedUri is being cached and served")
             }
 
-            synchronized(database) {
-                transaction(database) {
-                    ImageDatum.new(imageId) {
-                        this.contentType = contentType
-                        this.lastModified = lastModified
+            if(imageDatum == null) {
+                synchronized(database) {
+                    transaction(database) {
+                        ImageDatum.new(imageId) {
+                            this.contentType = contentType
+                            this.lastModified = lastModified
+                        }
                     }
                 }
             }
