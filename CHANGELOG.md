@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [2020-07-04] Fixed typo on `access-control-allow-methods` by [@carbotaniuman].
+- [2020-07-05] Fixed minor graph update issues [@RedMatriz].
 
 ### Security
 - [2020-07-05] Prevent `Referer` matching on subdomains such as `mangadex.org.example.com` by [@AviKav].
