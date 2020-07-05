@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [2020-07-04] Changed GitLab CI to build on every push irregardless of tagging by [@carbotaniuman].
 
 ### Deprecated
+- [2020-07-05] Deprecated `Referer` checking for hotlink prevention in favour of token verification system by [@lflare].
 
 ### Removed
 
