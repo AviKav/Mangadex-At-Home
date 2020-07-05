@@ -8,12 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- [2020-07-04] Changed GitLab CI to build on every push irregardless of tagging by [@carbotaniuman].
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+- [2020-07-04] Fixed typo on `access-control-allow-methods` by [@carbotaniuman].
 
 ### Security
 
