@@ -6,11 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- [2020-07-05] Added basic graph creation interface to dash [@RedMatriz].
 
 ### Changed
-- [2020-07-05] Changed mobile dash to allow for graph creation [@RedMatriz].
-- [2020-07-05] Minor improvements to graph load [@RedMatriz].
 
 ### Deprecated
 
@@ -21,9 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 ## [1.1.5] - 2020-07-05
+### Added
+- [2020-07-05] Added basic graph creation interface to dash [@RedMatriz].
+
 ### Changed
 - [2020-07-04] Changed GitLab CI to build on every push irregardless of tagging by [@carbotaniuman].
 - [2020-07-05] Added `mangadex.network` as allowed domain for `Referer`. Allow blank or missing `Referer` by [@AviKav].
+- [2020-07-05] Changed mobile dash to allow for graph creation [@RedMatriz].
+- [2020-07-05] Minor improvements to graph load [@RedMatriz].
 
 ### Fixed
 - [2020-07-04] Fixed typo on `access-control-allow-methods` by [@carbotaniuman].
