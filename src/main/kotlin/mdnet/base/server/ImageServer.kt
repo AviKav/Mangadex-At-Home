@@ -164,6 +164,7 @@ class ImageServer(
         return allowedDomains.any {
             referer.substringAfter("//") // Ignore scheme
                     .substringBefore("/") // Ignore path
+                    .substringBefore(":")
                     .endsWith(it)
         }
     }
