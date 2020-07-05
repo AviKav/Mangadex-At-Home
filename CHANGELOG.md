@@ -6,8 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- [2020-07-05] Added basic graph creation interface to dash [@RedMatriz].
 
 ### Changed
+- [2020-07-05] Changed mobile dash to allow for graph creation [@RedMatriz].
+- [2020-07-05] Minor improvements to graph load [@RedMatriz].
 
 ### Deprecated
 
