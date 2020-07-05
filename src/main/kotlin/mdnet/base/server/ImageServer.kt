@@ -135,7 +135,10 @@ class ImageServer(
                 }
             }
 
-            if (snapshot != null && imageDatum != null) {
+            if (request.header("Referer")?.startsWith("https://mangadex.org") == false) {
+                snapshot?.close()
+                Response(Status.FORBIDDEN)
+            } else if (snapshot != null && imageDatum != null) {
                 request.handleCacheHit(sanitizedUri, getRc4(rc4Bytes), snapshot, imageDatum)
             } else {
                 if (snapshot != null) {
