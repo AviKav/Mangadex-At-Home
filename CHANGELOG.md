@@ -17,6 +17,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [1.1.4] - 2020-07-04
+### Changed
+- [2020-07-04] Logging backbone overhauled by [@carbotaniuman].
+- [2020-07-04] Bumped client version to `15` by [@carbotaniuman].
+
+### Removed
+- [2020-07-04] Rolled back configuration of ServerFilters for CORS by [@carbotaniuman].
+
+## [1.1.3] - 2020-07-04
+### Added
+- [2020-07-04] Updated to allow for automatic version constant variable by [@carbotaniuman].
+
+### Fixed
+- [2020-07-04] Updated Dockerfile to include libsodium for token verification by [@FOG_Yamato].
+
+## [1.1.2] - 2020-07-04
+### Fixed
+- [2020-07-04] Fixed `client_hostname` default configuration bug by [@carbotaniuman].
+- [2020-07-04] Suppressed some non-essential logs by [@carbotaniuman].
+
+## [1.1.1] - 2020-07-04
+### Changed
+- [2020-07-04] Bumped version number by [@carbotaniuman].
+
 ## [1.1.0] - 2020-07-04
 ### Added
 - [2020-06-23] Added Gitlab CI integration by [@lflare].
@@ -167,7 +191,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [2020-06-11] Tweaked logging configuration to reduce log file sizes by [@carbotaniuman].
 
-[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.1.0...HEAD
+[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.1.4...HEAD
+[1.1.4]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.1.3...1.1.4
+[1.1.3]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.1.2...1.1.3
+[1.1.2]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.1.1...1.1.2
+[1.1.1]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.1.0...1.1.1
 [1.1.0]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0...1.1.0
 [1.0.0]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc22...1.0.0
 [1.0.0-rc22]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.0.0-rc21...1.0.0-rc22
