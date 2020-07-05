@@ -88,6 +88,11 @@ class ImageServer(
                 "/data"
             } + "/$chapterHash/$fileName"
 
+            if (!request.referrerMatches(ALLOWED_REFERER_DOMAINS)) {
+                LOGGER.info { "Request for $sanitizedUri rejected due to non-allowed referrer ${request.header("Referer")}" }
+                return@then Response(Status.FORBIDDEN)
+            }
+
             if (tokenized || serverSettings.forceTokens) {
                 val tokenArr = Base64.getUrlDecoder().decode(Path.of("token")(request))
                 val token = try {
@@ -135,11 +140,7 @@ class ImageServer(
                 }
             }
 
-            if (!request.referrerMatches(ALLOWED_REFERER_DOMAINS)) {
-                snapshot?.close()
-                LOGGER.info { "Request for $sanitizedUri rejected due to non-allowed referrer ${request.header("Referer")}" }
-                return@then Response(Status.FORBIDDEN)
-            } else if (snapshot != null && imageDatum != null) {
+            if (snapshot != null && imageDatum != null) {
                 request.handleCacheHit(sanitizedUri, getRc4(rc4Bytes), snapshot, imageDatum)
             } else {
                 if (snapshot != null) {
@@ -166,7 +167,6 @@ class ImageServer(
                     .endsWith(it)
         }
     }
-
 
     private fun Request.handleCacheHit(sanitizedUri: String, cipher: Cipher, snapshot: DiskLruCache.Snapshot, imageDatum: ImageDatum): Response {
         // our files never change, so it's safe to use the browser cache
