@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - [2020-07-04] Changed GitLab CI to build on every push irregardless of tagging by [@carbotaniuman].
 - [2020-07-05] Added `mangadex.network` to domains checked for `Referer` header match by [@AviKav].
-
 ### Deprecated
 
 ### Removed
@@ -18,8 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [2020-07-04] Fixed typo on `access-control-allow-methods` by [@carbotaniuman].
 
-### Security
 
+### Security
+- [2020-07-05] Prevent `Referer `matching on subdomains such as `mangadex.org.example.com` by[@AviKav].
 ## [1.1.4] - 2020-07-04
 ### Changed
 - [2020-07-04] Logging backbone overhauled by [@carbotaniuman].
