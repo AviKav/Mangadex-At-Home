@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - [2020-07-04] Changed GitLab CI to build on every push irregardless of tagging by [@carbotaniuman].
-- [2020-07-05] Added `mangadex.network` to domains checked for `Referer` header match by [@AviKav].
+- [2020-07-05] Added `mangadex.network` as allowed domain for `Referer`. Allow blank or missing `Referer` by [@AviKav].
+
 ### Deprecated
 
 ### Removed
