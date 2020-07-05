@@ -8,12 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
-- [2020-07-04] Changed GitLab CI to build on every push irregardless of tagging by [@carbotaniuman].
-- [2020-07-05] Added `mangadex.network` as allowed domain for `Referer`. Allow blank or missing `Referer` by [@AviKav].
 
 ### Deprecated
 
 ### Removed
+
+### Fixed
+
+### Security
+
+## [1.1.5] - 2020-07-05
+### Changed
+- [2020-07-04] Changed GitLab CI to build on every push irregardless of tagging by [@carbotaniuman].
+- [2020-07-05] Added `mangadex.network` as allowed domain for `Referer`. Allow blank or missing `Referer` by [@AviKav].
 
 ### Fixed
 - [2020-07-04] Fixed typo on `access-control-allow-methods` by [@carbotaniuman].
@@ -195,7 +202,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [2020-06-11] Tweaked logging configuration to reduce log file sizes by [@carbotaniuman].
 
-[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.1.4...HEAD
+[Unreleased]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.1.5...HEAD
+[1.1.5]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.1.4...1.1.5
 [1.1.4]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.1.3...1.1.4
 [1.1.3]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.1.2...1.1.3
 [1.1.2]: https://gitlab.com/mangadex/mangadex_at_home/-/compare/1.1.1...1.1.2
