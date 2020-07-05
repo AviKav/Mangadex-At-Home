@@ -135,9 +135,10 @@ class ImageServer(
                 }
             }
 
-            if (request.header("Referer")?.startsWith("https://mangadex.org") == false) {
+            if (!request.referrerMatches(ALLOWED_REFERER_DOMAINS)) {
                 snapshot?.close()
-                Response(Status.FORBIDDEN)
+                LOGGER.info { "Request for $sanitizedUri rejected due to non-allowed referrer ${request.header("Referer")}" }
+                return@then Response(Status.FORBIDDEN)
             } else if (snapshot != null && imageDatum != null) {
                 request.handleCacheHit(sanitizedUri, getRc4(rc4Bytes), snapshot, imageDatum)
             } else {
@@ -151,6 +152,21 @@ class ImageServer(
             }
         }
     }
+
+    /**
+     * Filters referrers based on passed (sub)domains. Ignores `scheme` (protocol) in URL
+     */
+    private fun Request.referrerMatches(allowedDomains: List<String>, permitBlank: Boolean = true): Boolean {
+        val referer = this.header("Referer") ?: return permitBlank // Referrer was misspelled as "Referer" and now we're stuck with it -_-
+        if (referer == "") return permitBlank
+
+        return allowedDomains.any {
+            referer.substringAfter("//") // Ignore scheme
+                    .substringBefore("/") // Ignore path
+                    .endsWith(it)
+        }
+    }
+
 
     private fun Request.handleCacheHit(sanitizedUri: String, cipher: Cipher, snapshot: DiskLruCache.Snapshot, imageDatum: ImageDatum): Response {
         // our files never change, so it's safe to use the browser cache
@@ -274,6 +290,7 @@ class ImageServer(
         private val JACKSON: ObjectMapper = jacksonObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .registerModule(JavaTimeModule())
+        private val ALLOWED_REFERER_DOMAINS = listOf("mangadex.org", "mangadex.network") // TODO: Factor out hardcoded domains?
 
         private fun baseHandler(): Filter =
             CachingFilters.Response.MaxAge(Clock.systemUTC(), Constants.MAX_AGE_CACHE)
