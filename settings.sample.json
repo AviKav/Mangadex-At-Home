@@ -14,8 +14,8 @@
     "ui_hostname": "127.0.0.1", // "127.0.0.1" is the default and binds to localhost only
     "ui_port": 8080
   },
-  "experimential": {
+  "experimental": {
     "max_buffer_size_for_cache_hit": 0 // Size is n * 8kiB. 0 uses the JDK default (which is likely 8kiB).
-    // May improve diskIO at the cost of memory pressue. Testing needed
+    // May improve diskIO at the cost of memory pressure. Testing needed
   }
 }
