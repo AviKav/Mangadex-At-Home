@@ -35,7 +35,8 @@ data class ClientSettings(
     val threads: Int = 4,
     val gracefulShutdownWaitSeconds: Int = 60,
     val webSettings: WebSettings? = null,
-    val devSettings: DevSettings? = null
+    val devSettings: DevSettings? = null,
+    val experimental: Experimental? = null
 )
 
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy::class)
@@ -47,4 +48,9 @@ data class WebSettings(
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy::class)
 data class DevSettings(
     val isDev: Boolean = false
+)
+
+@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy::class)
+data class Experimental(
+    val maxBufferSizeForCacheHit: Int = 0
 )

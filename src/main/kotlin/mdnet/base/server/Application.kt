@@ -63,7 +63,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
         .setMaxConnPerRoute(3000)
         .build())
 
-    val imageServer = ImageServer(cache, database, statistics, serverSettings, client)
+    val imageServer = ImageServer(cache, database, statistics, serverSettings, clientSettings, client)
 
     return timeRequest()
         .then(catchAllHideDetails())

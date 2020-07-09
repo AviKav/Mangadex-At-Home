@@ -48,6 +48,7 @@ import mdnet.base.data.ImageDatum
 import mdnet.base.data.Statistics
 import mdnet.base.data.Token
 import mdnet.base.info
+import mdnet.base.settings.ClientSettings
 import mdnet.base.settings.ServerSettings
 import mdnet.base.trace
 import mdnet.base.warn
@@ -66,6 +67,7 @@ class ImageServer(
     private val database: Database,
     private val statistics: AtomicReference<Statistics>,
     private val serverSettings: ServerSettings,
+    private val clientSettings: ClientSettings,
     private val client: HttpHandler
 ) {
     init {
@@ -74,6 +76,9 @@ class ImageServer(
         }
     }
     private val executor = Executors.newCachedThreadPool()
+    private val maxBufferSizeForCacheHit: Int? = clientSettings.experimental?.maxBufferSizeForCacheHit
+            ?.takeUnless { it == 0 }
+            ?.times(8 * 1024)
 
     fun handler(dataSaver: Boolean, tokenized: Boolean = false): HttpHandler {
         val sodium = LazySodiumJava(SodiumJava())
@@ -189,11 +194,16 @@ class ImageServer(
             }
 
             LOGGER.info { "Request for $sanitizedUri hit cache" }
+            val cacheStream = snapshot.getInputStream(0)
+            val bufferSize = maxBufferSizeForCacheHit?.coerceAtMost(snapshot.getLength(0).toInt())
+            val bufferedStream = bufferSize?.let {
+                BufferedInputStream(cacheStream, bufferSize)
+            } ?: BufferedInputStream(cacheStream) // Todo: Move into builder. It's untidy having the null propagate all the way here but I'm tired and tomorrow is a fast day.
 
             respondWithImage(
-                CipherInputStream(BufferedInputStream(snapshot.getInputStream(0)), cipher),
-                snapshot.getLength(0).toString(), imageDatum.contentType, imageDatum.lastModified,
-                true
+                    CipherInputStream(bufferedStream, cipher),
+                    snapshot.getLength(0).toString(), imageDatum.contentType, imageDatum.lastModified,
+                    true
             )
         }
     }

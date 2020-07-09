@@ -129,6 +129,10 @@ object Main {
                 dieWithError("Config Error: Invalid UI port number")
             }
         }
+        if (settings.experimental != null) {
+            if (settings.experimental.maxBufferSizeForCacheHit < 0)
+            dieWithError("Config Error: Max cache buffer multiple must be >= 0")
+        }
     }
 
     private const val CLIENT_KEY_LENGTH = 52
