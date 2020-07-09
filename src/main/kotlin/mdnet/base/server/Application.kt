@@ -67,6 +67,7 @@ fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSetting
 
     return timeRequest()
         .then(catchAllHideDetails())
+        .then(trackNumberOfActiveRequests(statistics))
         .then(ServerFilters.CatchLensFailure)
         .then(setHandled(isHandled))
         .then(addCommonHeaders())

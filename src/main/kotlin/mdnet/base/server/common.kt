@@ -23,8 +23,10 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.concurrent.atomic.AtomicReference
 import mdnet.BuildInfo
 import mdnet.base.Constants
+import mdnet.base.data.Statistics
 import mdnet.base.warn
 import org.http4k.core.Filter
 import org.http4k.core.HttpHandler
@@ -55,6 +57,19 @@ fun catchAllHideDetails(): Filter {
                 LOGGER.warn(e) { "Request error detected" }
 
                 Response(Status.INTERNAL_SERVER_ERROR)
+            }
+        }
+    }
+}
+
+fun trackNumberOfActiveRequests(statistics: AtomicReference<Statistics>): Filter {
+    return Filter { next: HttpHandler ->
+        { request: Request ->
+            statistics.getAndUpdate { it.copy(activeRequests = it.activeRequests + 1) }
+            try {
+                next(request)
+            } finally {
+                statistics.getAndUpdate { it.copy(activeRequests = it.activeRequests - 1) }
             }
         }
     }

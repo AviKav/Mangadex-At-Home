@@ -28,5 +28,6 @@ data class Statistics(
     val cacheMisses: Int = 0,
     val browserCached: Int = 0,
     val bytesSent: Long = 0,
-    val bytesOnDisk: Long = 0
+    val bytesOnDisk: Long = 0,
+    val activeRequests: Int = 0
 )
