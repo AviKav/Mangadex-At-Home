@@ -15,7 +15,7 @@
     "ui_port": 8080
   },
   "experimential": {
-    "max_buffer_size_for_cache_hit": 0 // Size is n * 8kiB. ~8Kib is the JDK default.
+    "max_buffer_size_for_cache_hit": 0 // Size is n * 8kiB. 0 uses the JDK default (which is likely 8kiB).
     // May improve diskIO at the cost of memory pressue. Testing needed
   }
 }
