@@ -53,6 +53,7 @@ java {
 }
 
 spotless {
+    lineEndings 'UNIX'
     java {
         targetExclude("build/generated/**/*")
         eclipse()
