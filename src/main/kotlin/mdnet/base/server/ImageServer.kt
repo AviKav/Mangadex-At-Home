@@ -144,7 +144,7 @@ class ImageServer(
             // TODO: Cleanup messy conditionals
 
             // Ensure that cached file isn't a non-image from the Great Cache Propagation
-            val flaresFault = imageDatum != null && imageDatum.contentType.isImage().not()
+            val flaresFault = imageDatum != null && imageDatum.contentType.isImageMimetype().not()
 
             if (flaresFault) {
                 snapshot?.close(); snapshot = null
@@ -181,7 +181,7 @@ class ImageServer(
         }
     }
 
-    private fun String.isImage() = this.toLowerCase().startsWith("image/")
+    private fun String.isImageMimetype() = this.toLowerCase().startsWith("image/")
 
     private fun Request.handleCacheHit(sanitizedUri: String, cipher: Cipher, snapshot: DiskLruCache.Snapshot, imageDatum: ImageDatum): Response {
         // our files never change, so it's safe to use the browser cache
@@ -233,8 +233,8 @@ class ImageServer(
 
         contentType!!
 
-        if (!contentType.isImage()) {
-            LOGGER.trace { "Upstream query for $sanitizedUri returned bad mime-type $contentType" }
+        if (!contentType.isImageMimetype()) {
+            LOGGER.trace { "Upstream query for $sanitizedUri returned bad mimetype $contentType" }
             mdResponse.close()
             return Response(mdResponse.status)
         }
