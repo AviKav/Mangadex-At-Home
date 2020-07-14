@@ -20,6 +20,7 @@ along with this MangaDex@Home.  If not, see <http://www.gnu.org/licenses/>.
 package mdnet.base.server
 
 import java.net.InetAddress
+import java.net.URL
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import mdnet.base.data.Statistics
@@ -46,6 +47,9 @@ private val LOGGER = LoggerFactory.getLogger("Application")
 fun getServer(cache: DiskLruCache, serverSettings: ServerSettings, clientSettings: ClientSettings, statistics: AtomicReference<Statistics>, isHandled: AtomicBoolean): Http4kServer {
     val database = Database.connect("jdbc:sqlite:cache/data.db", "org.sqlite.JDBC")
     val client = ApacheClient(responseBodyMode = BodyMode.Stream, client = HttpClients.custom()
+        .setSSLHostnameVerifier { hostname, _ ->
+            !serverSettings.ignoreImageServerCertCheck && hostname == URL(serverSettings.imageServer).host // Very bad workaround allowing MITM attacks
+        }
         .disableConnectionState()
         .setDefaultRequestConfig(
             RequestConfig.custom()

@@ -31,7 +31,8 @@ data class ServerSettings(
     val compromised: Boolean,
     val paused: Boolean,
     val forceTokens: Boolean = false,
-    val tls: TlsCert?
+    val tls: TlsCert?,
+    val ignoreImageServerCertCheck: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -46,6 +47,7 @@ data class ServerSettings(
         if (compromised != other.compromised) return false
         if (paused != other.paused) return false
         if (tls != other.tls) return false
+        if (ignoreImageServerCertCheck != other.ignoreImageServerCertCheck) return false
 
         return true
     }
@@ -58,11 +60,12 @@ data class ServerSettings(
         result = 31 * result + compromised.hashCode()
         result = 31 * result + paused.hashCode()
         result = 31 * result + (tls?.hashCode() ?: 0)
+        result = 31 * result + ignoreImageServerCertCheck.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "ServerSettings(imageServer='$imageServer', latestBuild=$latestBuild, url='$url', tokenKey=$tokenKey, compromised=$compromised, paused=$paused, forceTokens=$forceTokens, tls=$tls)"
+        return "ServerSettings(imageServer='$imageServer', latestBuild=$latestBuild, url='$url', tokenKey=$tokenKey, compromised=$compromised, paused=$paused, forceTokens=$forceTokens, tls=$tls, imageServerCertCheck=$ignoreImageServerCertCheck)"
     }
 }
 
