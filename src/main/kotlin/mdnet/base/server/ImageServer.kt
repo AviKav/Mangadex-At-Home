@@ -133,11 +133,23 @@ class ImageServer(
             }
             val imageId = printHexString(rc4Bytes)
 
-            val snapshot = cache.getUnsafe(imageId.toCacheId())
-            val imageDatum = synchronized(database) {
+            // These shouldn't be var but I don't want to touch the original conditional logic
+            var snapshot = cache.getUnsafe(imageId.toCacheId())
+            var imageDatum = synchronized(database) {
                 transaction(database) {
                     ImageDatum.findById(imageId)
                 }
+            }
+
+            // TODO: Cleanup messy conditionals
+
+            // Ensure that cached file isn't a non-image from the Great Cache Propagation
+            val flaresFault = imageDatum != null && imageDatum.contentType.isImage().not()
+
+            if (flaresFault) {
+                snapshot?.close(); snapshot = null
+                cache.removeUnsafe(imageId.toCacheId()); imageDatum = null
+                LOGGER.warn { "Removing cache file for $sanitizedUri left over the Great Cache Propagation" }
             }
 
             if (snapshot != null && imageDatum != null) {
@@ -168,6 +180,8 @@ class ImageServer(
                     .endsWith(it)
         }
     }
+
+    private fun String.isImage() = this.toLowerCase().startsWith("image/")
 
     private fun Request.handleCacheHit(sanitizedUri: String, cipher: Cipher, snapshot: DiskLruCache.Snapshot, imageDatum: ImageDatum): Response {
         // our files never change, so it's safe to use the browser cache
@@ -207,18 +221,25 @@ class ImageServer(
 
         val mdResponse = client(Request(Method.GET, "${serverSettings.imageServer}$sanitizedUri"))
 
+        val contentType = mdResponse.header("Content-Type")
+        val contentLength = mdResponse.header("Content-Length")
+        val lastModified = mdResponse.header("Last-Modified")
+
         if (mdResponse.status != Status.OK) {
             LOGGER.trace { "Upstream query for $sanitizedUri errored with status ${mdResponse.status}" }
+            mdResponse.close()
+            return Response(mdResponse.status)
+        }
 
+        contentType!!
+
+        if (!contentType.isImage()) {
+            LOGGER.trace { "Upstream query for $sanitizedUri returned bad mime-type" }
             mdResponse.close()
             return Response(mdResponse.status)
         }
 
         LOGGER.trace { "Upstream query for $sanitizedUri succeeded" }
-
-        val contentType = mdResponse.header("Content-Type")!!
-        val contentLength = mdResponse.header("Content-Length")
-        val lastModified = mdResponse.header("Last-Modified")
 
         val editor = cache.editUnsafe(imageId.toCacheId())
 
