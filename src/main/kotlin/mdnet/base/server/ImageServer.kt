@@ -234,7 +234,7 @@ class ImageServer(
         contentType!!
 
         if (!contentType.isImage()) {
-            LOGGER.trace { "Upstream query for $sanitizedUri returned bad mime-type" }
+            LOGGER.trace { "Upstream query for $sanitizedUri returned bad mime-type $contentType" }
             mdResponse.close()
             return Response(mdResponse.status)
         }
