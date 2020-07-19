@@ -144,9 +144,9 @@ class ImageServer(
             // TODO: Cleanup messy conditionals
 
             // Ensure that cached file isn't a non-image from the Great Cache Propagation
-            val flaresFault = imageDatum != null && imageDatum.contentType.isImageMimetype().not()
+            val cachedNonImage = imageDatum != null && imageDatum.contentType.isImageMimetype().not()
 
-            if (flaresFault) {
+            if (cachedNonImage) {
                 snapshot?.close(); snapshot = null
                 cache.removeUnsafe(imageId.toCacheId()); imageDatum = null
                 LOGGER.warn { "Removing cache file for $sanitizedUri left over the Great Cache Propagation" }
